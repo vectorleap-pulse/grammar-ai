@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build script for Grammar AI using Nuitka on Windows."""
+"""Build script for Grammar AI using PyInstaller on Windows."""
 
 import subprocess
 import sys
@@ -7,37 +7,41 @@ from pathlib import Path
 
 
 def build_windows_exe(debug: bool = False) -> int:
-    """Build Grammar AI executable for Windows using Nuitka."""
+    """Build Grammar AI executable for Windows using PyInstaller."""
     output_dir = Path("dist")
+    build_dir = Path("build")
+    spec_dir = Path("build")
     output_dir.mkdir(exist_ok=True)
+    build_dir.mkdir(exist_ok=True)
 
-    nuitka_args = [
+    pyinstaller_args = [
         sys.executable,
         "-m",
-        "nuitka",
+        "PyInstaller",
         "--onefile",
-        "--assume-yes-for-downloads",
-        "--include-package=app",
-        "--output-dir=dist",
-        "--remove-output",
-        "--follow-imports",
-        "--enable-plugin=tk-inter",
-        "--show-progress",
-        "main.py",
+        "--name",
+        "main",
+        "--distpath",
+        str(output_dir),
+        "--workpath",
+        str(build_dir),
+        "--specpath",
+        str(spec_dir),
+        "--clean",
+        "--noconfirm",
     ]
 
     if debug:
-        nuitka_args.insert(-1, "--windows-console-mode=force")
+        pyinstaller_args.append("--console")
     else:
-        nuitka_args.insert(-1, "--windows-disable-console")
+        pyinstaller_args.append("--windowed")
 
-    # Filter out empty strings
-    nuitka_args = [arg for arg in nuitka_args if arg]
+    pyinstaller_args.append("main.py")
 
-    print("Building Grammar AI executable with Nuitka...")
-    print(f"Command: {' '.join(nuitka_args)}")
+    print("Building Grammar AI executable with PyInstaller...")
+    print(f"Command: {' '.join(pyinstaller_args)}")
 
-    result = subprocess.run(nuitka_args, cwd=Path(__file__).parent)
+    result = subprocess.run(pyinstaller_args, cwd=Path(__file__).parent)
     return result.returncode
 
 
