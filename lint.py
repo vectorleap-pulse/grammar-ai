@@ -8,8 +8,11 @@ import sys
 def run_linter():
     """Run ruff check and mypy on the project."""
     try:
+        print("Running ruff format...")
+        subprocess.run([sys.executable, "-m", "ruff", "format", "."], check=True)
+        print("Ruff format passed.")
         print("Running ruff check...")
-        subprocess.run([sys.executable, "-m", "ruff", "check", "."], check=True)
+        subprocess.run([sys.executable, "-m", "ruff", "check", "--fix", "."], check=True)
         print("Ruff check passed.")
     except subprocess.CalledProcessError as e:
         print(f"Ruff check failed with exit code {e.returncode}")

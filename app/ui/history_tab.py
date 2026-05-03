@@ -37,8 +37,12 @@ class HistoryTab(ttk.Frame):
         # Show full text of selected row in a detail label.
         self._detail_var = tk.StringVar()
         detail = ttk.Label(
-            self, textvariable=self._detail_var, wraplength=700,
-            justify="left", font=("", 9), anchor="w",
+            self,
+            textvariable=self._detail_var,
+            wraplength=700,
+            justify="left",
+            font=("", 9),
+            anchor="w",
         )
         detail.pack(fill="x", padx=6, pady=(0, 4))
         self._tree.bind("<<TreeviewSelect>>", self._on_select)
@@ -49,7 +53,8 @@ class HistoryTab(ttk.Frame):
         self._detail_var.set("")
         for e in load_history():
             self._tree.insert(
-                "", "end",
+                "",
+                "end",
                 iid=str(e.id),
                 values=(
                     e.used_at.strftime("%Y-%m-%d %H:%M"),
