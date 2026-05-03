@@ -20,7 +20,7 @@ class SettingsDialog(tk.Toplevel):
         self.title("Settings")
         self.resizable(False, False)
         self.grab_set()
-        self.transient(parent)
+        self.transient(parent)  # type: ignore
         self._on_save = on_save
         self._build()
         self._load(config)
@@ -30,17 +30,17 @@ class SettingsDialog(tk.Toplevel):
         f = ttk.Frame(self, padding=12)
         f.pack(fill="both", expand=True)
 
-        ttk.Label(f, text="Base URL:").grid(row=0, column=0, sticky="w", **pad)
+        ttk.Label(f, text="Base URL:").grid(row=0, column=0, sticky="w", **pad)  # type:ignore
         self._url = ttk.Entry(f, width=44)
-        self._url.grid(row=0, column=1, sticky="ew", **pad)
+        self._url.grid(row=0, column=1, sticky="ew", **pad)  # type: ignore
 
-        ttk.Label(f, text="Model:").grid(row=1, column=0, sticky="w", **pad)
+        ttk.Label(f, text="Model:").grid(row=1, column=0, sticky="w", **pad)  # type: ignore
         self._model = ttk.Entry(f, width=44)
-        self._model.grid(row=1, column=1, sticky="ew", **pad)
+        self._model.grid(row=1, column=1, sticky="ew", **pad)  # type: ignore
 
-        ttk.Label(f, text="API Key:").grid(row=2, column=0, sticky="w", **pad)
+        ttk.Label(f, text="API Key:").grid(row=2, column=0, sticky="w", **pad)  # type: ignore
         self._key = ttk.Entry(f, width=44, show="*")
-        self._key.grid(row=2, column=1, sticky="ew", **pad)
+        self._key.grid(row=2, column=1, sticky="ew", **pad)  # type: ignore
 
         self._status = ttk.Label(f, text="", foreground="gray", font=("", 8))
         self._status.grid(row=3, column=0, columnspan=2, sticky="w", padx=8, pady=2)

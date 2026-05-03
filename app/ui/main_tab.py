@@ -169,7 +169,7 @@ class MainTab(ttk.Frame):
                 self._results_frame,
                 tone=item_data.tone,
                 text=item_data.text,
-                on_use=lambda tone, txt, orig=original: self._use_text(orig, tone, txt),
+                on_use=lambda tone, txt, orig=original: self._use_text(orig, tone, txt),  # type: ignore
             )
             item.pack(fill="x", padx=2, pady=2)
             self._items.append(item)
