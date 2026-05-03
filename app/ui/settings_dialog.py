@@ -73,7 +73,7 @@ class SettingsDialog(tk.Toplevel):
         self.update_idletasks()
         ok, msg = check_connection(self._current())
         self._status.config(text=msg, foreground="green" if ok else "red")
-        logger.info("Config test result: {} — {}", ok, msg)
+        logger.info(f"Config test result: {ok} — {msg}")
 
     def _save(self) -> None:
         cfg = self._current()

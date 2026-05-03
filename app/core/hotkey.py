@@ -35,7 +35,7 @@ class HotkeyManager:
             if not self._enabled:
                 _kb.add_hotkey(HOTKEY, self._dispatch, suppress=True)
                 self._enabled = True
-                logger.info("Hotkey {} enabled", HOTKEY)
+                logger.info(f"Hotkey {HOTKEY} enabled")
 
     def disable(self) -> None:
         if not _HAS_KB:
@@ -47,7 +47,7 @@ class HotkeyManager:
                 except (KeyError, ValueError):
                     pass
                 self._enabled = False
-                logger.info("Hotkey {} disabled", HOTKEY)
+                logger.info(f"Hotkey {HOTKEY} disabled")
 
     def _dispatch(self) -> None:
         # Run capture in a separate thread so we don't block the hook thread.
@@ -72,7 +72,7 @@ class HotkeyManager:
 
         text = pyperclip.paste()
         if text and text.strip():
-            logger.info("Hotkey captured {} chars", len(text))
+            logger.info(f"Hotkey captured {len(text)} chars")
             self.on_text(text.strip())
         else:
             logger.debug("Hotkey fired but clipboard was empty")

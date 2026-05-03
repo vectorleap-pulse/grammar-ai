@@ -24,9 +24,9 @@ def polish_text(text: str, config: LLMConfig) -> list[PolishedText]:
         ],
     )
     content = response.choices[0].message.content or "{}"
-    logger.debug("LLM raw response (first 300 chars): {}", content[:300])
+    logger.debug(f"LLM raw response (first 300 chars): {content[:300]}")
     result = PolishedResponse.model_validate_json(content)
-    logger.info("Received {} polished versions", len(result.polished))
+    logger.info(f"Received {len(result.polished)} polished versions")
     return result.polished
 
 

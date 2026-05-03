@@ -29,8 +29,8 @@ def restore_focus_and_paste(hwnd: int, text: str) -> bool:
         pyautogui.hotkey("ctrl", "a")
         time.sleep(0.05)
         pyautogui.hotkey("ctrl", "v")
-        logger.debug("Pasted to hwnd={}", hwnd)
+        logger.debug(f"Pasted to hwnd={hwnd}")
         return True
     except Exception as e:
-        logger.warning("restore_focus_and_paste failed: {}", e)
+        logger.warning(f"restore_focus_and_paste failed: {e}")
         return False

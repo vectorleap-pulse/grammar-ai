@@ -31,7 +31,7 @@ def init_db() -> None:
                 used_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
-    logger.info("Database initialized at {}", DB_PATH)
+    logger.info(f"Database initialized at {DB_PATH}")
 
 
 def load_config() -> LLMConfig:
@@ -61,7 +61,7 @@ def save_history(original: str, polished: str, tone: str) -> None:
             "INSERT INTO history (original_text, polished_text, tone) VALUES (?, ?, ?)",
             (original, polished, tone),
         )
-    logger.debug("History saved: tone={}", tone)
+    logger.debug(f"History saved: tone={tone}")
 
 
 def load_history(limit: int = 200) -> list[HistoryEntry]:

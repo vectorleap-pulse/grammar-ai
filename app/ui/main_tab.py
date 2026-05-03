@@ -179,8 +179,9 @@ class MainTab(ttk.Frame):
                 results = polish_text(text, config)
                 self.after(0, lambda: self._show_results(text, results))
             except Exception as exc:
-                logger.error(f"LLM error: {exc}")
-                self.after(0, lambda: self._set_status(f"Error: {exc}", "red"))
+                error_msg = str(exc)
+                logger.error(f"LLM error: {error_msg}")
+                self.after(0, lambda: self._set_status(f"Error: {error_msg}", "red"))
 
         threading.Thread(target=worker, daemon=True).start()
 
