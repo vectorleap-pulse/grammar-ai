@@ -67,7 +67,7 @@ class MainTab(ttk.Frame):
         bar = ttk.Frame(self, padding=(6, 4))
         bar.pack(fill="x")
 
-        ttk.Button(bar, text=f"Trigger ({HOTKEY})", command=self._trigger_manual).pack(
+        ttk.Button(bar, text=f"Trigger ({HOTKEY.upper()})", command=self._trigger_manual).pack(
             side="left", padx=2
         )
 
