@@ -14,7 +14,8 @@ except ImportError:
     _HAS_KB = False
     logger.warning("'keyboard' module unavailable; global hotkey disabled")
 
-HOTKEY = "ctrl+shift+g"
+HOTKEYS = ["ctrl", "shift", "g"]
+HOTKEY = "+".join(HOTKEYS)
 
 
 class HotkeyManager:
@@ -63,15 +64,14 @@ class HotkeyManager:
         self.last_hwnd = get_foreground_window()
 
         # Explicitly release all modifier keys to prevent key bleed.
-        pyautogui.keyUp("ctrl")
-        pyautogui.keyUp("shift")
-        pyautogui.keyUp("g")
-        time.sleep(0.15)
+        for key in HOTKEYS:
+            pyautogui.keyUp(key)
+        time.sleep(0.05)
 
         pyautogui.hotkey("ctrl", "a")
-        time.sleep(0.06)
+        time.sleep(0.05)
         pyautogui.hotkey("ctrl", "c")
-        time.sleep(0.15)
+        time.sleep(0.05)
 
         text = pyperclip.paste()
         if text and text.strip():
