@@ -10,8 +10,8 @@ class MainWindow(tk.Tk):
         super().__init__()
         self.title("Grammar AI")
         self.attributes("-topmost", True)
-        self.geometry("560x680")
-        self.minsize(480, 520)
+        self.geometry("400x680")
+        self.minsize(400, 520)
         self._build()
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
