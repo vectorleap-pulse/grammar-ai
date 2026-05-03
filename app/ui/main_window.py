@@ -9,6 +9,7 @@ class MainWindow(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("Grammar AI")
+        self.attributes("-topmost", True)
         self.geometry("560x680")
         self.minsize(480, 520)
         self._build()
