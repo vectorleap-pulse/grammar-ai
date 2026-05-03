@@ -13,6 +13,7 @@ _SYSTEM = (
     "(e.g. 'I'll let you know' → 'I'll share', 'in order to' → 'to', 'utilize' → 'use', 'at this point in time' → 'now').\n"
     "Never change pronouns or alter the original meaning, intent, or perspective — if it says 'you helped me', keep it exactly that way.\n"
     "For each required tone, provide one complete polished version of the entire input. Do not split the original message across multiple tone entries.\n"
+    "Do not add any AI-generated formatting characters, extra dashes, bullet points, labels, or decorative punctuation. Return only plain polished text.\n"
     "Every output must read like something a real developer would actually say or write — fluent, confident, no fluff.\n"
     'Respond ONLY with valid JSON: {"polished": [{"tone": "...", "text": "..."}, ...]}.\n'
     f"Required tones: {', '.join(TONES)}."
