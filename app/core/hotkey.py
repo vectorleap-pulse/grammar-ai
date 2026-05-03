@@ -62,8 +62,11 @@ class HotkeyManager:
         # Record which window had focus before we steal it.
         self.last_hwnd = get_foreground_window()
 
-        # Small pause so hotkey keys are released before we send new keys.
-        time.sleep(0.08)
+        # Explicitly release all modifier keys to prevent key bleed.
+        pyautogui.keyUp("ctrl")
+        pyautogui.keyUp("shift")
+        pyautogui.keyUp("g")
+        time.sleep(0.15)
 
         pyautogui.hotkey("ctrl", "a")
         time.sleep(0.06)
