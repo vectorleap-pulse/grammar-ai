@@ -1,4 +1,4 @@
-"""Global hotkey: Ctrl+Shift+G — select-all, copy, then trigger LLM."""
+"""Global hotkey: Ctrl+Shift+Space — select-all, copy, then trigger LLM."""
 
 import threading
 import time
@@ -14,7 +14,7 @@ except ImportError:
     _HAS_KB = False
     logger.warning("'keyboard' module unavailable; global hotkey disabled")
 
-HOTKEYS = ["ctrl", "shift", "g"]
+HOTKEYS = ["ctrl", "shift", "space"]
 HOTKEY = "+".join(HOTKEYS)
 
 
