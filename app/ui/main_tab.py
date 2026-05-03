@@ -1,5 +1,6 @@
 import threading
 import tkinter as tk
+import tkinter.font as tkFont
 from tkinter import messagebox, ttk
 from typing import Callable
 
@@ -34,9 +35,44 @@ class _PolishedItem(ttk.Frame):
         ttk.Label(header, text=tone.upper(), font=("", 8, "bold")).pack(side="left")
         ttk.Button(header, text="Use", width=5, command=self._use).pack(side="right")
 
-        self._txt = tk.Text(self, height=3, wrap="word", font=("", 9), borderwidth=0)
+        self._txt = tk.Text(
+            self, wrap="word", font=("", 9), borderwidth=0, highlightthickness=0, relief="flat"
+        )
         self._txt.insert("1.0", text)
-        self._txt.pack(fill="x", padx=4, pady=(2, 4))
+        self._txt.pack(fill="both", expand=True, padx=4, pady=(2, 4))
+        # Schedule height update after rendering
+        self.after(10, self._update_height)
+
+    def _update_height(self) -> None:
+        self._txt.update_idletasks()
+
+        # Get font metrics
+        font = tkFont.Font(font=self._txt.cget("font"))
+        _line_height = font.metrics("linespace")
+
+        # Get parent frame width to calculate word wrap
+        parent_width = self.winfo_width() - 8  # Account for padding
+        if parent_width < 1:
+            self.after(10, self._update_height)
+            return
+
+        # Calculate char width for this font
+        char_width = font.measure("0")
+        chars_per_line = max(1, parent_width // char_width)
+
+        # Count lines with word wrapping
+        content = self._txt.get("1.0", "end-1c")
+        total_display_lines = 0
+        for logical_line in content.split("\n"):
+            if not logical_line:
+                total_display_lines += 1
+            else:
+                # Calculate wrapped lines for this logical line
+                wrapped = max(1, (len(logical_line) + chars_per_line - 1) // chars_per_line)
+                total_display_lines += wrapped
+
+        height = max(3, total_display_lines)
+        self._txt.config(height=height)
 
     def get_text(self) -> str:
         return self._txt.get("1.0", "end-1c")
