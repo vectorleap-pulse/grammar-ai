@@ -61,6 +61,10 @@ def save_history(original: str, polished: str, tone: str) -> None:
             "INSERT INTO history (original_text, polished_text, tone) VALUES (?, ?, ?)",
             (original, polished, tone),
         )
+        # Enforce maximum 1000 history items
+        count = conn.execute("SELECT COUNT(*) FROM history").fetchone()[0]
+        if count > 1000:
+            conn.execute("DELETE FROM history WHERE id = (SELECT MIN(id) FROM history)")
     logger.debug(f"History saved: tone={tone}")
 
 
