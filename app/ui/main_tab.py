@@ -51,8 +51,9 @@ class MainTab(ttk.Frame):
         self._config: LLMConfig = load_config()
         self._hotkey = HotkeyManager(self._on_hotkey_text)
         self._items: list[_PolishedItem] = []
-        self._is_on = False
         self._build()
+        self._hotkey.enable()
+        self._set_status(f"Hotkey active ({HOTKEY})", "green")
 
     # ------------------------------------------------------------------ build
 
@@ -66,18 +67,6 @@ class MainTab(ttk.Frame):
     def _build_toolbar(self) -> None:
         bar = ttk.Frame(self, padding=(6, 4))
         bar.pack(fill="x")
-
-        self._toggle_btn = tk.Button(
-            bar,
-            text="OFF",
-            width=5,
-            bg="#c0392b",
-            fg="white",
-            relief="flat",
-            font=("", 9, "bold"),
-            command=self._toggle,
-        )
-        self._toggle_btn.pack(side="left", padx=(0, 4))
 
         ttk.Button(bar, text="Settings", command=self._open_settings).pack(side="left", padx=2)
         ttk.Button(bar, text="Trigger", command=self._trigger_manual).pack(side="left", padx=2)
@@ -116,19 +105,6 @@ class MainTab(ttk.Frame):
         )
         canvas.bind("<MouseWheel>", lambda e: canvas.yview_scroll(-1 * (e.delta // 120), "units"))
         self._canvas = canvas
-
-    # ------------------------------------------------------------------ toggle
-
-    def _toggle(self) -> None:
-        self._is_on = not self._is_on
-        if self._is_on:
-            self._hotkey.enable()
-            self._toggle_btn.config(text="ON", bg="#27ae60")
-            self._set_status(f"Hotkey active ({HOTKEY})", "green")
-        else:
-            self._hotkey.disable()
-            self._toggle_btn.config(text="OFF", bg="#c0392b")
-            self._set_status("", "gray")
 
     # ------------------------------------------------------------------ settings
 
