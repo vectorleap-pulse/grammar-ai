@@ -64,10 +64,10 @@ def save_history(original: str, polished: str, tone: str) -> None:
     logger.debug(f"History saved: tone={tone}")
 
 
-def load_history(limit: int = 200) -> list[HistoryEntry]:
+def load_history(limit: int = 200, offset: int = 0) -> list[HistoryEntry]:
     with _connect() as conn:
         rows = conn.execute(
-            "SELECT * FROM history ORDER BY used_at DESC LIMIT ?", (limit,)
+            "SELECT * FROM history ORDER BY used_at DESC LIMIT ? OFFSET ?", (limit, offset)
         ).fetchall()
     return [
         HistoryEntry(
@@ -79,3 +79,15 @@ def load_history(limit: int = 200) -> list[HistoryEntry]:
         )
         for row in rows
     ]
+
+
+def clear_history() -> None:
+    with _connect() as conn:
+        conn.execute("DELETE FROM history")
+    logger.info("History cleared")
+
+
+def get_history_count() -> int:
+    with _connect() as conn:
+        row = conn.execute("SELECT COUNT(*) as count FROM history").fetchone()
+    return row["count"]
