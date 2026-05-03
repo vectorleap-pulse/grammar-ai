@@ -24,6 +24,7 @@ class SettingsDialog(tk.Toplevel):
         self._on_save = on_save
         self._build()
         self._load(config)
+        self._center(parent)
 
     def _build(self) -> None:
         pad = {"padx": 8, "pady": 4}
@@ -87,3 +88,20 @@ class SettingsDialog(tk.Toplevel):
         self._on_save(cfg)
         logger.info("Settings saved and applied")
         self.destroy()
+
+    def _center(self, parent: tk.Widget) -> None:
+        self.update_idletasks()
+        parent_win = parent.winfo_toplevel()
+        parent_win.update_idletasks()
+
+        pw = parent_win.winfo_width()
+        ph = parent_win.winfo_height()
+        px = parent_win.winfo_rootx()
+        py = parent_win.winfo_rooty()
+
+        sw = self.winfo_width()
+        sh = self.winfo_height()
+
+        x = px + max(0, (pw - sw) // 2)
+        y = py + max(0, (ph - sh) // 2)
+        self.geometry(f"+{x}+{y}")

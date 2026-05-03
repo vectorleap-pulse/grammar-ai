@@ -121,7 +121,11 @@ class MainTab(ttk.Frame):
     def _trigger_manual(self) -> None:
         text = self._orig.get("1.0", "end-1c").strip()
         if not text:
-            messagebox.showinfo("Empty", "Enter or paste text to polish.", parent=self)
+            messagebox.showinfo(
+                "Empty",
+                "Enter or paste text to polish.",
+                parent=self.winfo_toplevel(),
+            )
             return
         self._run_llm(text)
 
@@ -142,7 +146,9 @@ class MainTab(ttk.Frame):
     def _run_llm(self, text: str) -> None:
         if not self._config.api_key:
             messagebox.showwarning(
-                "No API key", "Configure your API key in Settings first.", parent=self
+                "No API key",
+                "Configure your API key in Settings first.",
+                parent=self.winfo_toplevel(),
             )
             return
 
