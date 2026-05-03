@@ -53,7 +53,6 @@ class MainTab(ttk.Frame):
         self._items: list[_PolishedItem] = []
         self._build()
         self._hotkey.enable()
-        self._set_status(f"Hotkey active ({HOTKEY})", "green")
 
     # ------------------------------------------------------------------ build
 
@@ -68,12 +67,15 @@ class MainTab(ttk.Frame):
         bar = ttk.Frame(self, padding=(6, 4))
         bar.pack(fill="x")
 
-        ttk.Button(bar, text="Settings", command=self._open_settings).pack(side="left", padx=2)
-        ttk.Button(bar, text="Trigger", command=self._trigger_manual).pack(side="left", padx=2)
+        ttk.Button(bar, text=f"Trigger ({HOTKEY})", command=self._trigger_manual).pack(
+            side="left", padx=2
+        )
 
         self._status_var = tk.StringVar(value="")
         self._status_lbl = ttk.Label(bar, textvariable=self._status_var, font=("", 8))
         self._status_lbl.pack(side="left", padx=8)
+
+        ttk.Button(bar, text="Settings", command=self._open_settings).pack(side="right", padx=2)
 
     def _build_original(self) -> None:
         lf = ttk.LabelFrame(self, text="Original Text", padding=4)
