@@ -119,6 +119,9 @@ class MainTab(ttk.Frame):
 
         self._orig = tk.Text(lf, height=4, wrap="word", font=("", 9))
         self._orig.pack(fill="x")
+        self._orig.bind("<KeyRelease>", lambda e: self._update_original_height())
+        # Schedule initial height update after rendering
+        self.after(10, self._update_original_height)
 
     def _build_results(self) -> None:
         lf = ttk.LabelFrame(self, text="Polished Versions", padding=4)
@@ -143,6 +146,37 @@ class MainTab(ttk.Frame):
         )
         canvas.bind("<MouseWheel>", lambda e: canvas.yview_scroll(-1 * (e.delta // 120), "units"))
         self._canvas = canvas
+
+    def _update_original_height(self) -> None:
+        self._orig.update_idletasks()
+
+        # Get font metrics
+        font = tkFont.Font(font=self._orig.cget("font"))
+        _line_height = font.metrics("linespace")
+
+        # Get parent frame width to calculate word wrap
+        parent_width = self._orig.winfo_width()
+        if parent_width < 1:
+            self.after(10, self._update_original_height)
+            return
+
+        # Calculate char width for this font
+        char_width = font.measure("0")
+        chars_per_line = max(1, parent_width // char_width)
+
+        # Count lines with word wrapping
+        content = self._orig.get("1.0", "end-1c")
+        total_display_lines = 0
+        for logical_line in content.split("\n"):
+            if not logical_line:
+                total_display_lines += 1
+            else:
+                # Calculate wrapped lines for this logical line
+                wrapped = max(1, (len(logical_line) + chars_per_line - 1) // chars_per_line)
+                total_display_lines += wrapped
+
+        height = max(3, total_display_lines)
+        self._orig.config(height=height)
 
     # ------------------------------------------------------------------ settings
 
@@ -173,6 +207,7 @@ class MainTab(ttk.Frame):
     def _handle_hotkey_result(self, text: str) -> None:
         self._orig.delete("1.0", "end")
         self._orig.insert("1.0", text)
+        self._update_original_height()
         self._run_llm(text)
         top = self.winfo_toplevel()
         top.deiconify()
