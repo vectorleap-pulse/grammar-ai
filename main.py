@@ -7,9 +7,13 @@ from loguru import logger
 def main() -> None:
     try:
         logger.remove()
-        logger.add(sys.stderr, level="WARNING")
-        logger.add("grammar_ai.log", rotation="10 MB", level="DEBUG")
-        logger.info("Starting Grammar AI")
+
+        # Always log to file
+        logger.add("grammar_ai.log", rotation="10 MB", level="DEBUG", encoding="utf-8")
+
+        # Only add console logging in dev mode
+        if not getattr(sys, "frozen", False) and sys.stderr:
+            logger.add(sys.stderr, level="WARNING")
 
         from app.db.database import init_db
         from app.ui.main_window import MainWindow
