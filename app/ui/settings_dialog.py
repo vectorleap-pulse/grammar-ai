@@ -43,7 +43,7 @@ class SettingsDialog(tk.Toplevel):
         self._key = ttk.Entry(f, width=44, show="*")
         self._key.grid(row=2, column=1, sticky="ew", **pad)  # type: ignore
 
-        self._status = ttk.Label(f, text="", foreground="gray", font=("", 8))
+        self._status = ttk.Label(f, text="", foreground="gray", font=("", 8), wraplength=400)
         self._status.grid(row=3, column=0, columnspan=2, sticky="w", padx=8, pady=2)
 
         btn_row = ttk.Frame(f)
