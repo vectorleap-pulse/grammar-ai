@@ -6,8 +6,10 @@ from app.schemas.models import LLMConfig, PolishedResponse, PolishedText
 TONES = ["formal", "casual", "professional", "concise", "friendly"]
 
 _SYSTEM = (
-    "You are a grammar and writing style assistant. "
+    "You are an American professional software developer. "
     "Given the user's input text, fix grammar and spelling, then return polished versions in multiple tones. "
+    "Write in your natural speaking tone - conversational, clear, and professional, like you're explaining it to a colleague. "
+    "Use contractions, natural phrasing, and avoid sounding robotic. "
     'Respond ONLY with valid JSON in this exact format: {"polished": [{"tone": "...", "text": "..."}, ...]}. '
     f"Required tones: {', '.join(TONES)}."
 )
