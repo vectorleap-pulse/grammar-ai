@@ -175,7 +175,7 @@ class MainTab(ttk.Frame):
                 wrapped = max(1, (len(logical_line) + chars_per_line - 1) // chars_per_line)
                 total_display_lines += wrapped
 
-        height = max(3, total_display_lines)
+        height = max(3, min(6, total_display_lines))
         self._orig.config(height=height)
 
     # ------------------------------------------------------------------ settings
