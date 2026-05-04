@@ -100,18 +100,24 @@ class MainTab(ttk.Frame):
         self._build_results()
 
     def _build_toolbar(self) -> None:
-        bar = ttk.Frame(self, padding=(6, 4))
-        bar.pack(fill="x")
+        # First line: Clear and Settings buttons
+        bar1 = ttk.Frame(self, padding=(6, 4))
+        bar1.pack(fill="x")
 
-        ttk.Button(bar, text=f"Trigger ({HOTKEY.upper()})", command=self._trigger_manual).pack(
+        ttk.Button(bar1, text="Clear", command=self._clear_all).pack(side="left", padx=2)
+        ttk.Button(bar1, text="Settings", command=self._open_settings).pack(side="right", padx=2)
+
+        # Second line: Trigger button and status message
+        bar2 = ttk.Frame(self, padding=(6, 4))
+        bar2.pack(fill="x")
+
+        ttk.Button(bar2, text=f"Trigger ({HOTKEY.upper()})", command=self._trigger_manual).pack(
             side="left", padx=2
         )
 
         self._status_var = tk.StringVar(value="")
-        self._status_lbl = ttk.Label(bar, textvariable=self._status_var, font=("", 8))
+        self._status_lbl = ttk.Label(bar2, textvariable=self._status_var, font=("", 8))
         self._status_lbl.pack(side="left", padx=8)
-
-        ttk.Button(bar, text="Settings", command=self._open_settings).pack(side="right", padx=2)
 
     def _build_original(self) -> None:
         lf = ttk.LabelFrame(self, text="Original Text", padding=4)
@@ -264,7 +270,11 @@ class MainTab(ttk.Frame):
             pyperclip.copy(text)
             self._set_status(f"Copied to clipboard ({tone})", "gray")
 
-    # ------------------------------------------------------------------ helpers
+    def _clear_all(self) -> None:
+        self._orig.delete("1.0", "end")
+        self._update_original_height()
+        self._clear_results()
+        self._set_status("", "gray")
 
     def _clear_results(self) -> None:
         for w in self._results_frame.winfo_children():

@@ -42,18 +42,16 @@ class HistoryTab(ttk.Frame):
             side="left", padx=(4, 0)
         )
 
-        cols = ("used_at", "tone", "polished_text", "original_text")
+        cols = ("used_at", "tone", "polished_text")
         self._tree = ttk.Treeview(self, columns=cols, show="headings", selectmode="browse")
 
         self._tree.heading("used_at", text="Used At")
         self._tree.heading("tone", text="Tone")
         self._tree.heading("polished_text", text="Polished Text")
-        self._tree.heading("original_text", text="Original")
 
         self._tree.column("used_at", width=130, stretch=False)
         self._tree.column("tone", width=90, stretch=False)
-        self._tree.column("polished_text", width=320)
-        self._tree.column("original_text", width=180)
+        self._tree.column("polished_text", width=500)
 
         vsb = ttk.Scrollbar(self, orient="vertical", command=self._tree.yview)
         self._tree.configure(yscrollcommand=vsb.set)
@@ -61,25 +59,33 @@ class HistoryTab(ttk.Frame):
         self._tree.pack(side="left", fill="both", expand=True, padx=(6, 0), pady=(0, 6))
         vsb.pack(side="right", fill="y", pady=(0, 6), padx=(0, 6))
 
-        # Show full text of selected row in a detail label.
-        self._detail_var = tk.StringVar()
-        detail = ttk.Label(
-            self,
-            textvariable=self._detail_var,
-            wraplength=700,
-            justify="left",
+        # Show full text of selected row in a scrollable text panel.
+        detail_frame = ttk.Frame(self)
+        detail_frame.pack(fill="both", expand=True, padx=6, pady=(0, 4))
+
+        self._detail_text = tk.Text(
+            detail_frame,
+            wrap="word",
             font=("", 9),
-            anchor="w",
+            height=6,
+            width=80,  # Fixed width
+            state="disabled",
         )
-        detail.pack(fill="x", padx=6, pady=(0, 4))
-        self._tree.bind("<<TreeviewSelect>>", self._on_select)
+        detail_vsb = ttk.Scrollbar(detail_frame, orient="vertical", command=self._detail_text.yview)
+        self._detail_text.configure(yscrollcommand=detail_vsb.set)
+
+        self._detail_text.pack(side="left", fill="both", expand=True)
+        detail_vsb.pack(side="right", fill="y")
 
     def refresh(self) -> None:
         for row in self._tree.get_children():
             self._tree.delete(row)
-        self._detail_var.set("")
+        self._detail_text.config(state="normal")
+        self._detail_text.delete("1.0", "end")
+        self._detail_text.config(state="disabled")
         offset = self.current_page * self.page_size
         for e in load_history(limit=self.page_size, offset=offset):
+            first_line = e.polished_text.split("\n")[0][:120]  # Show only first line, truncated
             self._tree.insert(
                 "",
                 "end",
@@ -87,10 +93,9 @@ class HistoryTab(ttk.Frame):
                 values=(
                     e.used_at.strftime("%Y-%m-%d %H:%M"),
                     e.tone,
-                    e.polished_text[:120],
-                    e.original_text[:60],
+                    first_line,
                 ),
-                tags=(e.polished_text,),
+                tags=(e.polished_text, e.original_text),  # Keep both in tags for detail view
             )
         self._update_page_label()
 
@@ -100,7 +105,10 @@ class HistoryTab(ttk.Frame):
             return
         tags = self._tree.item(sel[0], "tags")
         if tags:
-            self._detail_var.set(tags[0])
+            self._detail_text.config(state="normal")
+            self._detail_text.delete("1.0", "end")
+            self._detail_text.insert("1.0", tags[0])  # Full polished text
+            self._detail_text.config(state="disabled")
 
     def clear(self) -> None:
         clear_history()

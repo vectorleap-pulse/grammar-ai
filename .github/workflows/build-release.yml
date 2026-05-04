@@ -1,0 +1,133 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
+      release_notes:
+        description: 'Release notes (optional - will use template if empty)'
+        required: false
+        type: textarea
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install pyinstaller tomli tomli-w
+    
+    - name: Bump version
+      id: bump_version
+      run: |
+        import tomllib
+        import tomli_w
+        from pathlib import Path
+        
+        # Read current version
+        pyproject_path = Path("pyproject.toml")
+        with open(pyproject_path, "rb") as f:
+            data = tomllib.load(f)
+        
+        current_version = data["project"]["version"]
+        major, minor, patch = map(int, current_version.split("."))
+        
+        bump_type = "${{ github.event.inputs.version_bump }}"
+        if bump_type == "major":
+            major += 1
+            minor = 0
+            patch = 0
+        elif bump_type == "minor":
+            minor += 1
+            patch = 0
+        else:  # patch
+            patch += 1
+        
+        new_version = f"{major}.{minor}.{patch}"
+        
+        # Update pyproject.toml
+        data["project"]["version"] = new_version
+        with open(pyproject_path, "wb") as f:
+            tomli_w.dump(data, f)
+        
+        print(f"Version bumped from {current_version} to {new_version}")
+        
+        # Set output for next steps
+        import os
+        with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+            f.write(f"new_version={new_version}\n")
+      shell: python
+    
+    - name: Commit version bump
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add pyproject.toml
+        git commit -m "Bump version to ${{ steps.bump_version.outputs.new_version }}"
+        git tag "v${{ steps.bump_version.outputs.new_version }}"
+        git push
+        git push --tags
+    
+    - name: Build executable
+      run: python build.py
+    
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        release_notes="${{ github.event.inputs.release_notes }}"
+        if [ -z "$release_notes" ]; then
+          release_notes="## What's Changed
+        
+        This release includes various improvements and bug fixes.
+        
+        ### Version
+        - Bumped to v${{ steps.bump_version.outputs.new_version }}
+        
+        ### Build
+        - Built executable for Windows"
+        fi
+        
+        echo "notes<<EOF" >> $GITHUB_OUTPUT
+        echo "$release_notes" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.bump_version.outputs.new_version }}
+        release_name: Release v${{ steps.bump_version.outputs.new_version }}
+        body: ${{ steps.release_notes.outputs.notes }}
+        draft: false
+        prerelease: false
+    
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/main.exe
+        asset_name: grammar-ai-v${{ steps.bump_version.outputs.new_version }}-windows.exe
+        asset_content_type: application/octet-stream

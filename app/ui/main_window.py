@@ -5,10 +5,23 @@ from app.ui.history_tab import HistoryTab
 from app.ui.main_tab import MainTab
 
 
+def get_app_version() -> str:
+    """Get the application version from pyproject.toml"""
+    import tomllib
+
+    try:
+        with open("pyproject.toml", "rb") as f:
+            data = tomllib.load(f)
+        return data["project"]["version"]
+    except Exception:
+        return "dev"
+
+
 class MainWindow(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title("Grammar AI")
+        version = get_app_version()
+        self.title(f"Grammar AI v{version}")
         self.attributes("-topmost", True)
         self.geometry("400x680")
         self.minsize(400, 520)
