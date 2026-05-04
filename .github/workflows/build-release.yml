@@ -15,7 +15,7 @@ on:
       release_notes:
         description: 'Release notes (optional - will use template if empty)'
         required: false
-        type: textarea
+        type: string
 
 jobs:
   build-and-release:
