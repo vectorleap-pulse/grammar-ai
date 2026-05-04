@@ -34,7 +34,7 @@ class HotkeyManager:
             return
         with self._lock:
             if not self._enabled:
-                _kb.add_hotkey(HOTKEY, self._dispatch, suppress=True)
+                _kb.add_hotkey(HOTKEY, self._dispatch, suppress=False)
                 self._enabled = True
                 logger.info(f"Hotkey {HOTKEY} enabled")
 
