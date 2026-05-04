@@ -76,6 +76,7 @@ class HistoryTab(ttk.Frame):
 
         self._detail_text.pack(side="left", fill="both", expand=True)
         detail_vsb.pack(side="right", fill="y")
+        self._tree.bind("<<TreeviewSelect>>", self._on_select)
 
     def refresh(self) -> None:
         for row in self._tree.get_children():
@@ -104,10 +105,16 @@ class HistoryTab(ttk.Frame):
         if not sel:
             return
         tags = self._tree.item(sel[0], "tags")
-        if tags:
+        if tags and len(tags) >= 2:
             self._detail_text.config(state="normal")
             self._detail_text.delete("1.0", "end")
-            self._detail_text.insert("1.0", tags[0])  # Full polished text
+            # Display original text
+            self._detail_text.insert("end", "ORIGINAL TEXT:\n")
+            self._detail_text.insert("end", tags[1])  # Original text
+            self._detail_text.insert("end", "\n\n")
+            # Display polished text
+            self._detail_text.insert("end", "POLISHED TEXT:\n")
+            self._detail_text.insert("end", tags[0])  # Polished text
             self._detail_text.config(state="disabled")
 
     def clear(self) -> None:
