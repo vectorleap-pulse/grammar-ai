@@ -40,7 +40,6 @@ jobs:
     - name: Bump version
       id: bump_version
       run: python .github/scripts/bump_version.py "${{ github.event.inputs.version_bump }}"
-      shell: python
 
     - name: Commit version bump
       run: |
@@ -60,7 +59,6 @@ jobs:
       env:
         RELEASE_NOTES: ${{ github.event.inputs.release_notes }}
       run: python .github/scripts/generate_release_notes.py --new-version "${{ steps.bump_version.outputs.new_version }}"
-      shell: python
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
@@ -68,6 +66,6 @@ jobs:
         tag_name: v${{ steps.bump_version.outputs.new_version }}
         name: Release v${{ steps.bump_version.outputs.new_version }}
         body: ${{ steps.release_notes.outputs.notes }}
-        files: ./dist/main.exe
+        files: ./dist/*.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
