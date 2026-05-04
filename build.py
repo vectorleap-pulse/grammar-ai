@@ -43,6 +43,7 @@ def build_exe(debug: bool = False) -> int:
     platform_tag = normalize_platform()
     binary_name = f"grammar-ai-{platform_tag}-v{version}"
 
+    data_separator = ";" if sys.platform.startswith("win") else ":"
     pyinstaller_args = [
         sys.executable,
         "-m",
@@ -56,6 +57,8 @@ def build_exe(debug: bool = False) -> int:
         str(build_dir),
         "--specpath",
         str(spec_dir),
+        "--add-data",
+        f"{root / 'pyproject.toml'}{data_separator}.",
         "--clean",
         "--noconfirm",
     ]

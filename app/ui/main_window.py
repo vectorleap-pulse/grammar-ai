@@ -1,4 +1,7 @@
+import importlib.metadata
+import sys
 import tkinter as tk
+from pathlib import Path
 from tkinter import ttk
 
 from app.ui.history_tab import HistoryTab
@@ -6,11 +9,24 @@ from app.ui.main_tab import MainTab
 
 
 def get_app_version() -> str:
-    """Get the application version from pyproject.toml"""
-    import tomllib
+    """Get the application version from installed metadata or pyproject.toml."""
+    try:
+        return importlib.metadata.version("grammar-ai")
+    except importlib.metadata.PackageNotFoundError:
+        pass
 
     try:
-        with open("pyproject.toml", "rb") as f:
+        import tomllib
+    except ImportError:
+        tomllib = None  # type: ignore[assignment]
+
+    if getattr(sys, "frozen", False):
+        project_root = Path(sys._MEIPASS)  # type: ignore[attr-defined]
+    else:
+        project_root = Path(__file__).resolve().parents[2]
+
+    try:
+        with open(project_root / "pyproject.toml", "rb") as f:
             data = tomllib.load(f)
         return data["project"]["version"]
     except Exception:
