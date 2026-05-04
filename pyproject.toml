@@ -1,6 +1,6 @@
 [project]
 name = "grammar-ai"
-version = "0.1.0"
+version = "0.1.1"
 description = "AI-powered grammar and writing style assistant"
 requires-python = ">=3.12"
 dependencies = [
@@ -20,8 +20,15 @@ target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I"]
-ignore = ["E501"]
+select = [
+    "E",
+    "F",
+    "W",
+    "I",
+]
+ignore = [
+    "E501",
+]
 
 [tool.mypy]
 python_version = "3.12"
