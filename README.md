@@ -74,6 +74,8 @@ To build a standalone executable:
 4. Trigger text polishing by pressing `Ctrl+Shift+Space`.
 5. Click the **USE** button for the polished version you want to use.
 
+![Usage demo](media/how-to-use.gif)
+
 ---
 
 ## Storage
