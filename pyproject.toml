@@ -12,6 +12,10 @@ dependencies = [
     "pyautogui>=0.9",
 ]
 
+[build-system]
+requires = ["setuptools>=65.5.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project.scripts]
 grammar-ai = "main:main"
 
@@ -20,15 +24,8 @@ target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
-select = [
-    "E",
-    "F",
-    "W",
-    "I",
-]
-ignore = [
-    "E501",
-]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
 
 [tool.mypy]
 python_version = "3.12"
