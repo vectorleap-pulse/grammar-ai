@@ -110,3 +110,11 @@ To build a standalone executable:
 
 * API keys are stored locally in the app database.
 * The project is designed for minimal setup and straightforward use.
+
+---
+
+## Support
+
+If you found this helpful, please ⭐ star this repository and 👤 follow me!
+
+---
