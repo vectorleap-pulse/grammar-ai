@@ -39,45 +39,9 @@ jobs:
     
     - name: Bump version
       id: bump_version
-      run: |
-        import tomllib
-        import tomli_w
-        from pathlib import Path
-        
-        # Read current version
-        pyproject_path = Path("pyproject.toml")
-        with open(pyproject_path, "rb") as f:
-            data = tomllib.load(f)
-        
-        current_version = data["project"]["version"]
-        major, minor, patch = map(int, current_version.split("."))
-        
-        bump_type = "${{ github.event.inputs.version_bump }}"
-        if bump_type == "major":
-            major += 1
-            minor = 0
-            patch = 0
-        elif bump_type == "minor":
-            minor += 1
-            patch = 0
-        else:  # patch
-            patch += 1
-        
-        new_version = f"{major}.{minor}.{patch}"
-        
-        # Update pyproject.toml
-        data["project"]["version"] = new_version
-        with open(pyproject_path, "wb") as f:
-            tomli_w.dump(data, f)
-        
-        print(f"Version bumped from {current_version} to {new_version}")
-        
-        # Set output for next steps
-        import os
-        with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-            f.write(f"new_version={new_version}\n")
+      run: python .github/scripts/bump_version.py "${{ github.event.inputs.version_bump }}"
       shell: python
-    
+
     - name: Commit version bump
       run: |
         git config --local user.email "action@github.com"
@@ -93,24 +57,11 @@ jobs:
     
     - name: Generate release notes
       id: release_notes
-      run: |
-        release_notes="${{ github.event.inputs.release_notes }}"
-        if [ -z "$release_notes" ]; then
-          release_notes="## What's Changed
-        
-        This release includes various improvements and bug fixes.
-        
-        ### Version
-        - Bumped to v${{ steps.bump_version.outputs.new_version }}
-        
-        ### Build
-        - Built executable for Windows"
-        fi
-        
-        echo "notes<<EOF" >> $GITHUB_OUTPUT
-        echo "$release_notes" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
-    
+      env:
+        RELEASE_NOTES: ${{ github.event.inputs.release_notes }}
+      run: python .github/scripts/generate_release_notes.py --new-version "${{ steps.bump_version.outputs.new_version }}"
+      shell: python
+
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
