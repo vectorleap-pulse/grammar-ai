@@ -6,6 +6,18 @@
 
 ---
 
+## Usage
+
+1. Launch the application.
+2. Configure your API settings (see Configuration section above).
+3. Enter or paste the text you want to polish.
+4. Trigger text polishing by pressing `Ctrl+Shift+Space`.
+5. Click the **USE** button for the polished version you want to use.
+
+![Usage demo](media/how-to-use.gif)
+
+---
+
 ## Goals
 
 * Provide fast grammar correction and writing-style polishing
