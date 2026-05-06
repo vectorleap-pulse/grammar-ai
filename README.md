@@ -1,8 +1,8 @@
-# GRAMMAR AI
+# Grammar AI
 
 ## Overview
 
-**GRAMMAR AI** is a lightweight desktop application built with Python for grammar correction and text polishing. Tired of premium grammar tools like Grammarly and LanguageTool? Enjoy **FREE FOREVER** grammar correction with the free tier of [Groq](https://groq.com/) API key. It provides a simple local UI for entering text, sending it to an AI service, and reviewing polished output.
+**Grammar AI** is a lightweight desktop application built with Python for grammar correction and text polishing. Tired of premium grammar tools like Grammarly and LanguageTool? Enjoy **FREE FOREVER** grammar correction with the free tier of [Groq](https://groq.com/) API key. It provides a simple local UI for entering text, sending it to an AI service, and reviewing polished output.
 
 ---
 
@@ -40,7 +40,7 @@
 
 ## Configuration
 
-GRAMMAR AI supports any LLM provider that is OpenAI-compatible, including OpenAI, Anthropic, Google, and more. You can use any platform, unlike some existing tools that are limited to specific platforms.
+Grammar AI supports any LLM provider that is OpenAI-compatible, including OpenAI, Anthropic, Google, and more. You can use any platform, unlike some existing tools that are limited to specific platforms.
 
 ### Example Configuration ([Groq](https://groq.com/) Free Tier)
 
