@@ -12,10 +12,6 @@ on:
         - patch
         - minor
         - major
-      release_notes:
-        description: 'Release notes (optional - will use template if empty)'
-        required: false
-        type: string
 
 permissions:
   contents: write
@@ -60,8 +56,6 @@ jobs:
     
     - name: Generate release notes
       id: release_notes
-      env:
-        RELEASE_NOTES: ${{ github.event.inputs.release_notes }}
       run: python .github/scripts/generate_release_notes.py --new-version "${{ steps.bump_version.outputs.new_version }}"
 
     - name: Create Release
