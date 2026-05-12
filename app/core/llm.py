@@ -7,7 +7,7 @@ from openai import OpenAI, OpenAIError
 
 from app.schemas.models import LLMConfig, PolishedText
 
-TONES = ["formal", "casual", "professional", "concise", "friendly"]
+TONES = ["professional", "casual", "friendly", "formal", "concise"]
 
 _SYSTEM = """
 ## Role

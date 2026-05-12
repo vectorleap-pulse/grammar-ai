@@ -263,8 +263,19 @@ class MainTab(ttk.Frame):
             text=result.text,
             on_use=lambda tone, txt, orig=original: self._use_text(orig, tone, txt),  # type: ignore
         )
-        item.pack(fill="x", padx=2, pady=2)
-        self._items.append(item)
+
+        insert_index = 0
+        for existing in self._items:
+            if TONES.index(existing._tone) > TONES.index(result.tone):
+                break
+            insert_index += 1
+
+        if insert_index < len(self._items):
+            item.pack(fill="x", padx=2, pady=2, before=self._items[insert_index])
+            self._items.insert(insert_index, item)
+        else:
+            item.pack(fill="x", padx=2, pady=2)
+            self._items.append(item)
 
     # ------------------------------------------------------------------ Use
 
