@@ -1,6 +1,6 @@
 [project]
 name = "grammar-ai"
-version = "0.1.4"
+version = "0.2.0"
 description = "AI-powered grammar and writing style assistant"
 requires-python = ">=3.12"
 dependencies = [
@@ -16,10 +16,7 @@ dependencies = [
 grammar-ai = "main:main"
 
 [build-system]
-requires = [
-    "setuptools>=65.5.0",
-    "wheel",
-]
+requires = ["setuptools>=65.5.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.ruff]
@@ -27,15 +24,8 @@ target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
-select = [
-    "E",
-    "F",
-    "W",
-    "I",
-]
-ignore = [
-    "E501",
-]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
 
 [tool.mypy]
 python_version = "3.12"

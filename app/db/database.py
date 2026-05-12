@@ -79,7 +79,9 @@ def load_history(limit: int = 200, offset: int = 0) -> list[HistoryEntry]:
             original_text=row["original_text"],
             polished_text=row["polished_text"],
             tone=row["tone"],
-            used_at=datetime.fromisoformat(row["used_at"]).replace(tzinfo=timezone.utc).astimezone(),
+            used_at=datetime.fromisoformat(row["used_at"])
+            .replace(tzinfo=timezone.utc)
+            .astimezone(),
         )
         for row in rows
     ]
