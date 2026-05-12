@@ -51,7 +51,7 @@ class HistoryTab(ttk.Frame):
 
         self._tree.column("used_at", width=130, stretch=False)
         self._tree.column("tone", width=90, stretch=False)
-        self._tree.column("polished_text", width=150, minwidth=80, stretch=True)
+        self._tree.column("polished_text", width=110, stretch=True)
 
         vsb = ttk.Scrollbar(self, orient="vertical", command=self._tree.yview)
         self._tree.configure(yscrollcommand=vsb.set)
@@ -101,13 +101,18 @@ class HistoryTab(ttk.Frame):
         dlg.resizable(True, True)
         dlg.transient(parent)
         dlg.grab_set()
+        dlg.lift()
+        dlg.focus_force()
+        dlg.bind("<Escape>", lambda _e: dlg.destroy())
 
         meta = ttk.Frame(dlg)
         meta.pack(fill="x", padx=8, pady=(8, 4))
         for label, value in [("ID", item), ("Tone", tone), ("Used At", used_at)]:
             row = ttk.Frame(meta)
             row.pack(fill="x", pady=1)
-            ttk.Label(row, text=f"{label}:", font=("", 9, "bold"), width=8, anchor="w").pack(side="left")
+            ttk.Label(row, text=f"{label}:", font=("", 9, "bold"), width=8, anchor="w").pack(
+                side="left"
+            )
             ttk.Label(row, text=value, font=("", 9)).pack(side="left")
 
         ttk.Separator(dlg, orient="horizontal").pack(fill="x", padx=8, pady=4)

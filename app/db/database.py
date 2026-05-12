@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from loguru import logger
@@ -79,7 +79,7 @@ def load_history(limit: int = 200, offset: int = 0) -> list[HistoryEntry]:
             original_text=row["original_text"],
             polished_text=row["polished_text"],
             tone=row["tone"],
-            used_at=datetime.fromisoformat(row["used_at"]),
+            used_at=datetime.fromisoformat(row["used_at"]).replace(tzinfo=timezone.utc).astimezone(),
         )
         for row in rows
     ]

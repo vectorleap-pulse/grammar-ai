@@ -1,3 +1,4 @@
+import ctypes
 import importlib.metadata
 import sys
 import tkinter as tk
@@ -43,6 +44,7 @@ class MainWindow(tk.Tk):
         self.minsize(400, 520)
         self._build()
         self.protocol("WM_DELETE_WINDOW", self._on_close)
+        self.after(10, self._remove_maximize_button)
 
     def _build(self) -> None:
         nb = ttk.Notebook(self)
@@ -60,6 +62,15 @@ class MainWindow(tk.Tk):
         nb: ttk.Notebook = event.widget  # type: ignore[assignment]
         if nb.tab(nb.select(), "text").strip() == "History":
             self._history_tab.refresh()
+
+    def _remove_maximize_button(self) -> None:
+        if sys.platform != "win32":
+            return
+        hwnd = ctypes.windll.user32.GetParent(self.winfo_id())  # type: ignore[attr-defined]
+        GWL_STYLE = -16
+        WS_MAXIMIZEBOX = 0x00010000
+        style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_STYLE)  # type: ignore[attr-defined]
+        ctypes.windll.user32.SetWindowLongW(hwnd, GWL_STYLE, style & ~WS_MAXIMIZEBOX)  # type: ignore[attr-defined]
 
     def _on_close(self) -> None:
         self._main_tab.cleanup()
