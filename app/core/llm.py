@@ -67,7 +67,7 @@ def _polish_single_tone(text: str, tone: str, config: LLMConfig) -> PolishedText
     response = client.chat.completions.create(
         model=config.model,
         response_format={"type": "json_object"},
-        max_tokens=512,
+        max_tokens=8192,
         messages=[
             {"role": "system", "content": _SYSTEM},
             {"role": "user", "content": _format_tone_request(text, tone)},
