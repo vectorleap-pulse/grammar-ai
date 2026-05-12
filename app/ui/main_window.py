@@ -59,7 +59,7 @@ class MainWindow(tk.Tk):
         self._update_bar = ttk.Frame(self, padding=(6, 2))
         self._update_lbl = ttk.Label(self._update_bar, font=("", 9))
         self._update_lbl.pack(side="left")
-        ttk.Button(self._update_bar, text="Update Now", command=self._do_update, width=10).pack(
+        ttk.Button(self._update_bar, text="Update Now", command=self._do_update, width=20).pack(
             side="right"
         )
         self._update_url = ""
@@ -123,9 +123,9 @@ class MainWindow(tk.Tk):
 
         ttk.Label(dlg, text="Downloading update…", font=("", 9)).pack(padx=20, pady=(14, 6))
         progress_var = tk.IntVar(value=0)
-        ttk.Progressbar(dlg, variable=progress_var, maximum=100, length=280, mode="determinate").pack(
-            padx=20, pady=(0, 14)
-        )
+        ttk.Progressbar(
+            dlg, variable=progress_var, maximum=100, length=280, mode="determinate"
+        ).pack(padx=20, pady=(0, 14))
 
         url = self._update_url
 
