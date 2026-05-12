@@ -9,7 +9,7 @@ from loguru import logger
 
 from app.core.focus import restore_focus_and_paste
 from app.core.hotkey import HOTKEY, HotkeyManager
-from app.core.llm import polish_text
+from app.core.llm import TONES, polish_text
 from app.db.database import load_config, save_history
 from app.schemas.models import LLMConfig, PolishedText
 
@@ -87,6 +87,7 @@ class MainTab(ttk.Frame):
         self._config: LLMConfig = load_config()
         self._hotkey = HotkeyManager(self._on_hotkey_text)
         self._items: list[_PolishedItem] = []
+        self._received = 0
         self._build()
         self._hotkey.enable()
 
@@ -232,13 +233,17 @@ class MainTab(ttk.Frame):
             return
 
         self._clear_results()
-        self._set_status("Polishing…", "blue")
+        self._received = 0
+        self._set_status(f"Polishing… (0/{len(TONES)})", "blue")
         config = self._config
+
+        def on_result(r: PolishedText) -> None:
+            self.after(0, lambda: self._add_result(text, r))
 
         def worker() -> None:
             try:
-                results = polish_text(text, config)
-                self.after(0, lambda: self._show_results(text, results))
+                polish_text(text, config, on_result=on_result)
+                self.after(0, lambda: self._set_status(f"{len(TONES)} versions ready", "green"))
             except Exception as exc:
                 error_msg = str(exc)
                 logger.error(f"LLM error: {error_msg}")
@@ -246,18 +251,17 @@ class MainTab(ttk.Frame):
 
         threading.Thread(target=worker, daemon=True).start()
 
-    def _show_results(self, original: str, results: list[PolishedText]) -> None:
-        self._set_status(f"{len(results)} versions ready", "green")
-        self._clear_results()
-        for item_data in results:
-            item = _PolishedItem(
-                self._results_frame,
-                tone=item_data.tone,
-                text=item_data.text,
-                on_use=lambda tone, txt, orig=original: self._use_text(orig, tone, txt),  # type: ignore
-            )
-            item.pack(fill="x", padx=2, pady=2)
-            self._items.append(item)
+    def _add_result(self, original: str, result: PolishedText) -> None:
+        self._received += 1
+        self._set_status(f"Polishing… ({self._received}/{len(TONES)})", "blue")
+        item = _PolishedItem(
+            self._results_frame,
+            tone=result.tone,
+            text=result.text,
+            on_use=lambda tone, txt, orig=original: self._use_text(orig, tone, txt),  # type: ignore
+        )
+        item.pack(fill="x", padx=2, pady=2)
+        self._items.append(item)
 
     # ------------------------------------------------------------------ Use
 
