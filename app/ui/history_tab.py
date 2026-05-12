@@ -49,9 +49,9 @@ class HistoryTab(ttk.Frame):
         self._tree.heading("tone", text="Tone")
         self._tree.heading("polished_text", text="Polished Text")
 
-        self._tree.column("used_at", width=130, stretch=False)
+        self._tree.column("used_at", width=110, stretch=False)
         self._tree.column("tone", width=90, stretch=False)
-        self._tree.column("polished_text", width=110, stretch=True)
+        self._tree.column("polished_text", width=80, stretch=True)
 
         vsb = ttk.Scrollbar(self, orient="vertical", command=self._tree.yview)
         self._tree.configure(yscrollcommand=vsb.set)
