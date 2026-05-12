@@ -268,7 +268,7 @@ class MainTab(ttk.Frame):
     def _use_text(self, original: str, tone: str, text: str) -> None:
         save_history(original, text, tone)
         hwnd = self._hotkey.last_hwnd
-        if hwnd and restore_focus_and_paste(hwnd, text):
+        if hwnd and restore_focus_and_paste(hwnd, original, text):
             self._set_status(f"Pasted ({tone})", "green")
         else:
             pyperclip.copy(text)

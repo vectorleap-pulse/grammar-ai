@@ -68,12 +68,22 @@ class HotkeyManager:
             pyautogui.keyUp(key)
         time.sleep(0.05)
 
-        pyautogui.hotkey("ctrl", "a")
-        time.sleep(0.05)
+        # Clear the clipboard to detect if copy actually works.
+        pyperclip.copy("")
+
+        # Try copying the current selection first.
         pyautogui.hotkey("ctrl", "c")
         time.sleep(0.05)
-
         text = pyperclip.paste()
+
+        if not text or not text.strip():
+            # Nothing was selected — fall back to select-all then copy.
+            pyautogui.hotkey("ctrl", "a")
+            time.sleep(0.05)
+            pyautogui.hotkey("ctrl", "c")
+            time.sleep(0.05)
+            text = pyperclip.paste()
+
         if text and text.strip():
             logger.info(f"Hotkey captured {len(text)} chars")
             self.on_text(text.strip())
