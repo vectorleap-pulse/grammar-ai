@@ -72,7 +72,7 @@ class HistoryTab(ttk.Frame):
                 iid=str(e.id),
                 values=(
                     e.used_at.strftime("%Y-%m-%d %H:%M"),
-                    e.tone,
+                    e.tone.capitalize(),
                     first_line,
                 ),
                 tags=(e.polished_text, e.original_text),  # Keep both in tags for detail view

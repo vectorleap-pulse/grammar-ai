@@ -32,7 +32,7 @@ class _PolishedItem(ttk.Frame):
     def _build(self, tone: str, text: str) -> None:
         header = ttk.Frame(self)
         header.pack(fill="x", padx=4, pady=(4, 0))
-        ttk.Label(header, text=tone.upper(), font=("", 8, "bold")).pack(side="left")
+        ttk.Label(header, text=tone.capitalize(), font=("", 8, "bold")).pack(side="left")
         ttk.Button(header, text="Use", width=5, command=self._use).pack(side="right")
 
         self._txt = tk.Text(
