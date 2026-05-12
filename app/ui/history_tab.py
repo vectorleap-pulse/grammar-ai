@@ -51,39 +51,18 @@ class HistoryTab(ttk.Frame):
 
         self._tree.column("used_at", width=130, stretch=False)
         self._tree.column("tone", width=90, stretch=False)
-        self._tree.column("polished_text", width=500)
+        self._tree.column("polished_text", width=150, minwidth=80, stretch=True)
 
         vsb = ttk.Scrollbar(self, orient="vertical", command=self._tree.yview)
         self._tree.configure(yscrollcommand=vsb.set)
 
         self._tree.pack(side="left", fill="both", expand=True, padx=(6, 0), pady=(0, 6))
         vsb.pack(side="right", fill="y", pady=(0, 6), padx=(0, 6))
-
-        # Show full text of selected row in a scrollable text panel.
-        detail_frame = ttk.Frame(self)
-        detail_frame.pack(fill="both", expand=True, padx=6, pady=(0, 4))
-
-        self._detail_text = tk.Text(
-            detail_frame,
-            wrap="word",
-            font=("", 9),
-            height=6,
-            width=80,  # Fixed width
-            state="disabled",
-        )
-        detail_vsb = ttk.Scrollbar(detail_frame, orient="vertical", command=self._detail_text.yview)
-        self._detail_text.configure(yscrollcommand=detail_vsb.set)
-
-        self._detail_text.pack(side="left", fill="both", expand=True)
-        detail_vsb.pack(side="right", fill="y")
-        self._tree.bind("<<TreeviewSelect>>", self._on_select)
+        self._tree.bind("<Double-1>", self._on_double_click)
 
     def refresh(self) -> None:
         for row in self._tree.get_children():
             self._tree.delete(row)
-        self._detail_text.config(state="normal")
-        self._detail_text.delete("1.0", "end")
-        self._detail_text.config(state="disabled")
         offset = self.current_page * self.page_size
         for e in load_history(limit=self.page_size, offset=offset):
             first_line = e.polished_text.split("\n")[0][:120]  # Show only first line, truncated
@@ -100,22 +79,52 @@ class HistoryTab(ttk.Frame):
             )
         self._update_page_label()
 
-    def _on_select(self, _event: tk.Event) -> None:  # type: ignore[type-arg]
-        sel = self._tree.selection()
-        if not sel:
+    def _on_double_click(self, event: tk.Event) -> None:  # type: ignore[type-arg]
+        item = self._tree.identify_row(event.y)
+        if not item:
             return
-        tags = self._tree.item(sel[0], "tags")
-        if tags and len(tags) >= 2:
-            self._detail_text.config(state="normal")
-            self._detail_text.delete("1.0", "end")
-            # Display original text
-            self._detail_text.insert("end", "ORIGINAL TEXT:\n")
-            self._detail_text.insert("end", tags[1])  # Original text
-            self._detail_text.insert("end", "\n\n")
-            # Display polished text
-            self._detail_text.insert("end", "POLISHED TEXT:\n")
-            self._detail_text.insert("end", tags[0])  # Polished text
-            self._detail_text.config(state="disabled")
+        tags = self._tree.item(item, "tags")
+        if not tags or len(tags) < 2:
+            return
+        polished, original = tags[0], tags[1]
+        values = self._tree.item(item, "values")
+        used_at, tone = values[0], values[1]
+
+        parent = self.winfo_toplevel()
+        dlg_w, dlg_h = 480, 500
+        px = parent.winfo_x() + (parent.winfo_width() - dlg_w) // 2
+        py = parent.winfo_y() + (parent.winfo_height() - dlg_h) // 2
+
+        dlg = tk.Toplevel(self)
+        dlg.title("History Entry")
+        dlg.geometry(f"{dlg_w}x{dlg_h}+{px}+{py}")
+        dlg.resizable(True, True)
+        dlg.transient(parent)
+        dlg.grab_set()
+
+        meta = ttk.Frame(dlg)
+        meta.pack(fill="x", padx=8, pady=(8, 4))
+        for label, value in [("ID", item), ("Tone", tone), ("Used At", used_at)]:
+            row = ttk.Frame(meta)
+            row.pack(fill="x", pady=1)
+            ttk.Label(row, text=f"{label}:", font=("", 9, "bold"), width=8, anchor="w").pack(side="left")
+            ttk.Label(row, text=value, font=("", 9)).pack(side="left")
+
+        ttk.Separator(dlg, orient="horizontal").pack(fill="x", padx=8, pady=4)
+
+        for label, content in [("Original Text", original), ("Polished Text", polished)]:
+            ttk.Label(dlg, text=label, font=("", 9, "bold")).pack(anchor="w", padx=8, pady=(4, 2))
+            frame = ttk.Frame(dlg)
+            frame.pack(fill="both", expand=True, padx=8)
+            txt = tk.Text(frame, wrap="word", font=("", 9), height=6)
+            vsb = ttk.Scrollbar(frame, orient="vertical", command=txt.yview)
+            txt.configure(yscrollcommand=vsb.set)
+            txt.insert("1.0", content)
+            txt.config(state="disabled")
+            vsb.pack(side="right", fill="y")
+            txt.pack(side="left", fill="both", expand=True)
+
+        ttk.Button(dlg, text="Close", command=dlg.destroy).pack(pady=8)
 
     def clear(self) -> None:
         clear_history()

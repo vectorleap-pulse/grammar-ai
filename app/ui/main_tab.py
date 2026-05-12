@@ -212,6 +212,9 @@ class MainTab(ttk.Frame):
         self.after(0, lambda: self._handle_hotkey_result(text))
 
     def _handle_hotkey_result(self, text: str) -> None:
+        nb = self.master
+        if isinstance(nb, ttk.Notebook):
+            nb.select(self)
         self._orig.delete("1.0", "end")
         self._orig.insert("1.0", text)
         self._update_original_height()
