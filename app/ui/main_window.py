@@ -12,6 +12,8 @@ from app.ui.history_tab import HistoryTab
 from app.ui.main_tab import MainTab
 
 _UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000  # 5 minutes
+_IDLE_OPACITY = 0.3
+_IDLE_TIMEOUT_MS = 10 * 1000  # 1 minute
 
 
 def get_app_version() -> str:
@@ -45,14 +47,44 @@ class MainWindow(tk.Tk):
         self._version = get_app_version()
         self.title(f"Grammar AI v{self._version}")
         self.attributes("-topmost", True)
+        self.attributes("-alpha", 1.0)
         self.geometry("360x640")
         self.minsize(360, 480)
         self.maxsize(360, 720)
+        self._idle_timer_id: Optional[str] = None
         self._build()
+        self._bind_idle_events()
+        self._schedule_idle_timer()
         self.protocol("WM_DELETE_WINDOW", self._on_close)
         self.after(10, self._remove_maximize_button)
         updater.cleanup_old_files()
         self.after(5000, self._start_update_check)
+
+    def _bind_idle_events(self) -> None:
+        self.bind_all("<Enter>", self._on_user_activity)
+        self.bind_all("<Motion>", self._on_user_activity)
+        self.bind_all("<Button>", self._on_user_activity)
+        self.bind_all("<Key>", self._on_user_activity)
+        self.bind_all("<FocusIn>", self._on_user_activity)
+
+    def _schedule_idle_timer(self) -> None:
+        if self._idle_timer_id is not None:
+            self.after_cancel(self._idle_timer_id)
+        self._idle_timer_id = self.after(_IDLE_TIMEOUT_MS, self._on_idle_timeout)
+
+    def _on_idle_timeout(self) -> None:
+        self._idle_timer_id = None
+        try:
+            self.attributes("-alpha", _IDLE_OPACITY)
+        except tk.TclError:
+            pass
+
+    def _on_user_activity(self, event: tk.Event | None = None) -> None:  # type: ignore[type-arg]
+        try:
+            self.attributes("-alpha", 1.0)
+        except tk.TclError:
+            pass
+        self._schedule_idle_timer()
 
     def _build(self) -> None:
         # Update bar — hidden until an update is found
