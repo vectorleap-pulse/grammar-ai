@@ -6,6 +6,7 @@ APP_NAME = "Grammar AI"
 DATA_DIR = Path.home() / ".grammar-ai"
 DB_PATH = DATA_DIR / "data.db"
 LOG_PATH = DATA_DIR / "grammar_ai.log"
+ERROR_LOG_PATH = DATA_DIR / "error.log"
 
 # Text polishing
 TONES: list[str] = ["professional", "casual", "friendly", "formal", "concise"]

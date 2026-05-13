@@ -5,7 +5,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from app.config import DATA_DIR, EXE_OLD_SUFFIX, LOG_PATH
+from app.config import DATA_DIR, ERROR_LOG_PATH, EXE_OLD_SUFFIX, LOG_PATH
 
 
 def _ensure_exe_name() -> None:
@@ -56,7 +56,7 @@ def main() -> None:
         print(error_msg)
         try:
             DATA_DIR.mkdir(parents=True, exist_ok=True)
-            with open(DATA_DIR / "error.log", "w") as f:
+            with open(ERROR_LOG_PATH, "w") as f:
                 f.write(error_msg)
         except Exception as write_err:
             print(f"Could not write error.log: {write_err}")
