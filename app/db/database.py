@@ -1,14 +1,10 @@
 import sqlite3
 from datetime import datetime, timezone
-from pathlib import Path
 
 from loguru import logger
 
+from app.config import DB_PATH, HISTORY_MAX_ENTRIES
 from app.schemas.models import HistoryEntry, LLMConfig
-
-DATA_DIR = Path.home() / ".grammar-ai"
-DB_PATH = DATA_DIR / "data.db"
-LOG_PATH = DATA_DIR / "grammar_ai.log"
 
 
 def _connect() -> sqlite3.Connection:
@@ -63,9 +59,8 @@ def save_history(original: str, polished: str, tone: str) -> None:
             "INSERT INTO history (original_text, polished_text, tone) VALUES (?, ?, ?)",
             (original, polished, tone),
         )
-        # Enforce maximum 1000 history items
         count = conn.execute("SELECT COUNT(*) FROM history").fetchone()[0]
-        if count > 1000:
+        if count > HISTORY_MAX_ENTRIES:
             conn.execute("DELETE FROM history WHERE id = (SELECT MIN(id) FROM history)")
     logger.debug(f"History saved: tone={tone}")
 

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from loguru import logger
 
-_DATA_DIR = Path.home() / ".grammar-ai"
+from app.config import DATA_DIR, EXE_OLD_SUFFIX, LOG_PATH
 
 
 def _ensure_exe_name() -> None:
@@ -17,8 +17,7 @@ def _ensure_exe_name() -> None:
     target = "grammar-ai.exe"
     if exe.name.lower() == target:
         return
-    # Leave update backup files alone
-    if "-old" in exe.stem:
+    if EXE_OLD_SUFFIX in exe.stem:
         return
     new_path = exe.parent / target
     try:
@@ -32,13 +31,8 @@ def main() -> None:
     try:
         logger.remove()
 
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        logger.add(
-            str(_DATA_DIR / "grammar_ai.log"),
-            rotation="10 MB",
-            level="DEBUG",
-            encoding="utf-8",
-        )
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        logger.add(str(LOG_PATH), rotation="10 MB", level="DEBUG", encoding="utf-8")
 
         if not getattr(sys, "frozen", False) and sys.stderr:
             logger.add(sys.stderr, level="WARNING")
@@ -61,8 +55,8 @@ def main() -> None:
         error_msg = f"Error starting Grammar AI: {e}\n{traceback.format_exc()}"
         print(error_msg)
         try:
-            _DATA_DIR.mkdir(parents=True, exist_ok=True)
-            with open(_DATA_DIR / "error.log", "w") as f:
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+            with open(DATA_DIR / "error.log", "w") as f:
                 f.write(error_msg)
         except Exception as write_err:
             print(f"Could not write error.log: {write_err}")

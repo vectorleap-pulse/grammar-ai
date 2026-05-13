@@ -2,8 +2,7 @@ import sys
 
 from loguru import logger
 
-_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
-_NAME = "Grammar AI"
+from app.config import APP_NAME, AUTORUN_REGISTRY_KEY
 
 
 def configure_autorun(enabled: bool) -> None:
@@ -17,14 +16,16 @@ def configure_autorun(enabled: bool) -> None:
     if exe is None:
         return
     try:
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, _KEY, 0, winreg.KEY_SET_VALUE) as key:
+        with winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER, AUTORUN_REGISTRY_KEY, 0, winreg.KEY_SET_VALUE
+        ) as key:
             if enabled:
                 value = f'"{exe}" --tray-only'
-                winreg.SetValueEx(key, _NAME, 0, winreg.REG_SZ, value)
+                winreg.SetValueEx(key, APP_NAME, 0, winreg.REG_SZ, value)
                 logger.info(f"Autorun enabled: {value}")
             else:
                 try:
-                    winreg.DeleteValue(key, _NAME)
+                    winreg.DeleteValue(key, APP_NAME)
                     logger.info("Autorun disabled")
                 except FileNotFoundError:
                     logger.debug("Autorun registry entry was not present")

@@ -4,9 +4,8 @@ from typing import Callable, Optional
 from loguru import logger
 from openai import OpenAI, OpenAIError
 
+from app.config import TONES
 from app.schemas.models import LLMConfig, PolishedText
-
-TONES = ["professional", "casual", "friendly", "formal", "concise"]
 
 _SYSTEM = """
 ## Role

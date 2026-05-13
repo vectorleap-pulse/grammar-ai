@@ -9,12 +9,17 @@ from typing import Optional
 
 from loguru import logger
 
+from app.config import (
+    APP_NAME,
+    UPDATE_CHECK_INTERVAL_MS,
+    WINDOW_GEOMETRY,
+    WINDOW_MAX_SIZE,
+    WINDOW_MIN_SIZE,
+)
 from app.core import updater
 from app.db.database import load_autorun
 from app.ui.history_tab import HistoryTab
 from app.ui.main_tab import MainTab
-
-_UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000  # 5 minutes
 
 
 def get_app_version() -> str:
@@ -59,11 +64,11 @@ class MainWindow(tk.Tk):
         if tray_only:
             self.withdraw()
         self._version = get_app_version()
-        self.title(f"Grammar AI v{self._version}")
+        self.title(f"{APP_NAME} v{self._version}")
         self.attributes("-alpha", 1.0)
-        self.geometry("360x640")
-        self.minsize(360, 480)
-        self.maxsize(360, 720)
+        self.geometry(WINDOW_GEOMETRY)
+        self.minsize(*WINDOW_MIN_SIZE)
+        self.maxsize(*WINDOW_MAX_SIZE)
         self._tray = None
         self._autorun = load_autorun()
         self._build()
@@ -118,7 +123,7 @@ class MainWindow(tk.Tk):
                 pystray.MenuItem("Open", self._tray_open, default=True),
                 pystray.MenuItem("Quit", self._tray_quit),
             )
-            self._tray = pystray.Icon("Grammar AI", icon_image, "Grammar AI", menu)
+            self._tray = pystray.Icon(APP_NAME, icon_image, APP_NAME, menu)
             if self._tray is not None:
                 threading.Thread(target=self._tray.run, daemon=True).start()
             else:
@@ -181,7 +186,7 @@ class MainWindow(tk.Tk):
             self._update_lbl.config(text=f"Update v{new_version} available")
             self._update_bar.pack(fill="x", padx=4, pady=(0, 2), before=self._nb)
         else:
-            self.after(_UPDATE_CHECK_INTERVAL_MS, self._start_update_check)
+            self.after(UPDATE_CHECK_INTERVAL_MS, self._start_update_check)
 
     def _do_update(self) -> None:
         if not self._update_url:

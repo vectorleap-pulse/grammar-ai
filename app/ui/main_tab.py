@@ -8,10 +8,11 @@ from typing import Callable, Optional
 import pyperclip
 from loguru import logger
 
+from app.config import HOTKEY, LOG_PATH, TONES
 from app.core.focus import restore_focus_and_paste
-from app.core.hotkey import HOTKEY, HotkeyManager
-from app.core.llm import TONES, polish_text
-from app.db.database import LOG_PATH, load_config, save_history
+from app.core.hotkey import HotkeyManager
+from app.core.llm import polish_text
+from app.db.database import load_config, save_history
 from app.schemas.models import LLMConfig, PolishedText
 
 

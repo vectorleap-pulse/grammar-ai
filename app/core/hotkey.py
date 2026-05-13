@@ -6,6 +6,8 @@ from typing import Callable
 
 from loguru import logger
 
+from app.config import HOTKEY, HOTKEYS
+
 try:
     import keyboard as _kb
 
@@ -13,9 +15,6 @@ try:
 except ImportError:
     _HAS_KB = False
     logger.warning("'keyboard' module unavailable; global hotkey disabled")
-
-HOTKEYS = ["ctrl", "shift", "space"]
-HOTKEY = "+".join(HOTKEYS)
 
 
 class HotkeyManager:

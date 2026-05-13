@@ -10,8 +10,7 @@ from typing import Callable, Optional
 
 from loguru import logger
 
-RELEASES_API = "https://api.github.com/repos/vectorleap-pulse/grammar-ai/releases/latest"
-_OLD_SUFFIX = "-old"
+from app.config import EXE_OLD_SUFFIX, RELEASES_API
 
 
 def _get_platform_tag() -> str:
@@ -45,7 +44,7 @@ def cleanup_old_files() -> None:
     if exe is None:
         logger.debug("Not running as frozen executable; skipping old file cleanup")
         return
-    for f in exe.parent.glob(f"*{_OLD_SUFFIX}{exe.suffix}"):
+    for f in exe.parent.glob(f"*{EXE_OLD_SUFFIX}{exe.suffix}"):
         try:
             f.unlink()
         except OSError as e:
@@ -139,7 +138,7 @@ def apply_update(new_exe: Path) -> bool:
         logger.debug("Not running as frozen executable; skipping update application")
         return False
 
-    old_exe = exe.with_name(exe.stem + _OLD_SUFFIX + exe.suffix)
+    old_exe = exe.with_name(exe.stem + EXE_OLD_SUFFIX + exe.suffix)
     try:
         exe.rename(old_exe)
         subprocess.Popen([str(new_exe)])
