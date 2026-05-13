@@ -246,7 +246,7 @@ class MainTab(ttk.Frame):
 
         self._clear_results()
         self._received = 0
-        self._set_status(f"Polishing… (0/{len(TONES)})", "blue")
+        self._set_status("Polishing…", "blue")
         config = self._config
 
         def on_result(r: PolishedText) -> None:
@@ -255,7 +255,7 @@ class MainTab(ttk.Frame):
         def worker() -> None:
             try:
                 polish_text(text, config, on_result=on_result)
-                self.after(0, lambda: self._set_status(f"{len(TONES)} versions ready", "green"))
+                self.after(0, lambda: self._set_status("Polished versions ready", "green"))
             except Exception as exc:
                 error_msg = str(exc)
                 logger.error(f"LLM error: {error_msg}")
