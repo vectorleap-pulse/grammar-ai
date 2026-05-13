@@ -27,6 +27,7 @@ def _get_platform_tag() -> str:
 def get_current_exe() -> Optional[Path]:
     """Returns the running .exe path; None when running as a plain Python script."""
     if not getattr(sys, "frozen", False):
+        logger.debug("Not running as frozen executable; skipping exe name check")
         return None
     exe = Path(sys.executable)
     if exe.exists():
@@ -42,6 +43,7 @@ def cleanup_old_files() -> None:
     """Delete any *-old.exe left over from a previous update."""
     exe = get_current_exe()
     if exe is None:
+        logger.debug("Not running as frozen executable; skipping old file cleanup")
         return
     for f in exe.parent.glob(f"*{_OLD_SUFFIX}{exe.suffix}"):
         try:
@@ -134,6 +136,7 @@ def apply_update(new_exe: Path) -> bool:
     """
     exe = get_current_exe()
     if exe is None:
+        logger.debug("Not running as frozen executable; skipping update application")
         return False
 
     old_exe = exe.with_name(exe.stem + _OLD_SUFFIX + exe.suffix)
