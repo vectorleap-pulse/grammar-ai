@@ -226,9 +226,12 @@ class MainTab(ttk.Frame):
         self._update_original_height()
         self._run_llm(text)
         top = self.winfo_toplevel()
-        top.deiconify()
-        top.lift()
-        top.focus_force()
+        if hasattr(top, "_show_window"):
+            top._show_window()  # type: ignore[union-attr]
+        else:
+            top.deiconify()
+            top.lift()
+            top.focus_force()
 
     # ------------------------------------------------------------------ LLM
 

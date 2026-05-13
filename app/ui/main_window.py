@@ -60,7 +60,6 @@ class MainWindow(tk.Tk):
         super().__init__()
         self._version = get_app_version()
         self.title(f"Grammar AI v{self._version}")
-        self.attributes("-topmost", True)
         self.attributes("-alpha", 1.0)
         self.geometry("360x640")
         self.minsize(360, 480)
@@ -164,8 +163,10 @@ class MainWindow(tk.Tk):
 
     def _show_window(self) -> None:
         self.deiconify()
+        self.attributes("-topmost", True)
         self.lift()
         self.focus_force()
+        self.attributes("-topmost", False)
         self._on_user_activity()
 
     def apply_autorun(self, enabled: bool) -> None:
