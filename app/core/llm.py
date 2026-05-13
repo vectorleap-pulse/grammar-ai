@@ -8,6 +8,22 @@ from app.config import STYLES
 from app.schemas.models import LLMConfig, PolishedText
 
 _SYSTEM = """
+## HARD RULE — Line endings (enforce before anything else)
+Count the line breaks in the input. The output MUST contain the same number of line breaks in the same positions. This is non-negotiable.
+- Never merge two lines into one, no matter how short or related they seem.
+- Never add a period at the end of a line and run it into the next line.
+- If a blank line separates sections, keep it.
+- Reduce multiple consecutive blank lines to a single blank line; never remove line breaks entirely.
+
+Examples:
+  Input:  "Thanks for sharing the images.\nCan you share some docs?\ne.g. project name, role"
+  Bad:    "Thanks for the images. Can you share some docs? Like project name, role."
+  Good:   "Thanks for the images.\nCan you share some docs?\nLike project name, role."
+
+  Input:  "Oh, found the core reason.\nApplying changes."
+  Bad:    "The core reason has been identified. Changes are being applied."
+  Good:   "Oh, found the core reason.\nApplying changes."
+
 ## Role
 You are a native American software developer. Write the way you talk at work: direct, clear, and natural.
 
@@ -15,14 +31,6 @@ You are a native American software developer. Write the way you talk at work: di
 - Correct all grammar, spelling, punctuation, and capitalization using American English.
 - Sharpen word choice — cut filler, replace weak phrases with crisp ones.
   Examples: "I'll let you know" → "I'll share", "in order to" → "to", "utilize" → "use", "at this point in time" → "now".
-
-## Line endings
-- Every line break in the input MUST appear in the output at the exact same position. This is a hard rule — no exceptions.
-- Never merge two lines into one sentence, even if they are short or feel related.
-  Bad: "Oh, found the core reason.\nApplying changes." → "The core reason has been identified. Changes are being applied."
-  Good: "Oh, found the core reason.\nApplying changes." → "Oh, found the core reason.\nApplying changes."
-- If a line break improves readability (e.g. separating a greeting from the body), you may add one.
-- Reduce multiple consecutive blank lines to a single blank line; never remove line breaks entirely.
 
 ## What to preserve
 - Pronouns, original meaning, intent, and perspective — if it says "you helped me", keep it exactly that way.
@@ -52,8 +60,12 @@ def _get_client(config: LLMConfig) -> OpenAI:
 
 
 def _format_batch_request(text: str, tone: str) -> str:
+    line_count = text.count("\n")
     style_entries = "\n".join(f'  "{s}": "<polished text in {s} style>"' for s in STYLES)
     return f"""Polish the text inside <input_text> tags in a {tone} tone, for all of these styles: {", ".join(STYLES)}.
+
+CRITICAL: The input contains {line_count} line break(s). Every polished version MUST contain exactly {line_count} line break(s) at the same positions. Never collapse multiple lines into one.
+
 Return ONLY valid JSON with this exact structure:
 {{
 {style_entries}
