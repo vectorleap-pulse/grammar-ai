@@ -287,7 +287,7 @@ class MainTab(ttk.Frame):
         def open_log() -> None:
             dlg.destroy()
             try:
-                os.startfile(str(LOG_PATH))
+                os.startfile(str(LOG_PATH))  # type: ignore[attr-defined]
             except Exception as e:
                 messagebox.showerror("Error", f"Could not open log file:\n{e}", parent=top)
 
