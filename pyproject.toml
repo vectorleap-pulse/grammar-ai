@@ -1,6 +1,6 @@
 [project]
 name = "grammar-ai"
-version = "0.3.1"
+version = "0.3.2"
 description = "AI-powered grammar and writing style assistant"
 requires-python = ">=3.12"
 dependencies = [
