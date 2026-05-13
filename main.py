@@ -1,6 +1,7 @@
 import argparse
 import sys
 import traceback
+from datetime import datetime
 from pathlib import Path
 
 from loguru import logger
@@ -24,6 +25,11 @@ def _ensure_exe_name() -> None:
         return
     new_path = exe.parent / target
     try:
+        if new_path.exists():
+            ts = datetime.now().strftime("%Y%m%dT%H%M%S")
+            stale = new_path.with_name(f"{new_path.stem}-{ts}{EXE_OLD_SUFFIX}{new_path.suffix}")
+            new_path.rename(stale)
+            logger.debug(f"Moved existing {target} to {stale.name} for cleanup")
         exe.rename(new_path)
         logger.info(f"Renamed {exe.name} to {target}")
     except Exception as e:
