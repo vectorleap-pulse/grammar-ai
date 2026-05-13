@@ -1,6 +1,13 @@
+import sys
 from pathlib import Path
 
 APP_NAME = "Grammar AI"
+
+# Icon path — sys._MEIPASS when frozen, project root otherwise
+if getattr(sys, "frozen", False):
+    ICON_PATH = Path(getattr(sys, "_MEIPASS", ".")) / "resources" / "icon.png"
+else:
+    ICON_PATH = Path(__file__).resolve().parent.parent / "resources" / "icon.png"
 
 # Data storage
 DATA_DIR = Path.home() / ".grammar-ai"

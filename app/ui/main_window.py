@@ -11,10 +11,11 @@ from typing import Optional
 
 import pystray
 from loguru import logger
-from PIL import Image, ImageDraw
+from PIL import Image, ImageTk
 
 from app.config import (
     APP_NAME,
+    ICON_PATH,
     UPDATE_CHECK_INTERVAL_MS,
     WINDOW_GEOMETRY,
     WINDOW_MAX_SIZE,
@@ -46,15 +47,6 @@ def get_app_version() -> str:
         return "dev"
 
 
-def _make_tray_icon() -> Image.Image:
-    size = 64
-    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-    draw.ellipse([2, 2, size - 2, size - 2], fill=(0, 120, 212, 255))
-    draw.text((18, 16), "GA", fill=(255, 255, 255))
-    return img
-
-
 class MainWindow(tk.Tk):
     def __init__(self, tray_only: bool = False) -> None:
         super().__init__()
@@ -66,6 +58,7 @@ class MainWindow(tk.Tk):
         self.geometry(WINDOW_GEOMETRY)
         self.minsize(*WINDOW_MIN_SIZE)
         self.maxsize(*WINDOW_MAX_SIZE)
+        self._set_window_icon()
         self._tray = None
         self._autorun = load_autorun()
         self._build()
@@ -109,11 +102,18 @@ class MainWindow(tk.Tk):
         style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_STYLE)  # type: ignore[attr-defined]
         ctypes.windll.user32.SetWindowLongW(hwnd, GWL_STYLE, style & ~WS_MAXIMIZEBOX)  # type: ignore[attr-defined]
 
+    def _set_window_icon(self) -> None:
+        try:
+            self._icon_photo = ImageTk.PhotoImage(Image.open(ICON_PATH))
+            self.iconphoto(True, self._icon_photo)
+        except Exception as e:
+            logger.debug(f"Could not set window icon: {e}")
+
     # ------------------------------------------------------------------ tray
 
     def _start_tray(self) -> None:
         try:
-            icon_image = _make_tray_icon()
+            icon_image = Image.open(ICON_PATH).convert("RGBA")
             menu = pystray.Menu(
                 pystray.MenuItem("Open", self._tray_open, default=True),
                 pystray.MenuItem("Quit", self._tray_quit),

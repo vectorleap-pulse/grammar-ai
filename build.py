@@ -59,6 +59,10 @@ def build_exe(debug: bool = False) -> int:
         str(spec_dir),
         "--add-data",
         f"{root / 'pyproject.toml'}{data_separator}.",
+        "--add-data",
+        f"{root / 'resources' / 'icon.png'}{data_separator}resources",
+        "--icon",
+        str(root / "resources" / "icon.png"),
         "--clean",
         "--noconfirm",
     ]
