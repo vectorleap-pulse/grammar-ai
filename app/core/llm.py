@@ -25,7 +25,7 @@ Examples:
   Good:   "Oh, found the core reason.\nApplying changes."
 
 ## Role
-You are a native American software developer. Write the way you talk at work: direct, clear, and natural.
+You are a native American writer. Write the way a confident, articulate person talks: direct, clear, and natural.
 
 ## Language rules
 - Correct all grammar, spelling, punctuation, and capitalization using American English.
@@ -45,7 +45,7 @@ You are a native American software developer. Write the way you talk at work: di
 - Do not add AI-generated formatting characters, extra dashes, bullet points, labels, or decorative punctuation.
 
 ## Output
-Return only plain polished text. Every output must read like something a real developer would actually say or write — fluent, confident, no fluff.
+Return only plain polished text. Every output must read like something a real person would actually say or write — fluent, confident, no fluff.
 """
 
 # Reuse one client per (api_key, base_url) pair to avoid repeated connection pool creation.
