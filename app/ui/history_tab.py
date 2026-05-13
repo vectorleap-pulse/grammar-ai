@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 
+from loguru import logger
+
 from app.db.database import clear_history, get_history_count, load_history
 
 
@@ -156,7 +158,7 @@ class HistoryTab(ttk.Frame):
                 self.current_page = 0
                 self.refresh()
         except ValueError:
-            pass
+            logger.debug(f"Invalid page size input: {self.page_size_var.get()!r}")
 
     def _update_page_label(self) -> None:
         total_count = get_history_count()

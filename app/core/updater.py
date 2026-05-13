@@ -8,6 +8,8 @@ import urllib.request
 from pathlib import Path
 from typing import Callable, Optional
 
+from loguru import logger
+
 RELEASES_API = "https://api.github.com/repos/vectorleap-pulse/grammar-ai/releases/latest"
 _OLD_SUFFIX = "-old"
 
@@ -44,8 +46,8 @@ def cleanup_old_files() -> None:
     for f in exe.parent.glob(f"*{_OLD_SUFFIX}{exe.suffix}"):
         try:
             f.unlink()
-        except OSError:
-            pass
+        except OSError as e:
+            logger.debug(f"Could not delete old exe {f.name}: {e}")
 
 
 def _parse_version(v: str) -> tuple[int, ...]:
@@ -80,8 +82,8 @@ def check_for_update(current_version: str) -> Optional[tuple[str, str]]:
             name: str = asset.get("name", "")
             if platform_tag in name:
                 return latest, asset["browser_download_url"]
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"Update check failed: {e}")
     return None
 
 
@@ -116,11 +118,12 @@ def download_update(
                     if on_progress and total:
                         on_progress(int(downloaded * 100 / total))
         return dest
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Download failed from {url}: {e}")
         try:
             dest.unlink(missing_ok=True)
-        except OSError:
-            pass
+        except OSError as oe:
+            logger.debug(f"Could not remove partial download {dest.name}: {oe}")
         return None
 
 
@@ -138,10 +141,11 @@ def apply_update(new_exe: Path) -> bool:
         exe.rename(old_exe)
         subprocess.Popen([str(new_exe)])
         return True
-    except Exception:
+    except Exception as e:
+        logger.error(f"Failed to apply update {new_exe.name}: {e}")
         if old_exe.exists() and not exe.exists():
             try:
                 old_exe.rename(exe)
-            except OSError:
-                pass
+            except OSError as oe:
+                logger.warning(f"Rollback rename failed: {oe}")
         return False

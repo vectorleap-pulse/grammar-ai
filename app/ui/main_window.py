@@ -39,7 +39,8 @@ def get_app_version() -> str:
         with open(project_root / "pyproject.toml", "rb") as f:
             data = tomllib.load(f)
         return data["project"]["version"]
-    except Exception:
+    except Exception as e:
+        logger.debug(f"Could not read version from pyproject.toml: {e}")
         return "dev"
 
 
@@ -174,8 +175,8 @@ class MainWindow(tk.Tk):
         elif not enabled and self._tray is not None:
             try:
                 self._tray.stop()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Tray stop error in apply_autorun: {e}")
             self._tray = None
 
     def _on_close(self) -> None:
@@ -188,8 +189,8 @@ class MainWindow(tk.Tk):
         if self._tray is not None:
             try:
                 self._tray.stop()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Tray stop error in _quit: {e}")
         self._main_tab.cleanup()
         self.destroy()
 

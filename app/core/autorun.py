@@ -26,6 +26,6 @@ def configure_autorun(enabled: bool) -> None:
                     winreg.DeleteValue(key, _NAME)
                     logger.info("Autorun disabled")
                 except FileNotFoundError:
-                    pass
+                    logger.debug("Autorun registry entry was not present")
     except Exception as e:
         logger.warning(f"Could not configure autorun: {e}")

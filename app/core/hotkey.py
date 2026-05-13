@@ -45,8 +45,8 @@ class HotkeyManager:
             if self._enabled:
                 try:
                     _kb.remove_hotkey(HOTKEY)
-                except (KeyError, ValueError):
-                    pass
+                except (KeyError, ValueError) as e:
+                    logger.debug(f"Hotkey {HOTKEY} was not registered: {e}")
                 self._enabled = False
                 logger.info(f"Hotkey {HOTKEY} disabled")
 

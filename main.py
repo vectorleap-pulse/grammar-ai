@@ -10,6 +10,7 @@ _DATA_DIR = Path.home() / ".grammar-ai"
 def _ensure_exe_name() -> None:
     """Rename the running exe to grammar-ai.exe if it has a different name."""
     if not getattr(sys, "frozen", False):
+        logger.debug("Not running as frozen executable; skipping exe name check")
         return
     exe = Path(sys.executable)
     target = "grammar-ai.exe"
@@ -58,8 +59,8 @@ def main() -> None:
             _DATA_DIR.mkdir(parents=True, exist_ok=True)
             with open(_DATA_DIR / "error.log", "w") as f:
                 f.write(error_msg)
-        except Exception:
-            pass
+        except Exception as write_err:
+            print(f"Could not write error.log: {write_err}")
         sys.exit(1)
 
 
