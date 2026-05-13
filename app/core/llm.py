@@ -4,7 +4,7 @@ from typing import Callable, Optional
 from loguru import logger
 from openai import OpenAI, OpenAIError
 
-from app.config import STYLES
+from app.config import GOALS
 from app.schemas.models import LLMConfig, PolishedText
 
 _SYSTEM = """
@@ -61,14 +61,14 @@ def _get_client(config: LLMConfig) -> OpenAI:
 
 def _format_batch_request(text: str, tone: str) -> str:
     line_count = text.count("\n")
-    style_entries = "\n".join(f'  "{s}": "<polished text in {s} style>"' for s in STYLES)
-    return f"""Polish the text inside <input_text> tags in a {tone} tone, for all of these styles: {", ".join(STYLES)}.
+    goal_entries = "\n".join(f'  "{g}": "<polished text with {g} goal>"' for g in GOALS)
+    return f"""Polish the text inside <input_text> tags in a {tone} tone, for each of these goals: {", ".join(GOALS)}.
 
 CRITICAL: The input contains {line_count} line break(s). Every polished version MUST contain exactly {line_count} line break(s) at the same positions. Never collapse multiple lines into one.
 
 Return ONLY valid JSON with this exact structure:
 {{
-{style_entries}
+{goal_entries}
 }}
 
 <input_text>
@@ -99,8 +99,8 @@ def polish_text(
 
     data = json.loads(content)
     results: list[PolishedText] = []
-    for style in STYLES:
-        result = PolishedText(tone=tone, style=style, text=data.get(style, ""))
+    for goal in GOALS:
+        result = PolishedText(tone=tone, goal=goal, text=data.get(goal, ""))
         results.append(result)
         if on_result:
             on_result(result)

@@ -11,7 +11,7 @@ class LLMConfig(BaseModel):
 
 class PolishedText(BaseModel):
     tone: str
-    style: str
+    goal: str
     text: str
 
 
@@ -24,5 +24,5 @@ class HistoryEntry(BaseModel):
     original_text: str
     polished_text: str
     tone: str
-    style: str = ""
+    goal: str = ""
     used_at: datetime

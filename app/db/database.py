@@ -26,14 +26,15 @@ def init_db() -> None:
                 original_text TEXT NOT NULL,
                 polished_text TEXT NOT NULL,
                 tone          TEXT NOT NULL,
-                style         TEXT NOT NULL DEFAULT '',
+                goal          TEXT NOT NULL DEFAULT '',
                 used_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
-        # Migration: add style column to existing databases
         columns = [row[1] for row in conn.execute("PRAGMA table_info(history)").fetchall()]
-        if "style" not in columns:
-            conn.execute("ALTER TABLE history ADD COLUMN style TEXT NOT NULL DEFAULT ''")
+        if "style" in columns and "goal" not in columns:
+            conn.execute("ALTER TABLE history RENAME COLUMN style TO goal")
+        elif "goal" not in columns:
+            conn.execute("ALTER TABLE history ADD COLUMN goal TEXT NOT NULL DEFAULT ''")
     logger.info(f"Database initialized at {DB_PATH}")
 
 
@@ -58,16 +59,16 @@ def save_config(config: LLMConfig) -> None:
     logger.info("Config saved")
 
 
-def save_history(original: str, polished: str, tone: str, style: str = "") -> None:
+def save_history(original: str, polished: str, tone: str, goal: str = "") -> None:
     with _connect() as conn:
         conn.execute(
-            "INSERT INTO history (original_text, polished_text, tone, style) VALUES (?, ?, ?, ?)",
-            (original, polished, tone, style),
+            "INSERT INTO history (original_text, polished_text, tone, goal) VALUES (?, ?, ?, ?)",
+            (original, polished, tone, goal),
         )
         count = conn.execute("SELECT COUNT(*) FROM history").fetchone()[0]
         if count > HISTORY_MAX_ENTRIES:
             conn.execute("DELETE FROM history WHERE id = (SELECT MIN(id) FROM history)")
-    logger.debug(f"History saved: tone={tone} style={style}")
+    logger.debug(f"History saved: tone={tone} goal={goal}")
 
 
 def load_history(limit: int = 200, offset: int = 0) -> list[HistoryEntry]:
@@ -81,7 +82,7 @@ def load_history(limit: int = 200, offset: int = 0) -> list[HistoryEntry]:
             original_text=row["original_text"],
             polished_text=row["polished_text"],
             tone=row["tone"],
-            style=row["style"] if "style" in row.keys() else "",
+            goal=row["goal"] if "goal" in row.keys() else "",
             used_at=datetime.fromisoformat(row["used_at"])
             .replace(tzinfo=timezone.utc)
             .astimezone(),
