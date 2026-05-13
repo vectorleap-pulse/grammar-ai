@@ -19,15 +19,18 @@ class SettingsDialog(tk.Toplevel):
         on_autorun_change: Optional[Callable[[bool], None]] = None,
     ) -> None:
         super().__init__(parent)
+        self.withdraw()
         self.title("Settings")
         self.resizable(False, False)
-        self.grab_set()
         self.transient(parent)  # type: ignore
         self._on_save = on_save
         self._on_autorun_change = on_autorun_change
         self._build()
         self._load(config)
+        self.update_idletasks()
         self._center(parent)
+        self.deiconify()
+        self.grab_set()
 
     def _build(self) -> None:
         pad = {"padx": 8, "pady": 4}
@@ -105,18 +108,16 @@ class SettingsDialog(tk.Toplevel):
         self.destroy()
 
     def _center(self, parent: tk.Widget) -> None:
-        self.update_idletasks()
         parent_win = parent.winfo_toplevel()
-        parent_win.update_idletasks()
 
         pw = parent_win.winfo_width()
         ph = parent_win.winfo_height()
-        px = parent_win.winfo_rootx()
-        py = parent_win.winfo_rooty()
+        px = parent_win.winfo_x()
+        py = parent_win.winfo_y()
 
-        sw = self.winfo_width()
-        sh = self.winfo_height()
+        sw = self.winfo_reqwidth()
+        sh = self.winfo_reqheight()
 
-        x = px + max(0, (pw - sw) // 2)
-        y = py + max(0, (ph - sh) // 2)
-        self.geometry(f"+{x}+{y}")
+        x = px + (pw - sw) // 2
+        y = py + (ph - sh) // 2
+        self.geometry(f"{sw}x{sh}+{x}+{y}")
