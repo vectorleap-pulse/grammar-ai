@@ -4,7 +4,7 @@ from typing import Callable, Optional
 from loguru import logger
 from openai import OpenAI, OpenAIError
 
-from app.config import TONES
+from app.config import STYLES
 from app.schemas.models import LLMConfig, PolishedText
 
 _SYSTEM = """
@@ -51,12 +51,12 @@ def _get_client(config: LLMConfig) -> OpenAI:
     return _clients[key]
 
 
-def _format_batch_request(text: str) -> str:
-    tone_entries = "\n".join(f'  "{t}": "<polished text in {t} tone>"' for t in TONES)
-    return f"""Polish the text inside <input_text> tags in all of these tones: {", ".join(TONES)}.
+def _format_batch_request(text: str, tone: str) -> str:
+    style_entries = "\n".join(f'  "{s}": "<polished text in {s} style>"' for s in STYLES)
+    return f"""Polish the text inside <input_text> tags in a {tone} tone, for all of these styles: {", ".join(STYLES)}.
 Return ONLY valid JSON with this exact structure:
 {{
-{tone_entries}
+{style_entries}
 }}
 
 <input_text>
@@ -66,6 +66,7 @@ Return ONLY valid JSON with this exact structure:
 
 def polish_text(
     text: str,
+    tone: str,
     config: LLMConfig,
     on_result: Optional[Callable[[PolishedText], None]] = None,
 ) -> list[PolishedText]:
@@ -76,7 +77,7 @@ def polish_text(
         max_tokens=8192,
         messages=[
             {"role": "system", "content": _SYSTEM},
-            {"role": "user", "content": _format_batch_request(text)},
+            {"role": "user", "content": _format_batch_request(text, tone)},
         ],
     )
     content = response.choices[0].message.content or "{}"
@@ -86,13 +87,13 @@ def polish_text(
 
     data = json.loads(content)
     results: list[PolishedText] = []
-    for tone in TONES:
-        result = PolishedText(tone=tone, text=data.get(tone, ""))
+    for style in STYLES:
+        result = PolishedText(tone=tone, style=style, text=data.get(style, ""))
         results.append(result)
         if on_result:
             on_result(result)
 
-    logger.info(f"Received {len(results)} polished versions")
+    logger.info(f"Received {len(results)} polished versions for tone={tone}")
     return results
 
 

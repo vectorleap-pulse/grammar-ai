@@ -16,7 +16,8 @@ LOG_PATH = DATA_DIR / "grammar_ai.log"
 ERROR_LOG_PATH = DATA_DIR / "error.log"
 
 # Text polishing
-TONES: list[str] = ["professional", "casual", "friendly", "formal", "concise"]
+TONES: list[str] = ["professional", "casual", "formal", "friendly"]
+STYLES: list[str] = ["concise", "polite", "direct", "confident"]
 
 # Global hotkey
 HOTKEYS: list[str] = ["ctrl", "shift", "space"]

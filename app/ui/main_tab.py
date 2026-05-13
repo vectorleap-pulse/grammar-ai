@@ -8,34 +8,34 @@ from typing import Callable, Optional
 import pyperclip
 from loguru import logger
 
-from app.config import HOTKEY, LOG_PATH, TONES
+from app.config import HOTKEYS, LOG_PATH, STYLES, TONES
 from app.core.focus import restore_focus_and_paste
 from app.core.hotkey import HotkeyManager
 from app.core.llm import polish_text
-from app.db.database import load_config, save_history
+from app.db.database import load_config, load_selected_tone, save_history, save_selected_tone
 from app.schemas.models import LLMConfig, PolishedText
 from app.ui.settings_dialog import SettingsDialog
 
 
 class _PolishedItem(ttk.Frame):
-    """One polished-text card: tone badge + editable text + Use button."""
+    """One polished-text card: style badge + editable text + Use button."""
 
     def __init__(
         self,
         parent: tk.Widget,
-        tone: str,
+        style: str,
         text: str,
         on_use: Callable[[str, str], None],
     ) -> None:
         super().__init__(parent, relief="groove", borderwidth=1)
-        self._tone = tone
+        self._style = style
         self._on_use = on_use
-        self._build(tone, text)
+        self._build(style, text)
 
-    def _build(self, tone: str, text: str) -> None:
+    def _build(self, style: str, text: str) -> None:
         header = ttk.Frame(self)
         header.pack(fill="x", padx=4, pady=(4, 0))
-        ttk.Label(header, text=tone.capitalize(), font=("", 8, "bold")).pack(side="left")
+        ttk.Label(header, text=style.capitalize(), font=("", 8, "bold")).pack(side="left")
         ttk.Button(header, text="Use", width=5, command=self._use).pack(side="right")
 
         self._txt = tk.Text(
@@ -81,7 +81,7 @@ class _PolishedItem(ttk.Frame):
         return self._txt.get("1.0", "end-1c")
 
     def _use(self) -> None:
-        self._on_use(self._tone, self.get_text())
+        self._on_use(self._style, self.get_text())
 
 
 class MainTab(ttk.Frame):
@@ -96,6 +96,7 @@ class MainTab(ttk.Frame):
         self._items: list[_PolishedItem] = []
         self._received = 0
         self._on_autorun_change = on_autorun_change
+        self._tone_var = tk.StringVar(value=load_selected_tone())
         self._build()
         self._hotkey.enable()
 
@@ -109,20 +110,33 @@ class MainTab(ttk.Frame):
         self._build_results()
 
     def _build_toolbar(self) -> None:
-        # First line: Clear and Settings buttons
+        # First line: Clear, Tone selector, Settings
         bar1 = ttk.Frame(self, padding=(6, 4))
         bar1.pack(fill="x")
 
         ttk.Button(bar1, text="Clear", command=self._clear_all).pack(side="left", padx=2)
         ttk.Button(bar1, text="Settings", command=self._open_settings).pack(side="right", padx=2)
 
+        tone_combo = ttk.Combobox(
+            bar1,
+            textvariable=self._tone_var,
+            values=TONES,
+            state="readonly",
+            width=12,
+        )
+        tone_combo.pack(side="right", padx=(0, 6))
+        ttk.Label(bar1, text="Tone:").pack(side="right")
+        tone_combo.bind("<<ComboboxSelected>>", self._on_tone_change)
+
         # Second line: Trigger button and status message
         bar2 = ttk.Frame(self, padding=(6, 4))
         bar2.pack(fill="x")
 
-        ttk.Button(bar2, text=f"Trigger ({HOTKEY.upper()})", command=self._trigger_manual).pack(
-            side="left", padx=2
-        )
+        ttk.Button(
+            bar2,
+            text=f"Trigger ({'+'.join([h.capitalize() for h in HOTKEYS])})",
+            command=self._trigger_manual,
+        ).pack(side="left", padx=2)
 
         self._status_var = tk.StringVar(value="")
         self._status_lbl = ttk.Label(bar2, textvariable=self._status_var, font=("", 8))
@@ -201,6 +215,9 @@ class MainTab(ttk.Frame):
     def _on_config_saved(self, config: LLMConfig) -> None:
         self._config = config
 
+    def _on_tone_change(self, _event: tk.Event) -> None:  # type: ignore[type-arg]
+        save_selected_tone(self._tone_var.get())
+
     # ------------------------------------------------------------------ trigger
 
     def _trigger_manual(self) -> None:
@@ -252,9 +269,11 @@ class MainTab(ttk.Frame):
         def on_result(r: PolishedText) -> None:
             self.after(0, lambda: self._add_result(text, r))
 
+        tone = self._tone_var.get()
+
         def worker() -> None:
             try:
-                polish_text(text, config, on_result=on_result)
+                polish_text(text, tone, config, on_result=on_result)
                 self.after(0, lambda: self._set_status("Polished versions ready", "green"))
             except Exception as exc:
                 error_msg = str(exc)
@@ -301,17 +320,17 @@ class MainTab(ttk.Frame):
 
     def _add_result(self, original: str, result: PolishedText) -> None:
         self._received += 1
-        self._set_status(f"Polishing… ({self._received}/{len(TONES)})", "blue")
+        self._set_status(f"Polishing… ({self._received}/{len(STYLES)})", "blue")
         item = _PolishedItem(
             self._results_frame,
-            tone=result.tone,
+            style=result.style,
             text=result.text,
-            on_use=lambda tone, txt, orig=original: self._use_text(orig, tone, txt),  # type: ignore
+            on_use=lambda style, txt, orig=original: self._use_text(orig, style, txt),  # type: ignore
         )
 
         insert_index = 0
         for existing in self._items:
-            if TONES.index(existing._tone) > TONES.index(result.tone):
+            if STYLES.index(existing._style) > STYLES.index(result.style):
                 break
             insert_index += 1
 
@@ -324,14 +343,15 @@ class MainTab(ttk.Frame):
 
     # ------------------------------------------------------------------ Use
 
-    def _use_text(self, original: str, tone: str, text: str) -> None:
-        save_history(original, text, tone)
+    def _use_text(self, original: str, style: str, text: str) -> None:
+        tone = self._tone_var.get()
+        save_history(original, text, tone, style)
         hwnd = self._hotkey.last_hwnd
         if hwnd and restore_focus_and_paste(hwnd, original, text):
-            self._set_status(f"Pasted ({tone})", "green")
+            self._set_status(f"Pasted ({tone} / {style})", "green")
         else:
             pyperclip.copy(text)
-            self._set_status(f"Copied to clipboard ({tone})", "gray")
+            self._set_status(f"Copied ({tone} / {style})", "gray")
 
     def _clear_all(self) -> None:
         self._orig.delete("1.0", "end")

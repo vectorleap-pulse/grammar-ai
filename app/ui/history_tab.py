@@ -44,15 +44,17 @@ class HistoryTab(ttk.Frame):
             side="left", padx=(4, 0)
         )
 
-        cols = ("used_at", "tone", "polished_text")
+        cols = ("used_at", "tone", "style", "polished_text")
         self._tree = ttk.Treeview(self, columns=cols, show="headings", selectmode="browse")
 
         self._tree.heading("used_at", text="Used At")
         self._tree.heading("tone", text="Tone")
+        self._tree.heading("style", text="Style")
         self._tree.heading("polished_text", text="Polished Text")
 
         self._tree.column("used_at", width=110, stretch=False)
-        self._tree.column("tone", width=90, stretch=False)
+        self._tree.column("tone", width=80, stretch=False)
+        self._tree.column("style", width=70, stretch=False)
         self._tree.column("polished_text", width=80, stretch=True)
 
         vsb = ttk.Scrollbar(self, orient="vertical", command=self._tree.yview)
@@ -75,6 +77,7 @@ class HistoryTab(ttk.Frame):
                 values=(
                     e.used_at.strftime("%Y-%m-%d %H:%M"),
                     e.tone.capitalize(),
+                    e.style.capitalize() if e.style else "",
                     first_line,
                 ),
                 tags=(e.polished_text, e.original_text),  # Keep both in tags for detail view
@@ -90,7 +93,7 @@ class HistoryTab(ttk.Frame):
             return
         polished, original = tags[0], tags[1]
         values = self._tree.item(item, "values")
-        used_at, tone = values[0], values[1]
+        used_at, tone, style = values[0], values[1], values[2]
 
         parent = self.winfo_toplevel()
         dlg_w, dlg_h = 480, 500
@@ -109,7 +112,7 @@ class HistoryTab(ttk.Frame):
 
         meta = ttk.Frame(dlg)
         meta.pack(fill="x", padx=8, pady=(8, 4))
-        for label, value in [("ID", item), ("Tone", tone), ("Used At", used_at)]:
+        for label, value in [("ID", item), ("Tone", tone), ("Style", style), ("Used At", used_at)]:
             row = ttk.Frame(meta)
             row.pack(fill="x", pady=1)
             ttk.Label(row, text=f"{label}:", font=("", 9, "bold"), width=8, anchor="w").pack(

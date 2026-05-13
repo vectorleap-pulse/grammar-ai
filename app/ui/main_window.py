@@ -105,7 +105,7 @@ class MainWindow(tk.Tk):
     def _set_window_icon(self) -> None:
         try:
             self._icon_photo = ImageTk.PhotoImage(Image.open(ICON_PATH))
-            self.iconphoto(True, self._icon_photo)
+            self.iconphoto(True, self._icon_photo)  # type: ignore[arg-type]
         except Exception as e:
             logger.debug(f"Could not set window icon: {e}")
 
