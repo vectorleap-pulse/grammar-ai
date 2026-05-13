@@ -3,7 +3,7 @@ import threading
 import tkinter as tk
 import tkinter.font as tkFont
 from tkinter import messagebox, ttk
-from typing import Callable
+from typing import Callable, Optional
 
 import pyperclip
 from loguru import logger
@@ -83,12 +83,17 @@ class _PolishedItem(ttk.Frame):
 
 
 class MainTab(ttk.Frame):
-    def __init__(self, parent: tk.Widget) -> None:
+    def __init__(
+        self,
+        parent: tk.Widget,
+        on_autorun_change: Optional[Callable[[bool], None]] = None,
+    ) -> None:
         super().__init__(parent)
         self._config: LLMConfig = load_config()
         self._hotkey = HotkeyManager(self._on_hotkey_text)
         self._items: list[_PolishedItem] = []
         self._received = 0
+        self._on_autorun_change = on_autorun_change
         self._build()
         self._hotkey.enable()
 
@@ -191,7 +196,7 @@ class MainTab(ttk.Frame):
     def _open_settings(self) -> None:
         from app.ui.settings_dialog import SettingsDialog
 
-        SettingsDialog(self, self._config, self._on_config_saved)
+        SettingsDialog(self, self._config, self._on_config_saved, self._on_autorun_change)
 
     def _on_config_saved(self, config: LLMConfig) -> None:
         self._config = config

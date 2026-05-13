@@ -104,7 +104,7 @@ def get_history_count() -> int:
 def load_autorun() -> bool:
     with _connect() as conn:
         row = conn.execute("SELECT value FROM settings WHERE key = 'autorun'").fetchone()
-    return row["value"] == "1" if row else False
+    return row["value"] == "1" if row else True
 
 
 def save_autorun(enabled: bool) -> None:

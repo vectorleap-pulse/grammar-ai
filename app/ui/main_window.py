@@ -8,6 +8,7 @@ from tkinter import messagebox, ttk
 from typing import Optional
 
 from app.core import updater
+from app.db.database import load_autorun
 from app.ui.history_tab import HistoryTab
 from app.ui.main_tab import MainTab
 
@@ -63,6 +64,7 @@ class MainWindow(tk.Tk):
         self.maxsize(360, 720)
         self._idle_timer_id: Optional[str] = None
         self._tray = None
+        self._autorun = load_autorun()
         self._build()
         self._bind_idle_events()
         self._schedule_idle_timer()
@@ -70,7 +72,8 @@ class MainWindow(tk.Tk):
         self.after(10, self._remove_maximize_button)
         updater.cleanup_old_files()
         self.after(5000, self._start_update_check)
-        self.after(100, self._start_tray)
+        if self._autorun:
+            self.after(100, self._start_tray)
 
     def _bind_idle_events(self) -> None:
         self.bind_all("<Enter>", self._on_user_activity)
@@ -110,7 +113,7 @@ class MainWindow(tk.Tk):
         self._nb = ttk.Notebook(self)
         self._nb.pack(fill="both", expand=True, padx=4, pady=4)
 
-        self._main_tab = MainTab(self._nb)
+        self._main_tab = MainTab(self._nb, on_autorun_change=self.apply_autorun)
         self._history_tab = HistoryTab(self._nb)
 
         self._nb.add(self._main_tab, text="  Main  ")
@@ -145,7 +148,7 @@ class MainWindow(tk.Tk):
             self._tray = pystray.Icon("Grammar AI", icon_image, "Grammar AI", menu)
             threading.Thread(target=self._tray.run, daemon=True).start()
         except Exception:
-            pass  # tray is optional — app still works without it
+            pass
 
     def _tray_open(self, *_: object) -> None:
         self.after(0, self._show_window)
@@ -159,8 +162,22 @@ class MainWindow(tk.Tk):
         self.focus_force()
         self._on_user_activity()
 
+    def apply_autorun(self, enabled: bool) -> None:
+        self._autorun = enabled
+        if enabled and self._tray is None:
+            self._start_tray()
+        elif not enabled and self._tray is not None:
+            try:
+                self._tray.stop()
+            except Exception:
+                pass
+            self._tray = None
+
     def _on_close(self) -> None:
-        self.withdraw()
+        if self._autorun:
+            self.withdraw()
+        else:
+            self._quit()
 
     def _quit(self) -> None:
         if self._tray is not None:

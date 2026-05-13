@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
-from typing import Callable
+from typing import Callable, Optional
 
 from loguru import logger
 
@@ -16,6 +16,7 @@ class SettingsDialog(tk.Toplevel):
         parent: tk.Widget,
         config: LLMConfig,
         on_save: Callable[[LLMConfig], None],
+        on_autorun_change: Optional[Callable[[bool], None]] = None,
     ) -> None:
         super().__init__(parent)
         self.title("Settings")
@@ -23,6 +24,7 @@ class SettingsDialog(tk.Toplevel):
         self.grab_set()
         self.transient(parent)  # type: ignore
         self._on_save = on_save
+        self._on_autorun_change = on_autorun_change
         self._build()
         self._load(config)
         self._center(parent)
@@ -96,6 +98,8 @@ class SettingsDialog(tk.Toplevel):
         autorun = self._autorun_var.get()
         save_autorun(autorun)
         configure_autorun(autorun)
+        if self._on_autorun_change:
+            self._on_autorun_change(autorun)
 
         logger.info("Settings saved and applied")
         self.destroy()
