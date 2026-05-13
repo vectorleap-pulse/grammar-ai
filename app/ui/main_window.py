@@ -16,7 +16,7 @@ from app.ui.main_tab import MainTab
 
 _UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000  # 5 minutes
 _IDLE_OPACITY = 0.3
-_IDLE_TIMEOUT_MS = 10 * 1000
+_IDLE_TIMEOUT_MS = 60 * 1000
 
 
 def get_app_version() -> str:

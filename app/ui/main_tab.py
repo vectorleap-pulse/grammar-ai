@@ -256,7 +256,7 @@ class MainTab(ttk.Frame):
             except Exception as exc:
                 error_msg = str(exc)
                 logger.error(f"LLM error: {error_msg}")
-                self.after(0, lambda msg=error_msg: self._show_llm_error(msg))
+                self.after(0, lambda: self._show_llm_error(error_msg))
 
         threading.Thread(target=worker, daemon=True).start()
 
