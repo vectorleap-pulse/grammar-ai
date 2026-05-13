@@ -96,7 +96,7 @@ class MainTab(ttk.Frame):
         self._items: list[_PolishedItem] = []
         self._received = 0
         self._on_autorun_change = on_autorun_change
-        self._tone_var = tk.StringVar(value=load_selected_tone())
+        self._tone_var = tk.StringVar(value=load_selected_tone().capitalize())
         self._build()
         self._hotkey.enable()
 
@@ -104,53 +104,49 @@ class MainTab(ttk.Frame):
 
     def _build(self) -> None:
         self._build_toolbar()
-        ttk.Separator(self, orient="horizontal").pack(fill="x", padx=4)
         self._build_original()
-        ttk.Separator(self, orient="horizontal").pack(fill="x", padx=4)
+        self._build_action_bar()
         self._build_results()
 
     def _build_toolbar(self) -> None:
-        # First line: Clear, Tone selector, Settings
-        bar1 = ttk.Frame(self, padding=(6, 4))
-        bar1.pack(fill="x")
+        bar = ttk.Frame(self, padding=(6, 4))
+        bar.pack(fill="x")
+        ttk.Button(bar, text="Clear", command=self._clear_all).pack(side="left", padx=2)
+        ttk.Button(bar, text="Settings", command=self._open_settings).pack(side="right", padx=2)
 
-        ttk.Button(bar1, text="Clear", command=self._clear_all).pack(side="left", padx=2)
-        ttk.Button(bar1, text="Settings", command=self._open_settings).pack(side="right", padx=2)
+    def _build_original(self) -> None:
+        lf = ttk.LabelFrame(self, text="Original Text", padding=4)
+        lf.pack(fill="x", padx=6, pady=(0, 4))
 
+        self._orig = tk.Text(lf, height=4, wrap="word", font=("", 9))
+        self._orig.pack(fill="x")
+        self._orig.bind("<KeyRelease>", lambda _e: self._update_original_height())
+        self.after(10, self._update_original_height)
+
+    def _build_action_bar(self) -> None:
+        bar = ttk.Frame(self, padding=(6, 4))
+        bar.pack(fill="x")
+
+        ttk.Label(bar, text="Tone:").pack(side="left")
         tone_combo = ttk.Combobox(
-            bar1,
+            bar,
             textvariable=self._tone_var,
-            values=TONES,
+            values=[t.capitalize() for t in TONES],
             state="readonly",
-            width=12,
+            width=11,
         )
-        tone_combo.pack(side="right", padx=(0, 6))
-        ttk.Label(bar1, text="Tone:").pack(side="right")
+        tone_combo.pack(side="left", padx=(4, 8))
         tone_combo.bind("<<ComboboxSelected>>", self._on_tone_change)
 
-        # Second line: Trigger button and status message
-        bar2 = ttk.Frame(self, padding=(6, 4))
-        bar2.pack(fill="x")
-
         ttk.Button(
-            bar2,
+            bar,
             text=f"Trigger ({'+'.join([h.capitalize() for h in HOTKEYS])})",
             command=self._trigger_manual,
         ).pack(side="left", padx=2)
 
         self._status_var = tk.StringVar(value="")
-        self._status_lbl = ttk.Label(bar2, textvariable=self._status_var, font=("", 8))
-        self._status_lbl.pack(side="left", padx=8)
-
-    def _build_original(self) -> None:
-        lf = ttk.LabelFrame(self, text="Original Text", padding=4)
-        lf.pack(fill="x", padx=6, pady=4)
-
-        self._orig = tk.Text(lf, height=4, wrap="word", font=("", 9))
-        self._orig.pack(fill="x")
-        self._orig.bind("<KeyRelease>", lambda e: self._update_original_height())
-        # Schedule initial height update after rendering
-        self.after(10, self._update_original_height)
+        self._status_lbl = ttk.Label(bar, textvariable=self._status_var, font=("", 8))
+        self._status_lbl.pack(side="left", padx=(6, 0))
 
     def _build_results(self) -> None:
         lf = ttk.LabelFrame(self, text="Polished Versions", padding=4)
@@ -216,7 +212,7 @@ class MainTab(ttk.Frame):
         self._config = config
 
     def _on_tone_change(self, _event: tk.Event) -> None:  # type: ignore[type-arg]
-        save_selected_tone(self._tone_var.get())
+        save_selected_tone(self._tone_var.get().lower())
 
     # ------------------------------------------------------------------ trigger
 
@@ -269,7 +265,7 @@ class MainTab(ttk.Frame):
         def on_result(r: PolishedText) -> None:
             self.after(0, lambda: self._add_result(text, r))
 
-        tone = self._tone_var.get()
+        tone = self._tone_var.get().lower()
 
         def worker() -> None:
             try:
@@ -344,7 +340,7 @@ class MainTab(ttk.Frame):
     # ------------------------------------------------------------------ Use
 
     def _use_text(self, original: str, style: str, text: str) -> None:
-        tone = self._tone_var.get()
+        tone = self._tone_var.get().lower()
         save_history(original, text, tone, style)
         hwnd = self._hotkey.last_hwnd
         if hwnd and restore_focus_and_paste(hwnd, original, text):
