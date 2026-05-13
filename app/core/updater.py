@@ -24,9 +24,16 @@ def _get_platform_tag() -> str:
 
 def get_current_exe() -> Optional[Path]:
     """Returns the running .exe path; None when running as a plain Python script."""
-    if getattr(sys, "frozen", False):
-        return Path(sys.executable)
-    return None
+    if not getattr(sys, "frozen", False):
+        return None
+    exe = Path(sys.executable)
+    if exe.exists():
+        return exe
+    # After a startup rename sys.executable no longer exists — fall back to grammar-ai.exe.
+    renamed = exe.parent / "grammar-ai.exe"
+    if renamed.exists():
+        return renamed
+    return exe
 
 
 def cleanup_old_files() -> None:

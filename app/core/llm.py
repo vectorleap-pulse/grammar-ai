@@ -1,4 +1,3 @@
-import concurrent.futures
 import json
 from typing import Callable, Optional
 
@@ -53,31 +52,17 @@ def _get_client(config: LLMConfig) -> OpenAI:
     return _clients[key]
 
 
-def _format_tone_request(text: str, tone: str) -> str:
-    return f"""Polish the text inside <input_text> tags in {tone} tone.
-Return ONLY valid JSON matching this structure: {{"tone": "{tone}", "text": "<polished text>"}}.
+def _format_batch_request(text: str) -> str:
+    tone_entries = "\n".join(f'  "{t}": "<polished text in {t} tone>"' for t in TONES)
+    return f"""Polish the text inside <input_text> tags in all of these tones: {", ".join(TONES)}.
+Return ONLY valid JSON with this exact structure:
+{{
+{tone_entries}
+}}
 
 <input_text>
 {text}
 </input_text>"""
-
-
-def _polish_single_tone(text: str, tone: str, config: LLMConfig) -> PolishedText:
-    client = _get_client(config)
-    response = client.chat.completions.create(
-        model=config.model,
-        response_format={"type": "json_object"},
-        max_tokens=8192,
-        messages=[
-            {"role": "system", "content": _SYSTEM},
-            {"role": "user", "content": _format_tone_request(text, tone)},
-        ],
-    )
-    content = response.choices[0].message.content or "{}"
-    if isinstance(content, dict):
-        content = json.dumps(content)
-    logger.debug(f"LLM raw response for {tone} (first 200 chars): {content[:200]}")
-    return PolishedText.model_validate_json(content)
 
 
 def polish_text(
@@ -85,14 +70,29 @@ def polish_text(
     config: LLMConfig,
     on_result: Optional[Callable[[PolishedText], None]] = None,
 ) -> list[PolishedText]:
+    client = _get_client(config)
+    response = client.chat.completions.create(
+        model=config.model,
+        response_format={"type": "json_object"},
+        max_tokens=8192,
+        messages=[
+            {"role": "system", "content": _SYSTEM},
+            {"role": "user", "content": _format_batch_request(text)},
+        ],
+    )
+    content = response.choices[0].message.content or "{}"
+    if isinstance(content, dict):
+        content = json.dumps(content)
+    logger.debug(f"LLM batch response (first 200 chars): {content[:200]}")
+
+    data = json.loads(content)
     results: list[PolishedText] = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(TONES)) as executor:
-        futures = {executor.submit(_polish_single_tone, text, tone, config): tone for tone in TONES}
-        for future in concurrent.futures.as_completed(futures):
-            result = future.result()
-            results.append(result)
-            if on_result:
-                on_result(result)
+    for tone in TONES:
+        result = PolishedText(tone=tone, text=data.get(tone, ""))
+        results.append(result)
+        if on_result:
+            on_result(result)
+
     logger.info(f"Received {len(results)} polished versions")
     return results
 

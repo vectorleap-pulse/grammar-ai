@@ -1,3 +1,4 @@
+import os
 import threading
 import tkinter as tk
 import tkinter.font as tkFont
@@ -10,7 +11,7 @@ from loguru import logger
 from app.core.focus import restore_focus_and_paste
 from app.core.hotkey import HOTKEY, HotkeyManager
 from app.core.llm import TONES, polish_text
-from app.db.database import load_config, save_history
+from app.db.database import LOG_PATH, load_config, save_history
 from app.schemas.models import LLMConfig, PolishedText
 
 
@@ -250,9 +251,45 @@ class MainTab(ttk.Frame):
             except Exception as exc:
                 error_msg = str(exc)
                 logger.error(f"LLM error: {error_msg}")
-                self.after(0, lambda: self._set_status(f"Error: {error_msg}", "red"))
+                self.after(0, lambda msg=error_msg: self._show_llm_error(msg))
 
         threading.Thread(target=worker, daemon=True).start()
+
+    def _show_llm_error(self, error_msg: str) -> None:
+        self._set_status("Error", "red")
+        top = self.winfo_toplevel()
+
+        dlg = tk.Toplevel(top)
+        dlg.title("LLM Error")
+        dlg.resizable(False, False)
+        dlg.transient(top)
+        dlg.grab_set()
+
+        ttk.Label(dlg, text="An error occurred while calling the LLM:", font=("", 9)).pack(
+            padx=16, pady=(14, 4), anchor="w"
+        )
+        txt = tk.Text(dlg, height=6, width=54, wrap="word", font=("", 9), state="normal")
+        txt.insert("1.0", error_msg)
+        txt.config(state="disabled")
+        txt.pack(padx=16, pady=(0, 8))
+
+        btn_row = ttk.Frame(dlg)
+        btn_row.pack(pady=(0, 12))
+
+        def open_log() -> None:
+            dlg.destroy()
+            try:
+                os.startfile(str(LOG_PATH))
+            except Exception as e:
+                messagebox.showerror("Error", f"Could not open log file:\n{e}", parent=top)
+
+        ttk.Button(btn_row, text="Open Log", command=open_log).pack(side="left", padx=6)
+        ttk.Button(btn_row, text="Close", command=dlg.destroy).pack(side="left", padx=6)
+
+        dlg.update_idletasks()
+        x = top.winfo_rootx() + (top.winfo_width() - dlg.winfo_width()) // 2
+        y = top.winfo_rooty() + (top.winfo_height() - dlg.winfo_height()) // 2
+        dlg.geometry(f"+{x}+{y}")
 
     def _add_result(self, original: str, result: PolishedText) -> None:
         self._received += 1

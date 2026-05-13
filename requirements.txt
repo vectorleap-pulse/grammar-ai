@@ -1,9 +1,11 @@
 keyboard>=0.13
 loguru>=0.7
 openai>=1.0
+Pillow>=9.0
 pyautogui>=0.9
 pydantic>=2.0
 pyinstaller>=5.14
 pyperclip>=1.8
+pystray>=0.19
 tomli_w>=1.2.0
 tomli>=2.4.1

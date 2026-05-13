@@ -13,11 +13,10 @@ from app.ui.main_tab import MainTab
 
 _UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000  # 5 minutes
 _IDLE_OPACITY = 0.3
-_IDLE_TIMEOUT_MS = 10 * 1000  # 1 minute
+_IDLE_TIMEOUT_MS = 10 * 1000
 
 
 def get_app_version() -> str:
-    """Get the application version from installed metadata or pyproject.toml."""
     try:
         return importlib.metadata.version("grammar-ai")
     except importlib.metadata.PackageNotFoundError:
@@ -41,6 +40,17 @@ def get_app_version() -> str:
         return "dev"
 
 
+def _make_tray_icon():  # type: ignore[return]
+    from PIL import Image, ImageDraw
+
+    size = 64
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.ellipse([2, 2, size - 2, size - 2], fill=(0, 120, 212, 255))
+    draw.text((18, 16), "GA", fill=(255, 255, 255))
+    return img
+
+
 class MainWindow(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
@@ -52,6 +62,7 @@ class MainWindow(tk.Tk):
         self.minsize(360, 480)
         self.maxsize(360, 720)
         self._idle_timer_id: Optional[str] = None
+        self._tray = None
         self._build()
         self._bind_idle_events()
         self._schedule_idle_timer()
@@ -59,6 +70,7 @@ class MainWindow(tk.Tk):
         self.after(10, self._remove_maximize_button)
         updater.cleanup_old_files()
         self.after(5000, self._start_update_check)
+        self.after(100, self._start_tray)
 
     def _bind_idle_events(self) -> None:
         self.bind_all("<Enter>", self._on_user_activity)
@@ -87,7 +99,6 @@ class MainWindow(tk.Tk):
         self._schedule_idle_timer()
 
     def _build(self) -> None:
-        # Update bar — hidden until an update is found
         self._update_bar = ttk.Frame(self, padding=(6, 2))
         self._update_lbl = ttk.Label(self._update_bar, font=("", 9))
         self._update_lbl.pack(side="left")
@@ -119,6 +130,46 @@ class MainWindow(tk.Tk):
         WS_MAXIMIZEBOX = 0x00010000
         style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_STYLE)  # type: ignore[attr-defined]
         ctypes.windll.user32.SetWindowLongW(hwnd, GWL_STYLE, style & ~WS_MAXIMIZEBOX)  # type: ignore[attr-defined]
+
+    # ------------------------------------------------------------------ tray
+
+    def _start_tray(self) -> None:
+        try:
+            import pystray
+
+            icon_image = _make_tray_icon()
+            menu = pystray.Menu(
+                pystray.MenuItem("Open", self._tray_open, default=True),
+                pystray.MenuItem("Quit", self._tray_quit),
+            )
+            self._tray = pystray.Icon("Grammar AI", icon_image, "Grammar AI", menu)
+            threading.Thread(target=self._tray.run, daemon=True).start()
+        except Exception:
+            pass  # tray is optional — app still works without it
+
+    def _tray_open(self, *_: object) -> None:
+        self.after(0, self._show_window)
+
+    def _tray_quit(self, *_: object) -> None:
+        self.after(0, self._quit)
+
+    def _show_window(self) -> None:
+        self.deiconify()
+        self.lift()
+        self.focus_force()
+        self._on_user_activity()
+
+    def _on_close(self) -> None:
+        self.withdraw()
+
+    def _quit(self) -> None:
+        if self._tray is not None:
+            try:
+                self._tray.stop()
+            except Exception:
+                pass
+        self._main_tab.cleanup()
+        self.destroy()
 
     # ------------------------------------------------------------------ update
 
@@ -174,13 +225,8 @@ class MainWindow(tk.Tk):
                 messagebox.showerror("Update Failed", "Could not download the update.", parent=self)
                 return
             if updater.apply_update(new_exe):
-                self._main_tab.cleanup()
-                self.destroy()
+                self._quit()
             else:
                 messagebox.showerror("Update Failed", "Could not apply the update.", parent=self)
 
         threading.Thread(target=worker, daemon=True).start()
-
-    def _on_close(self) -> None:
-        self._main_tab.cleanup()
-        self.destroy()

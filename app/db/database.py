@@ -6,7 +6,9 @@ from loguru import logger
 
 from app.schemas.models import HistoryEntry, LLMConfig
 
-DB_PATH = Path.home() / ".grammar-ai" / "data.db"
+DATA_DIR = Path.home() / ".grammar-ai"
+DB_PATH = DATA_DIR / "data.db"
+LOG_PATH = DATA_DIR / "grammar_ai.log"
 
 
 def _connect() -> sqlite3.Connection:
@@ -97,3 +99,18 @@ def get_history_count() -> int:
     with _connect() as conn:
         row = conn.execute("SELECT COUNT(*) as count FROM history").fetchone()
     return row["count"]
+
+
+def load_autorun() -> bool:
+    with _connect() as conn:
+        row = conn.execute("SELECT value FROM settings WHERE key = 'autorun'").fetchone()
+    return row["value"] == "1" if row else False
+
+
+def save_autorun(enabled: bool) -> None:
+    with _connect() as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES ('autorun', ?)",
+            ("1" if enabled else "0",),
+        )
+    logger.info(f"Autorun setting saved: {enabled}")

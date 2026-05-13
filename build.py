@@ -68,8 +68,10 @@ def build_exe(debug: bool = False) -> int:
     else:
         pyinstaller_args.append("--windowed")
 
-    # Ensure loguru is bundled into the release executable
+    # Ensure loguru, pystray and Pillow are bundled into the release executable
     pyinstaller_args.extend(["--hidden-import", "loguru", "--collect-all", "loguru"])
+    pyinstaller_args.extend(["--hidden-import", "pystray", "--collect-all", "pystray"])
+    pyinstaller_args.extend(["--hidden-import", "PIL", "--collect-all", "PIL"])
 
     pyinstaller_args.append("main.py")
 

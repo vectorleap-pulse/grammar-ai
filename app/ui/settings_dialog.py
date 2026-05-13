@@ -4,8 +4,9 @@ from typing import Callable
 
 from loguru import logger
 
+from app.core.autorun import configure_autorun
 from app.core.llm import check_connection
-from app.db.database import save_config
+from app.db.database import load_autorun, save_autorun, save_config
 from app.schemas.models import LLMConfig
 
 
@@ -43,11 +44,16 @@ class SettingsDialog(tk.Toplevel):
         self._key = ttk.Entry(f, width=44, show="*")
         self._key.grid(row=2, column=1, sticky="ew", **pad)  # type: ignore
 
+        self._autorun_var = tk.BooleanVar(value=load_autorun())
+        ttk.Checkbutton(f, text="Run at Windows startup", variable=self._autorun_var).grid(
+            row=3, column=0, columnspan=2, sticky="w", padx=8, pady=4
+        )
+
         self._status = ttk.Label(f, text="", foreground="gray", font=("", 8), wraplength=400)
-        self._status.grid(row=3, column=0, columnspan=2, sticky="w", padx=8, pady=2)
+        self._status.grid(row=4, column=0, columnspan=2, sticky="w", padx=8, pady=2)
 
         btn_row = ttk.Frame(f)
-        btn_row.grid(row=4, column=0, columnspan=2, pady=(8, 0))
+        btn_row.grid(row=5, column=0, columnspan=2, pady=(8, 0))
         ttk.Button(btn_row, text="Test Connection", command=self._test).pack(side="left", padx=4)
         ttk.Button(btn_row, text="Save", command=self._save).pack(side="left", padx=4)
         ttk.Button(btn_row, text="Cancel", command=self.destroy).pack(side="left", padx=4)
@@ -86,6 +92,11 @@ class SettingsDialog(tk.Toplevel):
             return
         save_config(cfg)
         self._on_save(cfg)
+
+        autorun = self._autorun_var.get()
+        save_autorun(autorun)
+        configure_autorun(autorun)
+
         logger.info("Settings saved and applied")
         self.destroy()
 
