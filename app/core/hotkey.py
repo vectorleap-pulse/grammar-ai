@@ -4,9 +4,12 @@ import threading
 import time
 from typing import Callable
 
+import pyautogui
+import pyperclip
 from loguru import logger
 
 from app.config import HOTKEY, HOTKEYS
+from app.core.focus import get_foreground_window
 
 try:
     import keyboard as _kb
@@ -54,11 +57,6 @@ class HotkeyManager:
         threading.Thread(target=self._capture, daemon=True).start()
 
     def _capture(self) -> None:
-        import pyautogui
-        import pyperclip
-
-        from app.core.focus import get_foreground_window
-
         # Record which window had focus before we steal it.
         self.last_hwnd = get_foreground_window()
 

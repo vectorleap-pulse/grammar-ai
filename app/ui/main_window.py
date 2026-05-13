@@ -1,13 +1,17 @@
 import ctypes
+import importlib
 import importlib.metadata
 import sys
 import threading
 import tkinter as tk
+import tomllib
 from pathlib import Path
 from tkinter import messagebox, ttk
 from typing import Optional
 
+import pystray
 from loguru import logger
+from PIL import Image, ImageDraw
 
 from app.config import (
     APP_NAME,
@@ -28,11 +32,6 @@ def get_app_version() -> str:
     except importlib.metadata.PackageNotFoundError:
         pass
 
-    try:
-        import tomllib
-    except ImportError:
-        tomllib = None  # type: ignore[assignment]
-
     if getattr(sys, "frozen", False):
         project_root = Path(sys._MEIPASS)  # type: ignore[attr-defined]
     else:
@@ -47,9 +46,7 @@ def get_app_version() -> str:
         return "dev"
 
 
-def _make_tray_icon():  # type: ignore[return]
-    from PIL import Image, ImageDraw
-
+def _make_tray_icon() -> Image.Image:
     size = 64
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
@@ -116,8 +113,6 @@ class MainWindow(tk.Tk):
 
     def _start_tray(self) -> None:
         try:
-            import pystray
-
             icon_image = _make_tray_icon()
             menu = pystray.Menu(
                 pystray.MenuItem("Open", self._tray_open, default=True),

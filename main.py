@@ -6,6 +6,9 @@ from pathlib import Path
 from loguru import logger
 
 from app.config import DATA_DIR, ERROR_LOG_PATH, EXE_OLD_SUFFIX, LOG_PATH
+from app.core.autorun import configure_autorun
+from app.db.database import init_db, load_autorun
+from app.ui.main_window import MainWindow
 
 
 def _ensure_exe_name() -> None:
@@ -42,10 +45,6 @@ def main() -> None:
         parser = argparse.ArgumentParser(add_help=False)
         parser.add_argument("--tray-only", action="store_true")
         args, _ = parser.parse_known_args()
-
-        from app.core.autorun import configure_autorun
-        from app.db.database import init_db, load_autorun
-        from app.ui.main_window import MainWindow
 
         init_db()
         configure_autorun(load_autorun())

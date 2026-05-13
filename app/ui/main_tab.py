@@ -14,6 +14,7 @@ from app.core.hotkey import HotkeyManager
 from app.core.llm import polish_text
 from app.db.database import load_config, save_history
 from app.schemas.models import LLMConfig, PolishedText
+from app.ui.settings_dialog import SettingsDialog
 
 
 class _PolishedItem(ttk.Frame):
@@ -195,8 +196,6 @@ class MainTab(ttk.Frame):
     # ------------------------------------------------------------------ settings
 
     def _open_settings(self) -> None:
-        from app.ui.settings_dialog import SettingsDialog
-
         SettingsDialog(self, self._config, self._on_config_saved, self._on_autorun_change)
 
     def _on_config_saved(self, config: LLMConfig) -> None:
