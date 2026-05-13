@@ -106,6 +106,7 @@ class MainTab(ttk.Frame):
         self._build_toolbar()
         self._build_original()
         self._build_action_bar()
+        self._build_status()
         self._build_results()
 
     def _build_toolbar(self) -> None:
@@ -144,9 +145,12 @@ class MainTab(ttk.Frame):
             command=self._trigger_manual,
         ).pack(side="left", padx=2)
 
+    def _build_status(self) -> None:
+        row = ttk.Frame(self, padding=(8, 0, 8, 4))
+        row.pack(fill="x")
         self._status_var = tk.StringVar(value="")
-        self._status_lbl = ttk.Label(bar, textvariable=self._status_var, font=("", 8))
-        self._status_lbl.pack(side="left", padx=(6, 0))
+        self._status_lbl = ttk.Label(row, textvariable=self._status_var, font=("", 8))
+        self._status_lbl.pack(side="left")
 
     def _build_results(self) -> None:
         lf = ttk.LabelFrame(self, text="Polished Versions", padding=4)
