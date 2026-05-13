@@ -7,6 +7,8 @@ from pathlib import Path
 from tkinter import messagebox, ttk
 from typing import Optional
 
+from loguru import logger
+
 from app.core import updater
 from app.db.database import load_autorun
 from app.ui.history_tab import HistoryTab
@@ -146,9 +148,12 @@ class MainWindow(tk.Tk):
                 pystray.MenuItem("Quit", self._tray_quit),
             )
             self._tray = pystray.Icon("Grammar AI", icon_image, "Grammar AI", menu)
-            threading.Thread(target=self._tray.run, daemon=True).start()
-        except Exception:
-            pass
+            if self._tray is not None:
+                threading.Thread(target=self._tray.run, daemon=True).start()
+            else:
+                logger.error("Failed to create system tray icon")
+        except Exception as ex:
+            logger.exception(f"Error occurred while creating system tray icon: {ex}")
 
     def _tray_open(self, *_: object) -> None:
         self.after(0, self._show_window)
