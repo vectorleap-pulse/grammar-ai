@@ -1,32 +1,37 @@
 import ctypes
+import importlib
 import importlib.metadata
 import sys
 import threading
 import tkinter as tk
+import tomllib
 from pathlib import Path
 from tkinter import messagebox, ttk
 from typing import Optional
 
+import pystray
+from loguru import logger
+from PIL import Image, ImageTk
+
+from app.config import (
+    APP_NAME,
+    ICON_PATH,
+    UPDATE_CHECK_INTERVAL_MS,
+    WINDOW_GEOMETRY,
+    WINDOW_MAX_SIZE,
+    WINDOW_MIN_SIZE,
+)
 from app.core import updater
+from app.db.database import load_autorun
 from app.ui.history_tab import HistoryTab
 from app.ui.main_tab import MainTab
 
-_UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000  # 5 minutes
-_IDLE_OPACITY = 0.3
-_IDLE_TIMEOUT_MS = 10 * 1000  # 1 minute
-
 
 def get_app_version() -> str:
-    """Get the application version from installed metadata or pyproject.toml."""
     try:
         return importlib.metadata.version("grammar-ai")
     except importlib.metadata.PackageNotFoundError:
         pass
-
-    try:
-        import tomllib
-    except ImportError:
-        tomllib = None  # type: ignore[assignment]
 
     if getattr(sys, "frozen", False):
         project_root = Path(sys._MEIPASS)  # type: ignore[attr-defined]
@@ -37,57 +42,34 @@ def get_app_version() -> str:
         with open(project_root / "pyproject.toml", "rb") as f:
             data = tomllib.load(f)
         return data["project"]["version"]
-    except Exception:
+    except Exception as e:
+        logger.debug(f"Could not read version from pyproject.toml: {e}")
         return "dev"
 
 
 class MainWindow(tk.Tk):
-    def __init__(self) -> None:
+    def __init__(self, tray_only: bool = False) -> None:
         super().__init__()
+        if tray_only:
+            self.withdraw()
         self._version = get_app_version()
-        self.title(f"Grammar AI v{self._version}")
-        self.attributes("-topmost", True)
+        self.title(f"{APP_NAME} v{self._version}")
         self.attributes("-alpha", 1.0)
-        self.geometry("360x640")
-        self.minsize(360, 480)
-        self.maxsize(360, 720)
-        self._idle_timer_id: Optional[str] = None
+        self.geometry(WINDOW_GEOMETRY)
+        self.minsize(*WINDOW_MIN_SIZE)
+        self.maxsize(*WINDOW_MAX_SIZE)
+        self._set_window_icon()
+        self._tray = None
+        self._autorun = load_autorun()
         self._build()
-        self._bind_idle_events()
-        self._schedule_idle_timer()
         self.protocol("WM_DELETE_WINDOW", self._on_close)
         self.after(10, self._remove_maximize_button)
         updater.cleanup_old_files()
         self.after(5000, self._start_update_check)
-
-    def _bind_idle_events(self) -> None:
-        self.bind_all("<Enter>", self._on_user_activity)
-        self.bind_all("<Motion>", self._on_user_activity)
-        self.bind_all("<Button>", self._on_user_activity)
-        self.bind_all("<Key>", self._on_user_activity)
-        self.bind_all("<FocusIn>", self._on_user_activity)
-
-    def _schedule_idle_timer(self) -> None:
-        if self._idle_timer_id is not None:
-            self.after_cancel(self._idle_timer_id)
-        self._idle_timer_id = self.after(_IDLE_TIMEOUT_MS, self._on_idle_timeout)
-
-    def _on_idle_timeout(self) -> None:
-        self._idle_timer_id = None
-        try:
-            self.attributes("-alpha", _IDLE_OPACITY)
-        except tk.TclError:
-            pass
-
-    def _on_user_activity(self, event: tk.Event | None = None) -> None:  # type: ignore[type-arg]
-        try:
-            self.attributes("-alpha", 1.0)
-        except tk.TclError:
-            pass
-        self._schedule_idle_timer()
+        if self._autorun:
+            self.after(100, self._start_tray)
 
     def _build(self) -> None:
-        # Update bar — hidden until an update is found
         self._update_bar = ttk.Frame(self, padding=(6, 2))
         self._update_lbl = ttk.Label(self._update_bar, font=("", 9))
         self._update_lbl.pack(side="left")
@@ -99,7 +81,7 @@ class MainWindow(tk.Tk):
         self._nb = ttk.Notebook(self)
         self._nb.pack(fill="both", expand=True, padx=4, pady=4)
 
-        self._main_tab = MainTab(self._nb)
+        self._main_tab = MainTab(self._nb, on_autorun_change=self.apply_autorun)
         self._history_tab = HistoryTab(self._nb)
 
         self._nb.add(self._main_tab, text="  Main  ")
@@ -120,6 +102,69 @@ class MainWindow(tk.Tk):
         style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_STYLE)  # type: ignore[attr-defined]
         ctypes.windll.user32.SetWindowLongW(hwnd, GWL_STYLE, style & ~WS_MAXIMIZEBOX)  # type: ignore[attr-defined]
 
+    def _set_window_icon(self) -> None:
+        try:
+            self._icon_photo = ImageTk.PhotoImage(Image.open(ICON_PATH))
+            self.iconphoto(True, self._icon_photo)  # type: ignore[arg-type]
+        except Exception as e:
+            logger.debug(f"Could not set window icon: {e}")
+
+    # ------------------------------------------------------------------ tray
+
+    def _start_tray(self) -> None:
+        try:
+            icon_image = Image.open(ICON_PATH).convert("RGBA")
+            menu = pystray.Menu(
+                pystray.MenuItem("Open", self._tray_open, default=True),
+                pystray.MenuItem("Quit", self._tray_quit),
+            )
+            self._tray = pystray.Icon(APP_NAME, icon_image, f"{APP_NAME} v{self._version}", menu)
+            if self._tray is not None:
+                threading.Thread(target=self._tray.run, daemon=True).start()
+            else:
+                logger.error("Failed to create system tray icon")
+        except Exception as ex:
+            logger.exception(f"Error occurred while creating system tray icon: {ex}")
+
+    def _tray_open(self, *_: object) -> None:
+        self.after(0, self._show_window)
+
+    def _tray_quit(self, *_: object) -> None:
+        self.after(0, self._quit)
+
+    def _show_window(self) -> None:
+        self.deiconify()
+        self.attributes("-topmost", True)
+        self.lift()
+        self.focus_force()
+        self.attributes("-topmost", False)
+
+    def apply_autorun(self, enabled: bool) -> None:
+        self._autorun = enabled
+        if enabled and self._tray is None:
+            self._start_tray()
+        elif not enabled and self._tray is not None:
+            try:
+                self._tray.stop()
+            except Exception as e:
+                logger.debug(f"Tray stop error in apply_autorun: {e}")
+            self._tray = None
+
+    def _on_close(self) -> None:
+        if self._autorun:
+            self.withdraw()
+        else:
+            self._quit()
+
+    def _quit(self) -> None:
+        if self._tray is not None:
+            try:
+                self._tray.stop()
+            except Exception as e:
+                logger.debug(f"Tray stop error in _quit: {e}")
+        self._main_tab.cleanup()
+        self.destroy()
+
     # ------------------------------------------------------------------ update
 
     def _start_update_check(self) -> None:
@@ -136,7 +181,7 @@ class MainWindow(tk.Tk):
             self._update_lbl.config(text=f"Update v{new_version} available")
             self._update_bar.pack(fill="x", padx=4, pady=(0, 2), before=self._nb)
         else:
-            self.after(_UPDATE_CHECK_INTERVAL_MS, self._start_update_check)
+            self.after(UPDATE_CHECK_INTERVAL_MS, self._start_update_check)
 
     def _do_update(self) -> None:
         if not self._update_url:
@@ -174,13 +219,8 @@ class MainWindow(tk.Tk):
                 messagebox.showerror("Update Failed", "Could not download the update.", parent=self)
                 return
             if updater.apply_update(new_exe):
-                self._main_tab.cleanup()
-                self.destroy()
+                self._quit()
             else:
                 messagebox.showerror("Update Failed", "Could not apply the update.", parent=self)
 
         threading.Thread(target=worker, daemon=True).start()
-
-    def _on_close(self) -> None:
-        self._main_tab.cleanup()
-        self.destroy()

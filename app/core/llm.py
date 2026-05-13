@@ -1,13 +1,11 @@
-import concurrent.futures
 import json
 from typing import Callable, Optional
 
 from loguru import logger
 from openai import OpenAI, OpenAIError
 
+from app.config import STYLES
 from app.schemas.models import LLMConfig, PolishedText
-
-TONES = ["professional", "casual", "friendly", "formal", "concise"]
 
 _SYSTEM = """
 ## Role
@@ -53,16 +51,25 @@ def _get_client(config: LLMConfig) -> OpenAI:
     return _clients[key]
 
 
-def _format_tone_request(text: str, tone: str) -> str:
-    return f"""Polish the text inside <input_text> tags in {tone} tone.
-Return ONLY valid JSON matching this structure: {{"tone": "{tone}", "text": "<polished text>"}}.
+def _format_batch_request(text: str, tone: str) -> str:
+    style_entries = "\n".join(f'  "{s}": "<polished text in {s} style>"' for s in STYLES)
+    return f"""Polish the text inside <input_text> tags in a {tone} tone, for all of these styles: {", ".join(STYLES)}.
+Return ONLY valid JSON with this exact structure:
+{{
+{style_entries}
+}}
 
 <input_text>
 {text}
 </input_text>"""
 
 
-def _polish_single_tone(text: str, tone: str, config: LLMConfig) -> PolishedText:
+def polish_text(
+    text: str,
+    tone: str,
+    config: LLMConfig,
+    on_result: Optional[Callable[[PolishedText], None]] = None,
+) -> list[PolishedText]:
     client = _get_client(config)
     response = client.chat.completions.create(
         model=config.model,
@@ -70,30 +77,23 @@ def _polish_single_tone(text: str, tone: str, config: LLMConfig) -> PolishedText
         max_tokens=8192,
         messages=[
             {"role": "system", "content": _SYSTEM},
-            {"role": "user", "content": _format_tone_request(text, tone)},
+            {"role": "user", "content": _format_batch_request(text, tone)},
         ],
     )
     content = response.choices[0].message.content or "{}"
     if isinstance(content, dict):
         content = json.dumps(content)
-    logger.debug(f"LLM raw response for {tone} (first 200 chars): {content[:200]}")
-    return PolishedText.model_validate_json(content)
+    logger.debug(f"LLM batch response (first 200 chars): {content[:200]}")
 
-
-def polish_text(
-    text: str,
-    config: LLMConfig,
-    on_result: Optional[Callable[[PolishedText], None]] = None,
-) -> list[PolishedText]:
+    data = json.loads(content)
     results: list[PolishedText] = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(TONES)) as executor:
-        futures = {executor.submit(_polish_single_tone, text, tone, config): tone for tone in TONES}
-        for future in concurrent.futures.as_completed(futures):
-            result = future.result()
-            results.append(result)
-            if on_result:
-                on_result(result)
-    logger.info(f"Received {len(results)} polished versions")
+    for style in STYLES:
+        result = PolishedText(tone=tone, style=style, text=data.get(style, ""))
+        results.append(result)
+        if on_result:
+            on_result(result)
+
+    logger.info(f"Received {len(results)} polished versions for tone={tone}")
     return results
 
 

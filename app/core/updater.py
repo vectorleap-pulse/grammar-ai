@@ -8,8 +8,9 @@ import urllib.request
 from pathlib import Path
 from typing import Callable, Optional
 
-RELEASES_API = "https://api.github.com/repos/vectorleap-pulse/grammar-ai/releases/latest"
-_OLD_SUFFIX = "-old"
+from loguru import logger
+
+from app.config import EXE_OLD_SUFFIX, RELEASES_API
 
 
 def _get_platform_tag() -> str:
@@ -24,21 +25,30 @@ def _get_platform_tag() -> str:
 
 def get_current_exe() -> Optional[Path]:
     """Returns the running .exe path; None when running as a plain Python script."""
-    if getattr(sys, "frozen", False):
-        return Path(sys.executable)
-    return None
+    if not getattr(sys, "frozen", False):
+        logger.debug("Not running as frozen executable; skipping exe name check")
+        return None
+    exe = Path(sys.executable)
+    if exe.exists():
+        return exe
+    # After a startup rename sys.executable no longer exists — fall back to grammar-ai.exe.
+    renamed = exe.parent / "grammar-ai.exe"
+    if renamed.exists():
+        return renamed
+    return exe
 
 
 def cleanup_old_files() -> None:
     """Delete any *-old.exe left over from a previous update."""
     exe = get_current_exe()
     if exe is None:
+        logger.debug("Not running as frozen executable; skipping old file cleanup")
         return
-    for f in exe.parent.glob(f"*{_OLD_SUFFIX}{exe.suffix}"):
+    for f in exe.parent.glob(f"*{EXE_OLD_SUFFIX}{exe.suffix}"):
         try:
             f.unlink()
-        except OSError:
-            pass
+        except OSError as e:
+            logger.debug(f"Could not delete old exe {f.name}: {e}")
 
 
 def _parse_version(v: str) -> tuple[int, ...]:
@@ -73,8 +83,8 @@ def check_for_update(current_version: str) -> Optional[tuple[str, str]]:
             name: str = asset.get("name", "")
             if platform_tag in name:
                 return latest, asset["browser_download_url"]
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"Update check failed: {e}")
     return None
 
 
@@ -109,11 +119,12 @@ def download_update(
                     if on_progress and total:
                         on_progress(int(downloaded * 100 / total))
         return dest
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Download failed from {url}: {e}")
         try:
             dest.unlink(missing_ok=True)
-        except OSError:
-            pass
+        except OSError as oe:
+            logger.debug(f"Could not remove partial download {dest.name}: {oe}")
         return None
 
 
@@ -124,17 +135,19 @@ def apply_update(new_exe: Path) -> bool:
     """
     exe = get_current_exe()
     if exe is None:
+        logger.debug("Not running as frozen executable; skipping update application")
         return False
 
-    old_exe = exe.with_name(exe.stem + _OLD_SUFFIX + exe.suffix)
+    old_exe = exe.with_name(exe.stem + EXE_OLD_SUFFIX + exe.suffix)
     try:
         exe.rename(old_exe)
         subprocess.Popen([str(new_exe)])
         return True
-    except Exception:
+    except Exception as e:
+        logger.error(f"Failed to apply update {new_exe.name}: {e}")
         if old_exe.exists() and not exe.exists():
             try:
                 old_exe.rename(exe)
-            except OSError:
-                pass
+            except OSError as oe:
+                logger.warning(f"Rollback rename failed: {oe}")
         return False

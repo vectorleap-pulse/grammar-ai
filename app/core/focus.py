@@ -4,6 +4,8 @@ import ctypes
 import sys
 import time
 
+import pyautogui
+import pyperclip
 from loguru import logger
 
 _IS_WIN = sys.platform == "win32"
@@ -20,9 +22,6 @@ def restore_focus_and_paste(hwnd: int, original: str, polished: str) -> bool:
     if not _IS_WIN or not hwnd:
         return False
     try:
-        import pyautogui
-        import pyperclip
-
         ctypes.windll.user32.SetForegroundWindow(hwnd)  # type: ignore[attr-defined]
         time.sleep(0.15)
         pyautogui.hotkey("ctrl", "a")

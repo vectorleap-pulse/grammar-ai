@@ -59,6 +59,10 @@ def build_exe(debug: bool = False) -> int:
         str(spec_dir),
         "--add-data",
         f"{root / 'pyproject.toml'}{data_separator}.",
+        "--add-data",
+        f"{root / 'resources' / 'icon.png'}{data_separator}resources",
+        "--icon",
+        str(root / "resources" / "icon.png"),
         "--clean",
         "--noconfirm",
     ]
@@ -68,8 +72,10 @@ def build_exe(debug: bool = False) -> int:
     else:
         pyinstaller_args.append("--windowed")
 
-    # Ensure loguru is bundled into the release executable
+    # Ensure loguru, pystray and Pillow are bundled into the release executable
     pyinstaller_args.extend(["--hidden-import", "loguru", "--collect-all", "loguru"])
+    pyinstaller_args.extend(["--hidden-import", "pystray", "--collect-all", "pystray"])
+    pyinstaller_args.extend(["--hidden-import", "PIL", "--collect-all", "PIL"])
 
     pyinstaller_args.append("main.py")
 

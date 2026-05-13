@@ -4,7 +4,12 @@ import threading
 import time
 from typing import Callable
 
+import pyautogui
+import pyperclip
 from loguru import logger
+
+from app.config import HOTKEY, HOTKEYS
+from app.core.focus import get_foreground_window
 
 try:
     import keyboard as _kb
@@ -13,9 +18,6 @@ try:
 except ImportError:
     _HAS_KB = False
     logger.warning("'keyboard' module unavailable; global hotkey disabled")
-
-HOTKEYS = ["ctrl", "shift", "space"]
-HOTKEY = "+".join(HOTKEYS)
 
 
 class HotkeyManager:
@@ -45,8 +47,8 @@ class HotkeyManager:
             if self._enabled:
                 try:
                     _kb.remove_hotkey(HOTKEY)
-                except (KeyError, ValueError):
-                    pass
+                except (KeyError, ValueError) as e:
+                    logger.debug(f"Hotkey {HOTKEY} was not registered: {e}")
                 self._enabled = False
                 logger.info(f"Hotkey {HOTKEY} disabled")
 
@@ -55,11 +57,6 @@ class HotkeyManager:
         threading.Thread(target=self._capture, daemon=True).start()
 
     def _capture(self) -> None:
-        import pyautogui
-        import pyperclip
-
-        from app.core.focus import get_foreground_window
-
         # Record which window had focus before we steal it.
         self.last_hwnd = get_foreground_window()
 

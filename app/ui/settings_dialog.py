@@ -1,11 +1,12 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
-from typing import Callable
+from typing import Callable, Optional
 
 from loguru import logger
 
+from app.core.autorun import configure_autorun
 from app.core.llm import check_connection
-from app.db.database import save_config
+from app.db.database import load_autorun, save_autorun, save_config
 from app.schemas.models import LLMConfig
 
 
@@ -15,16 +16,21 @@ class SettingsDialog(tk.Toplevel):
         parent: tk.Widget,
         config: LLMConfig,
         on_save: Callable[[LLMConfig], None],
+        on_autorun_change: Optional[Callable[[bool], None]] = None,
     ) -> None:
         super().__init__(parent)
+        self.withdraw()
         self.title("Settings")
         self.resizable(False, False)
-        self.grab_set()
         self.transient(parent)  # type: ignore
         self._on_save = on_save
+        self._on_autorun_change = on_autorun_change
         self._build()
         self._load(config)
+        self.update_idletasks()
         self._center(parent)
+        self.deiconify()
+        self.grab_set()
 
     def _build(self) -> None:
         pad = {"padx": 8, "pady": 4}
@@ -43,11 +49,16 @@ class SettingsDialog(tk.Toplevel):
         self._key = ttk.Entry(f, width=44, show="*")
         self._key.grid(row=2, column=1, sticky="ew", **pad)  # type: ignore
 
+        self._autorun_var = tk.BooleanVar(value=load_autorun())
+        ttk.Checkbutton(f, text="Run at Windows startup", variable=self._autorun_var).grid(
+            row=3, column=0, columnspan=2, sticky="w", padx=8, pady=4
+        )
+
         self._status = ttk.Label(f, text="", foreground="gray", font=("", 8), wraplength=400)
-        self._status.grid(row=3, column=0, columnspan=2, sticky="w", padx=8, pady=2)
+        self._status.grid(row=4, column=0, columnspan=2, sticky="w", padx=8, pady=2)
 
         btn_row = ttk.Frame(f)
-        btn_row.grid(row=4, column=0, columnspan=2, pady=(8, 0))
+        btn_row.grid(row=5, column=0, columnspan=2, pady=(8, 0))
         ttk.Button(btn_row, text="Test Connection", command=self._test).pack(side="left", padx=4)
         ttk.Button(btn_row, text="Save", command=self._save).pack(side="left", padx=4)
         ttk.Button(btn_row, text="Cancel", command=self.destroy).pack(side="left", padx=4)
@@ -86,22 +97,27 @@ class SettingsDialog(tk.Toplevel):
             return
         save_config(cfg)
         self._on_save(cfg)
+
+        autorun = self._autorun_var.get()
+        save_autorun(autorun)
+        configure_autorun(autorun)
+        if self._on_autorun_change:
+            self._on_autorun_change(autorun)
+
         logger.info("Settings saved and applied")
         self.destroy()
 
     def _center(self, parent: tk.Widget) -> None:
-        self.update_idletasks()
         parent_win = parent.winfo_toplevel()
-        parent_win.update_idletasks()
 
         pw = parent_win.winfo_width()
         ph = parent_win.winfo_height()
-        px = parent_win.winfo_rootx()
-        py = parent_win.winfo_rooty()
+        px = parent_win.winfo_x()
+        py = parent_win.winfo_y()
 
-        sw = self.winfo_width()
-        sh = self.winfo_height()
+        sw = self.winfo_reqwidth()
+        sh = self.winfo_reqheight()
 
-        x = px + max(0, (pw - sw) // 2)
-        y = py + max(0, (ph - sh) // 2)
-        self.geometry(f"+{x}+{y}")
+        x = px + (pw - sw) // 2
+        y = py + (ph - sh) // 2
+        self.geometry(f"{sw}x{sh}+{x}+{y}")

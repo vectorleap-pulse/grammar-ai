@@ -8,11 +8,11 @@
 
 ## Usage
 
-1. Launch the application.
-2. Configure your API settings (see Configuration section above).
+1. Launch the application. It runs in the system tray and starts automatically with Windows.
+2. Configure your API settings in Settings (see Configuration section).
 3. Enter or paste the text you want to polish.
-4. Trigger text polishing by pressing `Ctrl+Shift+Space`.
-5. Click the **USE** button for the polished version you want to use.
+4. Press `Ctrl+Shift+Space` to capture selected text from any window, or use the Trigger button in the app.
+5. Click the **Use** button next to the polished version you want to apply.
 
 ![Usage demo](media/how-to-use.gif)
 
@@ -32,6 +32,7 @@
 * Python 3.12
 * tkinter for UI
 * `openai`-compatible AI integration
+* `pystray` and `Pillow` for system tray
 * `loguru` for logging
 * `pydantic` for schema validation
 * `ruff` and `mypy` for linting
@@ -40,7 +41,7 @@
 
 ## Configuration
 
-Grammar AI supports any LLM provider that is OpenAI-compatible, including OpenAI, Anthropic, Google, and more. You can use any platform, unlike some existing tools that are limited to specific platforms.
+Grammar AI supports any LLM provider that is OpenAI-compatible, including OpenAI, Anthropic, Google, and more.
 
 ### Example Configuration ([Groq](https://groq.com/) Free Tier)
 
@@ -50,7 +51,7 @@ Grammar AI supports any LLM provider that is OpenAI-compatible, including OpenAI
 
 To configure:
 1. Launch the application.
-2. Go to Settings and enter your API configuration.
+2. Open Settings and enter your API configuration.
 
 ---
 
@@ -63,37 +64,26 @@ Download the latest prebuilt executable for Windows from the [Releases](https://
 ### From Source
 
 1. Clone the repository.
-2. Install dependencies: `pip install -r requirements.txt`
+2. Install dependencies: `pip install -e .`
 3. Run: `python main.py`
 
 ### Building from Source
 
 To build a standalone executable:
 
-1. Install dependencies: `pip install -r requirements.txt` (includes PyInstaller)
+1. Install dependencies including build tools: `pip install -e ".[dev]"`
 2. Run the build script:
-   - For release build: `python build.py` or `build.bat`
-   - For debug build (with console): `python build.py --debug` or `build.bat debug`
+   - Release build: `python build.py` or `build.bat`
+   - Debug build (with console): `python build.py --debug` or `build.bat debug`
 3. The executable will be created in the `dist/` folder.
-
----
-
-## Usage
-
-1. Launch the application.
-2. Configure your API settings (see Configuration section above).
-3. Enter or paste the text you want to polish.
-4. Trigger text polishing by pressing `Ctrl+Shift+Space`.
-5. Click the **USE** button for the polished version you want to use.
-
-![Usage demo](media/how-to-use.gif)
 
 ---
 
 ## Storage
 
-* Local SQLite database stores configuration and history.
+* Local SQLite database and log files are stored in `~/.grammar-ai/`.
 * History entries include original text, polished text, tone, and timestamp.
+* API keys are stored locally in the app database.
 
 ---
 
@@ -101,15 +91,8 @@ To build a standalone executable:
 
 * `main.py` — application entry point
 * `app/` — core application modules
-* `requirements.txt` — runtime dependencies
-* `pyproject.toml` — linting and type-checking configuration
-
----
-
-## Notes
-
-* API keys are stored locally in the app database.
-* The project is designed for minimal setup and straightforward use.
+* `pyproject.toml` — project metadata, dependencies, and linting configuration
+* `build.py` — PyInstaller build script
 
 ---
 

@@ -1,38 +1,41 @@
+import os
 import threading
 import tkinter as tk
 import tkinter.font as tkFont
 from tkinter import messagebox, ttk
-from typing import Callable
+from typing import Callable, Optional
 
 import pyperclip
 from loguru import logger
 
+from app.config import HOTKEYS, LOG_PATH, STYLES, TONES
 from app.core.focus import restore_focus_and_paste
-from app.core.hotkey import HOTKEY, HotkeyManager
-from app.core.llm import TONES, polish_text
-from app.db.database import load_config, save_history
+from app.core.hotkey import HotkeyManager
+from app.core.llm import polish_text
+from app.db.database import load_config, load_selected_tone, save_history, save_selected_tone
 from app.schemas.models import LLMConfig, PolishedText
+from app.ui.settings_dialog import SettingsDialog
 
 
 class _PolishedItem(ttk.Frame):
-    """One polished-text card: tone badge + editable text + Use button."""
+    """One polished-text card: style badge + editable text + Use button."""
 
     def __init__(
         self,
         parent: tk.Widget,
-        tone: str,
+        style: str,
         text: str,
         on_use: Callable[[str, str], None],
     ) -> None:
         super().__init__(parent, relief="groove", borderwidth=1)
-        self._tone = tone
+        self._style = style
         self._on_use = on_use
-        self._build(tone, text)
+        self._build(style, text)
 
-    def _build(self, tone: str, text: str) -> None:
+    def _build(self, style: str, text: str) -> None:
         header = ttk.Frame(self)
         header.pack(fill="x", padx=4, pady=(4, 0))
-        ttk.Label(header, text=tone.capitalize(), font=("", 8, "bold")).pack(side="left")
+        ttk.Label(header, text=style.capitalize(), font=("", 8, "bold")).pack(side="left")
         ttk.Button(header, text="Use", width=5, command=self._use).pack(side="right")
 
         self._txt = tk.Text(
@@ -78,16 +81,22 @@ class _PolishedItem(ttk.Frame):
         return self._txt.get("1.0", "end-1c")
 
     def _use(self) -> None:
-        self._on_use(self._tone, self.get_text())
+        self._on_use(self._style, self.get_text())
 
 
 class MainTab(ttk.Frame):
-    def __init__(self, parent: tk.Widget) -> None:
+    def __init__(
+        self,
+        parent: tk.Widget,
+        on_autorun_change: Optional[Callable[[bool], None]] = None,
+    ) -> None:
         super().__init__(parent)
         self._config: LLMConfig = load_config()
         self._hotkey = HotkeyManager(self._on_hotkey_text)
         self._items: list[_PolishedItem] = []
         self._received = 0
+        self._on_autorun_change = on_autorun_change
+        self._tone_var = tk.StringVar(value=load_selected_tone().capitalize())
         self._build()
         self._hotkey.enable()
 
@@ -95,40 +104,53 @@ class MainTab(ttk.Frame):
 
     def _build(self) -> None:
         self._build_toolbar()
-        ttk.Separator(self, orient="horizontal").pack(fill="x", padx=4)
         self._build_original()
-        ttk.Separator(self, orient="horizontal").pack(fill="x", padx=4)
+        self._build_action_bar()
+        self._build_status()
         self._build_results()
 
     def _build_toolbar(self) -> None:
-        # First line: Clear and Settings buttons
-        bar1 = ttk.Frame(self, padding=(6, 4))
-        bar1.pack(fill="x")
-
-        ttk.Button(bar1, text="Clear", command=self._clear_all).pack(side="left", padx=2)
-        ttk.Button(bar1, text="Settings", command=self._open_settings).pack(side="right", padx=2)
-
-        # Second line: Trigger button and status message
-        bar2 = ttk.Frame(self, padding=(6, 4))
-        bar2.pack(fill="x")
-
-        ttk.Button(bar2, text=f"Trigger ({HOTKEY.upper()})", command=self._trigger_manual).pack(
-            side="left", padx=2
-        )
-
-        self._status_var = tk.StringVar(value="")
-        self._status_lbl = ttk.Label(bar2, textvariable=self._status_var, font=("", 8))
-        self._status_lbl.pack(side="left", padx=8)
+        bar = ttk.Frame(self, padding=(6, 4))
+        bar.pack(fill="x")
+        ttk.Button(bar, text="Clear", command=self._clear_all).pack(side="left", padx=2)
+        ttk.Button(bar, text="Settings", command=self._open_settings).pack(side="right", padx=2)
 
     def _build_original(self) -> None:
         lf = ttk.LabelFrame(self, text="Original Text", padding=4)
-        lf.pack(fill="x", padx=6, pady=4)
+        lf.pack(fill="x", padx=6, pady=(0, 4))
 
         self._orig = tk.Text(lf, height=4, wrap="word", font=("", 9))
         self._orig.pack(fill="x")
-        self._orig.bind("<KeyRelease>", lambda e: self._update_original_height())
-        # Schedule initial height update after rendering
+        self._orig.bind("<KeyRelease>", lambda _e: self._update_original_height())
         self.after(10, self._update_original_height)
+
+    def _build_action_bar(self) -> None:
+        bar = ttk.Frame(self, padding=(6, 4))
+        bar.pack(fill="x")
+
+        ttk.Label(bar, text="Tone:").pack(side="left")
+        tone_combo = ttk.Combobox(
+            bar,
+            textvariable=self._tone_var,
+            values=[t.capitalize() for t in TONES],
+            state="readonly",
+            width=11,
+        )
+        tone_combo.pack(side="left", padx=(4, 8))
+        tone_combo.bind("<<ComboboxSelected>>", self._on_tone_change)
+
+        ttk.Button(
+            bar,
+            text=f"Trigger ({'+'.join([h.capitalize() for h in HOTKEYS])})",
+            command=self._trigger_manual,
+        ).pack(side="left", padx=2)
+
+    def _build_status(self) -> None:
+        row = ttk.Frame(self, padding=(8, 0, 8, 4))
+        row.pack(fill="x")
+        self._status_var = tk.StringVar(value="")
+        self._status_lbl = ttk.Label(row, textvariable=self._status_var, font=("", 8))
+        self._status_lbl.pack(side="left")
 
     def _build_results(self) -> None:
         lf = ttk.LabelFrame(self, text="Polished Versions", padding=4)
@@ -188,12 +210,13 @@ class MainTab(ttk.Frame):
     # ------------------------------------------------------------------ settings
 
     def _open_settings(self) -> None:
-        from app.ui.settings_dialog import SettingsDialog
-
-        SettingsDialog(self, self._config, self._on_config_saved)
+        SettingsDialog(self, self._config, self._on_config_saved, self._on_autorun_change)
 
     def _on_config_saved(self, config: LLMConfig) -> None:
         self._config = config
+
+    def _on_tone_change(self, _event: tk.Event) -> None:  # type: ignore[type-arg]
+        save_selected_tone(self._tone_var.get().lower())
 
     # ------------------------------------------------------------------ trigger
 
@@ -220,9 +243,12 @@ class MainTab(ttk.Frame):
         self._update_original_height()
         self._run_llm(text)
         top = self.winfo_toplevel()
-        top.deiconify()
-        top.lift()
-        top.focus_force()
+        if hasattr(top, "_show_window"):
+            top._show_window()  # type: ignore[union-attr]
+        else:
+            top.deiconify()
+            top.lift()
+            top.focus_force()
 
     # ------------------------------------------------------------------ LLM
 
@@ -237,36 +263,74 @@ class MainTab(ttk.Frame):
 
         self._clear_results()
         self._received = 0
-        self._set_status(f"Polishing… (0/{len(TONES)})", "blue")
+        self._set_status("Polishing…", "blue")
         config = self._config
 
         def on_result(r: PolishedText) -> None:
             self.after(0, lambda: self._add_result(text, r))
 
+        tone = self._tone_var.get().lower()
+
         def worker() -> None:
             try:
-                polish_text(text, config, on_result=on_result)
-                self.after(0, lambda: self._set_status(f"{len(TONES)} versions ready", "green"))
+                polish_text(text, tone, config, on_result=on_result)
+                self.after(0, lambda: self._set_status("Polished versions ready", "green"))
             except Exception as exc:
                 error_msg = str(exc)
                 logger.error(f"LLM error: {error_msg}")
-                self.after(0, lambda: self._set_status(f"Error: {error_msg}", "red"))
+                self.after(0, lambda: self._show_llm_error(error_msg))
 
         threading.Thread(target=worker, daemon=True).start()
 
+    def _show_llm_error(self, error_msg: str) -> None:
+        self._set_status("Error", "red")
+        top = self.winfo_toplevel()
+
+        dlg = tk.Toplevel(top)
+        dlg.title("LLM Error")
+        dlg.resizable(False, False)
+        dlg.transient(top)
+        dlg.grab_set()
+
+        ttk.Label(dlg, text="An error occurred while calling the LLM:", font=("", 9)).pack(
+            padx=16, pady=(14, 4), anchor="w"
+        )
+        txt = tk.Text(dlg, height=6, width=54, wrap="word", font=("", 9), state="normal")
+        txt.insert("1.0", error_msg)
+        txt.config(state="disabled")
+        txt.pack(padx=16, pady=(0, 8))
+
+        btn_row = ttk.Frame(dlg)
+        btn_row.pack(pady=(0, 12))
+
+        def open_log() -> None:
+            dlg.destroy()
+            try:
+                os.startfile(str(LOG_PATH))  # type: ignore[attr-defined]
+            except Exception as e:
+                messagebox.showerror("Error", f"Could not open log file:\n{e}", parent=top)
+
+        ttk.Button(btn_row, text="Open Log", command=open_log).pack(side="left", padx=6)
+        ttk.Button(btn_row, text="Close", command=dlg.destroy).pack(side="left", padx=6)
+
+        dlg.update_idletasks()
+        x = top.winfo_rootx() + (top.winfo_width() - dlg.winfo_width()) // 2
+        y = top.winfo_rooty() + (top.winfo_height() - dlg.winfo_height()) // 2
+        dlg.geometry(f"+{x}+{y}")
+
     def _add_result(self, original: str, result: PolishedText) -> None:
         self._received += 1
-        self._set_status(f"Polishing… ({self._received}/{len(TONES)})", "blue")
+        self._set_status(f"Polishing… ({self._received}/{len(STYLES)})", "blue")
         item = _PolishedItem(
             self._results_frame,
-            tone=result.tone,
+            style=result.style,
             text=result.text,
-            on_use=lambda tone, txt, orig=original: self._use_text(orig, tone, txt),  # type: ignore
+            on_use=lambda style, txt, orig=original: self._use_text(orig, style, txt),  # type: ignore
         )
 
         insert_index = 0
         for existing in self._items:
-            if TONES.index(existing._tone) > TONES.index(result.tone):
+            if STYLES.index(existing._style) > STYLES.index(result.style):
                 break
             insert_index += 1
 
@@ -279,14 +343,15 @@ class MainTab(ttk.Frame):
 
     # ------------------------------------------------------------------ Use
 
-    def _use_text(self, original: str, tone: str, text: str) -> None:
-        save_history(original, text, tone)
+    def _use_text(self, original: str, style: str, text: str) -> None:
+        tone = self._tone_var.get().lower()
+        save_history(original, text, tone, style)
         hwnd = self._hotkey.last_hwnd
         if hwnd and restore_focus_and_paste(hwnd, original, text):
-            self._set_status(f"Pasted ({tone})", "green")
+            self._set_status(f"Pasted ({tone} / {style})", "green")
         else:
             pyperclip.copy(text)
-            self._set_status(f"Copied to clipboard ({tone})", "gray")
+            self._set_status(f"Copied ({tone} / {style})", "gray")
 
     def _clear_all(self) -> None:
         self._orig.delete("1.0", "end")
