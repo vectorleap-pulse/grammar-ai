@@ -1,4 +1,5 @@
 import argparse
+import subprocess
 import sys
 import traceback
 from datetime import datetime
@@ -31,7 +32,9 @@ def _ensure_exe_name() -> None:
             new_path.rename(stale)
             logger.debug(f"Moved existing {target} to {stale.name} for cleanup")
         exe.rename(new_path)
-        logger.info(f"Renamed {exe.name} to {target}")
+        logger.info(f"Renamed {exe.name} to {target}; restarting")
+        subprocess.Popen([str(new_path)] + sys.argv[1:])
+        sys.exit(0)
     except Exception as e:
         logger.warning(f"Could not rename {exe.name} to {target}: {e}")
 
