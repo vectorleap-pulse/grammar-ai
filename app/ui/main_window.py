@@ -118,7 +118,7 @@ class MainWindow(tk.Tk):
                 pystray.MenuItem("Open", self._tray_open, default=True),
                 pystray.MenuItem("Quit", self._tray_quit),
             )
-            self._tray = pystray.Icon(APP_NAME, icon_image, APP_NAME, menu)
+            self._tray = pystray.Icon(APP_NAME, icon_image, f"{APP_NAME} v{self._version}", menu)
             if self._tray is not None:
                 threading.Thread(target=self._tray.run, daemon=True).start()
             else:
