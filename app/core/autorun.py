@@ -19,8 +19,9 @@ def configure_autorun(enabled: bool) -> None:
     try:
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, _KEY, 0, winreg.KEY_SET_VALUE) as key:
             if enabled:
-                winreg.SetValueEx(key, _NAME, 0, winreg.REG_SZ, str(exe))
-                logger.info(f"Autorun enabled: {exe}")
+                value = f'"{exe}" --tray-only'
+                winreg.SetValueEx(key, _NAME, 0, winreg.REG_SZ, value)
+                logger.info(f"Autorun enabled: {value}")
             else:
                 try:
                     winreg.DeleteValue(key, _NAME)

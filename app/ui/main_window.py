@@ -54,8 +54,10 @@ def _make_tray_icon():  # type: ignore[return]
 
 
 class MainWindow(tk.Tk):
-    def __init__(self) -> None:
+    def __init__(self, tray_only: bool = False) -> None:
         super().__init__()
+        if tray_only:
+            self.withdraw()
         self._version = get_app_version()
         self.title(f"Grammar AI v{self._version}")
         self.attributes("-alpha", 1.0)

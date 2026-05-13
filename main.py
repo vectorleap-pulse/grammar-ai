@@ -1,3 +1,4 @@
+import argparse
 import sys
 import traceback
 from pathlib import Path
@@ -44,13 +45,17 @@ def main() -> None:
 
         _ensure_exe_name()
 
+        parser = argparse.ArgumentParser(add_help=False)
+        parser.add_argument("--tray-only", action="store_true")
+        args, _ = parser.parse_known_args()
+
         from app.core.autorun import configure_autorun
         from app.db.database import init_db, load_autorun
         from app.ui.main_window import MainWindow
 
         init_db()
         configure_autorun(load_autorun())
-        app = MainWindow()
+        app = MainWindow(tray_only=args.tray_only)
         app.mainloop()
     except Exception as e:
         error_msg = f"Error starting Grammar AI: {e}\n{traceback.format_exc()}"
