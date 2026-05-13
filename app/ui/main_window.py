@@ -28,17 +28,26 @@ from app.ui.main_tab import MainTab
 
 
 def get_app_version() -> str:
+    if getattr(sys, "frozen", False):
+        # In a frozen exe, importlib.metadata reflects the dist-info from the
+        # build environment (installed before version bump), so read the
+        # bundled pyproject.toml which is always written after the bump.
+        project_root = Path(sys._MEIPASS)  # type: ignore[attr-defined]
+        try:
+            with open(project_root / "pyproject.toml", "rb") as f:
+                data = tomllib.load(f)
+            return data["project"]["version"]
+        except Exception as e:
+            logger.debug(f"Could not read version from pyproject.toml: {e}")
+            return "dev"
+
     try:
         return importlib.metadata.version("grammar-ai")
     except importlib.metadata.PackageNotFoundError:
         pass
 
-    if getattr(sys, "frozen", False):
-        project_root = Path(sys._MEIPASS)  # type: ignore[attr-defined]
-    else:
-        project_root = Path(__file__).resolve().parents[2]
-
     try:
+        project_root = Path(__file__).resolve().parents[2]
         with open(project_root / "pyproject.toml", "rb") as f:
             data = tomllib.load(f)
         return data["project"]["version"]
