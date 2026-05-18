@@ -122,12 +122,12 @@ def get_history_count() -> int:
 
 
 def load_selected_goals() -> list[Goal]:
-    from app.config import GOALS
+    from app.config import GOALS, GOALS_PRESET_MIN
 
     with _connect() as conn:
         row = conn.execute("SELECT value FROM settings WHERE key = 'selected_goals'").fetchone()
     if not row:
-        return list(GOALS)
+        return list(GOALS_PRESET_MIN)
     try:
         saved = set(json.loads(row["value"]))
         return [g for g in GOALS if g.value in saved]
