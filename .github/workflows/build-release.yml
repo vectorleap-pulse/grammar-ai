@@ -37,19 +37,28 @@ jobs:
       id: bump_version
       run: uv run python .github/scripts/bump_version.py "${{ github.event.inputs.version_bump }}"
 
-    # Cache Nuitka's downloaded C toolchain and compiled headers.
-    # Key on pyproject.toml (which pins the nuitka version) — not on source files,
-    # because the cache contains toolchain downloads, not compiled objects.
-    - name: Cache Nuitka downloads
-      uses: actions/cache@v4
-      with:
-        path: ~\AppData\Local\Nuitka\Nuitka
-        key: nuitka-${{ runner.os }}-py3.12-${{ hashFiles('pyproject.toml') }}
-        restore-keys: |
-          nuitka-${{ runner.os }}-py3.12-
+    # Generate resources/icon.ico from the PNG before Nuitka runs.
+    - name: Generate Windows icon
+      run: uv run python -c "from pathlib import Path; from build import _make_ico; _make_ico(Path('resources/icon.png'), Path('resources/icon.ico'))"
 
+    # Nuitka/Nuitka-Action installs ccache, compiles through it, and caches the
+    # compiled C objects between runs — unchanged modules recompile in milliseconds.
     - name: Build standalone executable (Nuitka)
-      run: uv run python build.py
+      uses: Nuitka/Nuitka-Action@main
+      with:
+        nuitka-version: main
+        script-name: main.py
+        standalone: true
+        output-filename: grammar-ai.exe
+        output-dir: build
+        enable-plugins: tk-inter
+        windows-icon-from-ico: resources/icon.ico
+        windows-disable-console: true
+        include-data-files: |
+          pyproject.toml=pyproject.toml
+          resources/icon.png=resources/icon.png
+        assume-yes-for-downloads: true
+        lto: no
 
     - name: Build installer (Inno Setup)
       shell: pwsh

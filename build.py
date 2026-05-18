@@ -43,6 +43,7 @@ def build_exe(debug: bool = False) -> int:
         "nuitka",
         "--standalone",
         "--assume-yes-for-downloads",
+        "--lto=no",
         f"--jobs={os.cpu_count() or 1}",
         f"--output-dir={build_dir}",
         "--output-filename=grammar-ai.exe",
