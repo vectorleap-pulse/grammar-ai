@@ -6,6 +6,7 @@ import platform
 import subprocess
 import sys
 import tempfile
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Callable, Optional
@@ -98,11 +99,11 @@ def download_update(
     on_progress is called with an integer 0-100.
     Returns the destination path on success, None on failure.
     """
-    exe = get_current_exe()
-    if exe is None:
+    if get_current_exe() is None:
         return None
 
-    filename = url.rsplit("/", 1)[-1]
+    # Strip query-string params from the URL before extracting the filename.
+    filename = Path(urllib.parse.urlsplit(url).path).name
     # Download to %TEMP%, not next to the running exe — avoids the AV heuristic
     # of writing a new executable into the same directory as the running process.
     dest = Path(tempfile.gettempdir()) / filename
@@ -134,7 +135,7 @@ def download_update(
 def apply_update(new_exe: Path) -> bool:
     """
     Hand the update off to a temporary batch script that runs after this process
-    exits: it waits for the PID to disappear, moves the new exe into place, then
+    exits: it waits for the PID to disappear, copies the new exe into place, then
     relaunches it.  The app never self-renames or directly executes a downloaded
     binary, which eliminates the AV heuristics that trigger false positives.
     Returns True on success; the caller must exit the process afterwards.
@@ -145,25 +146,45 @@ def apply_update(new_exe: Path) -> bool:
         return False
 
     pid = os.getpid()
-    bat = Path(tempfile.gettempdir()) / "grammar_ai_update.bat"
+    # PID-based name avoids collision if two app instances run simultaneously.
+    bat = Path(tempfile.gettempdir()) / f"grammar_ai_update_{pid}.bat"
     script = (
         "@echo off\n"
+        "set MAX_WAIT=60\n"
+        "set /a WAITED=0\n"
         ":wait\n"
-        f'tasklist /FI "PID eq {pid}" 2>NUL | find " {pid} " >NUL\n'
+        # /FO LIST produces "PID: <n>" — reliable without space-padding assumptions.
+        f'tasklist /FI "PID eq {pid}" /FO LIST 2>NUL | find "PID:" >NUL\n'
         "if not errorlevel 1 (\n"
         "    timeout /t 1 /nobreak >NUL\n"
-        "    goto :wait\n"
+        "    set /a WAITED+=1\n"
+        "    if !WAITED! lss !MAX_WAIT! goto :wait\n"
+        "    goto :cleanup\n"
         ")\n"
-        # copy works across drives; move does not
-        f'copy /Y "{new_exe}" "{exe}"\n'
-        f'del /F /Q "{new_exe}"\n'
+        # Retry copy up to 5 times — AV scanners may lock the file briefly.
+        "set /a TRIES=0\n"
+        ":copy\n"
+        f'copy /Y "{new_exe}" "{exe}" >NUL\n'
+        "if not errorlevel 1 goto :launch\n"
+        "set /a TRIES+=1\n"
+        "if !TRIES! lss 5 (\n"
+        "    timeout /t 2 /nobreak >NUL\n"
+        "    goto :copy\n"
+        ")\n"
+        "goto :cleanup\n"
+        ":launch\n"
         f'start "" "{exe}"\n'
-        'del "%~f0"\n'
+        ":cleanup\n"
+        f'del /F /Q "{new_exe}" 2>NUL\n'
+        # (goto) closes cmd's handle to the script before del runs — reliable self-delete.
+        '(goto) 2>NUL & del "%~f0"\n'
     )
     try:
-        bat.write_text(script, encoding="utf-8")
+        # Use system ANSI encoding — cmd.exe reads batch files as ANSI by default.
+        # UTF-8 without BOM breaks on non-ASCII paths (Cyrillic, CJK, etc.).
+        bat.write_text(script, encoding="mbcs")
         subprocess.Popen(
-            ["cmd.exe", "/C", str(bat)],
+            ["cmd.exe", "/V:ON", "/C", str(bat)],
             creationflags=subprocess.CREATE_NO_WINDOW,
         )
         logger.info(f"Update script launched for {exe.name}; exiting for handoff")
