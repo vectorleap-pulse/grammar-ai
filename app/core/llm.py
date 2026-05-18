@@ -5,7 +5,7 @@ from loguru import logger
 from openai import OpenAI, OpenAIError
 
 from app.config import GOALS as ALL_GOALS
-from app.schemas.models import Goal, LLMConfig, PolishedText
+from app.schemas.models import Goal, LLMConfig, PolishedText, Tone
 
 _SYSTEM = """
 ## HARD RULE — Line endings (enforce before anything else)
@@ -49,8 +49,8 @@ Return only plain polished text. Every output must read like something a real pe
 """
 
 # Extra instructions injected into the user message for specific tones.
-_TONE_EXTRA: dict[str, str] = {
-    "chatting": (
+_TONE_EXTRA: dict[Tone, str] = {
+    Tone.CHATTING: (
         "\n\nADDITIONAL RULES for chatting tone (override general rules where they conflict):\n"
         "Write exactly like a fast, casual text or chat message. Apply ALL of these:\n"
         "- Contract aggressively: you're → u're, you → u, are → r, be → b, see → c, "
@@ -75,7 +75,7 @@ def _get_client(config: LLMConfig) -> OpenAI:
     return _clients[key]
 
 
-def _format_batch_request(text: str, tone: str, goals: list[Goal]) -> str:
+def _format_batch_request(text: str, tone: Tone, goals: list[Goal]) -> str:
     line_count = text.count("\n")
     goal_entries = "\n".join(f'  "{g}": "<polished text with {g} goal>"' for g in goals)
     tone_extra = _TONE_EXTRA.get(tone, "")
@@ -94,7 +94,7 @@ def _format_batch_request(text: str, tone: str, goals: list[Goal]) -> str:
 
 def polish_text(
     text: str,
-    tone: str,
+    tone: Tone,
     config: LLMConfig,
     goals: Optional[list[Goal]] = None,
     on_result: Optional[Callable[[PolishedText], None]] = None,

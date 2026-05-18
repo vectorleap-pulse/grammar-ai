@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-from app.schemas.models import Goal
+from app.schemas.models import Goal, Tone
 
 APP_NAME = "Grammar AI"
 
@@ -18,15 +18,15 @@ LOG_PATH = DATA_DIR / "grammar_ai.log"
 ERROR_LOG_PATH = DATA_DIR / "error.log"
 
 # Text polishing
-TONES: list[str] = [
-    "professional",
-    "casual",
-    "chatting",
-    "formal",
-    "friendly",
-    "empathetic",
-    "assertive",
-    "diplomatic",
+TONES: list[Tone] = [
+    Tone.PROFESSIONAL,
+    Tone.CASUAL,
+    Tone.CHATTING,
+    Tone.FORMAL,
+    Tone.FRIENDLY,
+    Tone.EMPATHETIC,
+    Tone.ASSERTIVE,
+    Tone.DIPLOMATIC,
 ]
 
 

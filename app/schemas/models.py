@@ -4,6 +4,17 @@ from enum import StrEnum
 from pydantic import BaseModel
 
 
+class Tone(StrEnum):
+    PROFESSIONAL = "professional"
+    CASUAL = "casual"
+    CHATTING = "chatting"
+    FORMAL = "formal"
+    FRIENDLY = "friendly"
+    EMPATHETIC = "empathetic"
+    ASSERTIVE = "assertive"
+    DIPLOMATIC = "diplomatic"
+
+
 class Goal(StrEnum):
     INFORM = "inform"
     PERSUADE = "persuade"
@@ -25,7 +36,7 @@ class LLMConfig(BaseModel):
 
 
 class PolishedText(BaseModel):
-    tone: str
+    tone: Tone
     goal: Goal
     text: str
 

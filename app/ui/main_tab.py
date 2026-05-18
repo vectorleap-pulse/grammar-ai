@@ -19,7 +19,7 @@ from app.db.database import (
     save_history,
     save_selected_tone,
 )
-from app.schemas.models import Goal, LLMConfig, PolishedText
+from app.schemas.models import Goal, LLMConfig, PolishedText, Tone
 from app.ui.settings_dialog import SettingsDialog
 
 
@@ -224,7 +224,7 @@ class MainTab(ttk.Frame):
         self._selected_goals = load_selected_goals()
 
     def _on_tone_change(self, _event: tk.Event) -> None:  # type: ignore[type-arg]
-        save_selected_tone(self._tone_var.get().lower())
+        save_selected_tone(Tone(self._tone_var.get().lower()))
 
     # ------------------------------------------------------------------ trigger
 
@@ -277,7 +277,7 @@ class MainTab(ttk.Frame):
         def on_result(r: PolishedText) -> None:
             self.after(0, lambda: self._add_result(text, r))
 
-        tone = self._tone_var.get().lower()
+        tone = Tone(self._tone_var.get().lower())
 
         goals = list(self._selected_goals)
 
@@ -354,7 +354,7 @@ class MainTab(ttk.Frame):
     # ------------------------------------------------------------------ Use
 
     def _use_text(self, original: str, goal: Goal, text: str) -> None:
-        tone = self._tone_var.get().lower()
+        tone = Tone(self._tone_var.get().lower())
         save_history(original, text, tone, goal)
         hwnd = self._hotkey.last_hwnd
         if hwnd and restore_focus_and_paste(hwnd, original, text):

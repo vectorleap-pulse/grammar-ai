@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from loguru import logger
 
 from app.config import DB_PATH, HISTORY_MAX_ENTRIES
-from app.schemas.models import Goal, HistoryEntry, LLMConfig
+from app.schemas.models import Goal, HistoryEntry, LLMConfig, Tone
 
 
 def _connect() -> sqlite3.Connection:
@@ -92,15 +92,18 @@ def load_history(limit: int = 200, offset: int = 0) -> list[HistoryEntry]:
     ]
 
 
-def load_selected_tone() -> str:
+def load_selected_tone() -> Tone:
     with _connect() as conn:
         row = conn.execute("SELECT value FROM settings WHERE key = 'selected_tone'").fetchone()
     from app.config import TONES
 
-    return row["value"] if row and row["value"] in TONES else TONES[0]
+    try:
+        return Tone(row["value"]) if row else TONES[0]
+    except ValueError:
+        return TONES[0]
 
 
-def save_selected_tone(tone: str) -> None:
+def save_selected_tone(tone: Tone) -> None:
     with _connect() as conn:
         conn.execute(
             "INSERT OR REPLACE INTO settings (key, value) VALUES ('selected_tone', ?)",
