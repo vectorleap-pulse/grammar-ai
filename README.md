@@ -49,6 +49,12 @@ Grammar AI supports any LLM provider that is OpenAI-compatible, including OpenAI
 - **Model**: `meta-llama/llama-4-scout-17b-16e-instruct`
 - **API Key**: `YOUR_GROQ_API_KEY`
 
+### Example Configuration (OpenAI)
+
+- **Base URL**: `https://api.openai.com/v1`
+- **Model**: `gpt-4o-mini`
+- **API Key**: `YOUR_OPENAI_API_KEY`
+
 To configure:
 1. Launch the application.
 2. Open Settings and enter your API configuration.
