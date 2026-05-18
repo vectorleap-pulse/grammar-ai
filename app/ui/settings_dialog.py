@@ -122,6 +122,14 @@ class SettingsDialog(tk.Toplevel):
             if goal in GOAL_DESCRIPTIONS:
                 self._tooltips.append(_Tooltip(cb, GOAL_DESCRIPTIONS[goal]))
 
+        disclaimer_row = (len(GOALS) - 1) // 3 + 2
+        ttk.Label(
+            goals_lf,
+            text="More goals = longer generation time.",
+            foreground="gray",
+            font=("", 8, "italic"),
+        ).grid(row=disclaimer_row, column=0, columnspan=3, sticky="w", padx=6, pady=(4, 2))
+
         self._status = ttk.Label(f, text="", foreground="gray", font=("", 8), wraplength=400)
         self._status.grid(row=5, column=0, columnspan=2, sticky="w", padx=8, pady=2)
 
