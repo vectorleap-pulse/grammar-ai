@@ -62,6 +62,7 @@ def main() -> None:
     except Exception as e:
         error_msg = f"Error starting Grammar AI: {e}\n{traceback.format_exc()}"
         print(error_msg)
+
         try:
             DATA_DIR.mkdir(parents=True, exist_ok=True)
             with open(ERROR_LOG_PATH, "w") as f:
