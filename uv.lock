@@ -97,7 +97,7 @@ wheels = [
 
 [[package]]
 name = "grammar-ai"
-version = "0.3.6"
+version = "0.3.8"
 source = { editable = "." }
 dependencies = [
     { name = "keyboard" },

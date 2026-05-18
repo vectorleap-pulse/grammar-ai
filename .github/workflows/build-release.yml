@@ -48,6 +48,7 @@ jobs:
       with:
         nuitka-version: main
         script-name: main.py
+        mode: standalone
         output-file: grammar-ai.exe
         output-dir: build
         enable-plugins: tk-inter

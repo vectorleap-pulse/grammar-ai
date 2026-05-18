@@ -9,8 +9,6 @@ from pathlib import Path
 from tkinter import messagebox, ttk
 from typing import Optional
 
-_NUITKA_COMPILED: bool = "__compiled__" in globals()
-
 import pystray
 from loguru import logger
 from PIL import Image, ImageTk
@@ -27,6 +25,8 @@ from app.core import updater
 from app.db.database import load_autorun
 from app.ui.history_tab import HistoryTab
 from app.ui.main_tab import MainTab
+
+_NUITKA_COMPILED: bool = "__compiled__" in globals()
 
 
 def get_app_version() -> str:
