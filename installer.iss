@@ -41,7 +41,7 @@ Source: "build\grammar-ai\*"; DestDir: "{app}"; Flags: ignoreversion recursesubd
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
 Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
-Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
 ; Interactive installs: shown as checkbox on Finish page (default checked)
