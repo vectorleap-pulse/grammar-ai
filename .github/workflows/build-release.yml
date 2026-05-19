@@ -41,21 +41,28 @@ jobs:
     - name: Generate Windows icon
       run: uv run python -c "from pathlib import Path; from build import _make_ico; _make_ico(Path('resources/icon.png'), Path('resources/icon.ico'))"
 
-    - name: Build standalone executable (Nuitka)
+    # Expose the uv venv so Nuitka-Action picks up the installed packages.
+    - name: Add uv venv to PATH
       shell: pwsh
-      run: |
-        uv run python -m nuitka `
-          --standalone `
-          --assume-yes-for-downloads `
-          --lto=no `
-          --output-dir=build `
-          --output-filename=grammar-ai.exe `
-          --enable-plugin=tk-inter `
-          --include-data-files=pyproject.toml=pyproject.toml `
-          --include-data-files=resources/icon.png=resources/icon.png `
-          --windows-icon-from-ico=resources/icon.ico `
-          --windows-console-mode=disable `
-          main.py
+      run: "${{ github.workspace }}\.venv\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Append
+
+    # Nuitka-Action installs ccache, compiles through it, and caches the
+    # compiled C objects between runs — unchanged modules recompile in milliseconds.
+    - name: Build standalone executable (Nuitka)
+      uses: Nuitka/Nuitka-Action@main
+      with:
+        nuitka-version: "4.1"
+        script-name: main.py
+        mode: standalone
+        output-file: grammar-ai.exe
+        output-dir: build
+        enable-plugins: tk-inter
+        windows-icon-from-ico: resources/icon.ico
+        windows-console-mode: disable
+        include-data-files: |
+          pyproject.toml=pyproject.toml
+          resources/icon.png=resources/icon.png
+        assume-yes-for-downloads: true
 
     - name: Build installer (Inno Setup)
       shell: pwsh
