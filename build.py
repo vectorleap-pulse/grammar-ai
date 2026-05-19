@@ -32,7 +32,6 @@ def build_exe(debug: bool = False) -> int:
     root = Path(__file__).parent
     build_dir = root / "build"
     build_dir.mkdir(exist_ok=True)
-    (root / "dist").mkdir(exist_ok=True)
 
     version = get_project_version(root / "pyproject.toml")
 
@@ -61,9 +60,7 @@ def build_exe(debug: bool = False) -> int:
     nuitka_args.append("main.py")
 
     print(f"Building Grammar AI v{version} with Nuitka...")
-    print(f"Output: {build_dir / 'grammar-ai.exe'}")
-    print(f"Command: {' '.join(str(a) for a in nuitka_args)}")
-
+    print(f"Output: {build_dir / 'main.dist'}")
     result = subprocess.run(nuitka_args, cwd=root)
     return result.returncode
 

@@ -41,10 +41,6 @@ class PolishedText(BaseModel):
     text: str
 
 
-class PolishedResponse(BaseModel):
-    polished: list[PolishedText]
-
-
 class HistoryEntry(BaseModel):
     id: int
     original_text: str

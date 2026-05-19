@@ -46,7 +46,7 @@ jobs:
     - name: Build standalone executable (Nuitka)
       uses: Nuitka/Nuitka-Action@main
       with:
-        nuitka-version: main
+        nuitka-version: "4.1"
         script-name: main.py
         mode: standalone
         output-file: grammar-ai.exe

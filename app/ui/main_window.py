@@ -5,8 +5,9 @@ import sys
 import threading
 import tkinter as tk
 import tomllib
+import webbrowser
 from pathlib import Path
-from tkinter import messagebox, ttk
+from tkinter import ttk
 from typing import Optional
 
 import pystray
@@ -193,41 +194,4 @@ class MainWindow(tk.Tk):
     def _do_update(self) -> None:
         if not self._update_url:
             return
-
-        dlg_w, dlg_h = 320, 90
-        px = self.winfo_x() + (self.winfo_width() - dlg_w) // 2
-        py = self.winfo_y() + (self.winfo_height() - dlg_h) // 2
-
-        dlg = tk.Toplevel(self)
-        dlg.title("Updating")
-        dlg.geometry(f"{dlg_w}x{dlg_h}+{px}+{py}")
-        dlg.resizable(False, False)
-        dlg.transient(self)
-        dlg.grab_set()
-
-        ttk.Label(dlg, text="Downloading update…", font=("", 9)).pack(padx=20, pady=(14, 6))
-        progress_var = tk.IntVar(value=0)
-        ttk.Progressbar(
-            dlg, variable=progress_var, maximum=100, length=280, mode="determinate"
-        ).pack(padx=20, pady=(0, 14))
-
-        url = self._update_url
-
-        def on_progress(pct: int) -> None:
-            self.after(0, lambda: progress_var.set(pct))
-
-        def worker() -> None:
-            new_exe = updater.download_update(url, on_progress=on_progress)
-            self.after(0, lambda: _on_done(new_exe))
-
-        def _on_done(new_exe: Optional[Path]) -> None:
-            dlg.destroy()
-            if new_exe is None:
-                messagebox.showerror("Update Failed", "Could not download the update.", parent=self)
-                return
-            if updater.apply_update(new_exe):
-                self._quit()
-            else:
-                messagebox.showerror("Update Failed", "Could not apply the update.", parent=self)
-
-        threading.Thread(target=worker, daemon=True).start()
+        webbrowser.open(self._update_url)

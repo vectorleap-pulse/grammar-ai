@@ -55,9 +55,7 @@ class _PolishedItem(ttk.Frame):
     def _update_height(self) -> None:
         self._txt.update_idletasks()
 
-        # Get font metrics
         font = tkFont.Font(font=self._txt.cget("font"))
-        _line_height = font.metrics("linespace")
 
         # Get parent frame width to calculate word wrap
         parent_width = self.winfo_width() - 8  # Account for padding
@@ -186,9 +184,7 @@ class MainTab(ttk.Frame):
     def _update_original_height(self) -> None:
         self._orig.update_idletasks()
 
-        # Get font metrics
         font = tkFont.Font(font=self._orig.cget("font"))
-        _line_height = font.metrics("linespace")
 
         # Get parent frame width to calculate word wrap
         parent_width = self._orig.winfo_width()

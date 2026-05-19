@@ -1,20 +1,29 @@
 import sys
+from pathlib import Path
+from typing import Optional
 
 from loguru import logger
 
 from app.config import APP_NAME, AUTORUN_REGISTRY_KEY
-from app.core.updater import get_current_exe
 
 try:
     import winreg
 except ImportError:
     pass
 
+_NUITKA_COMPILED: bool = "__compiled__" in globals()
+
+
+def _get_current_exe() -> Optional[Path]:
+    if not (getattr(sys, "frozen", False) or _NUITKA_COMPILED):
+        return None
+    return Path(sys.executable)
+
 
 def configure_autorun(enabled: bool) -> None:
     if sys.platform != "win32":
         return
-    exe = get_current_exe()
+    exe = _get_current_exe()
     if exe is None:
         return
     try:

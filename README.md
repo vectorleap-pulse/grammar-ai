@@ -1,5 +1,7 @@
 # Grammar AI
 
+[![Latest Release](https://img.shields.io/github/v/release/vectorleap-pulse/grammar-ai?label=Download&color=blue)](https://github.com/vectorleap-pulse/grammar-ai/releases/latest)
+
 ## Overview
 
 **Grammar AI** is a lightweight desktop application built with Python for grammar correction and text polishing. Tired of premium grammar tools like Grammarly and LanguageTool? Enjoy **FREE FOREVER** grammar correction with the free tier of [Groq](https://groq.com/) API key. It provides a simple local UI for entering text, sending it to an AI service, and reviewing polished output.
@@ -65,7 +67,9 @@ To configure:
 
 ### Prebuilt Release (Windows)
 
-Download the latest prebuilt executable for Windows from the [Releases](https://github.com/alpha5611331/grammar-ai/releases) page.
+**[Download latest release →](https://github.com/vectorleap-pulse/grammar-ai/releases/latest)**
+
+All releases: [github.com/vectorleap-pulse/grammar-ai/releases](https://github.com/vectorleap-pulse/grammar-ai/releases)
 
 ### From Source
 
@@ -81,7 +85,7 @@ To build a standalone executable:
 2. Run the build script:
    - Release build: `python build.py` or `build.bat`
    - Debug build (with console): `python build.py --debug` or `build.bat debug`
-3. The executable will be created in the `dist/` folder.
+3. The executable will be created in the `build/main.dist/` folder.
 
 ---
 
@@ -98,7 +102,7 @@ To build a standalone executable:
 * `main.py` — application entry point
 * `app/` — core application modules
 * `pyproject.toml` — project metadata, dependencies, and linting configuration
-* `build.py` — PyInstaller build script
+* `build.py` — Nuitka build script
 
 ---
 
