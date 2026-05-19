@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Build script for Grammar AI using Nuitka (standalone mode)."""
+"""Build script for Grammar AI using PyInstaller (onedir mode)."""
 
 import argparse
-import os
 import subprocess
 import sys
 import tomllib
@@ -28,40 +27,46 @@ def _make_ico(png_path: Path, ico_path: Path) -> None:
 
 
 def build_exe(debug: bool = False) -> int:
-    """Build Grammar AI as a Nuitka standalone distribution."""
+    """Build Grammar AI as a PyInstaller onedir distribution."""
     root = Path(__file__).parent
     build_dir = root / "build"
     build_dir.mkdir(exist_ok=True)
 
     version = get_project_version(root / "pyproject.toml")
 
-    nuitka_args = [
+    sep = ";" if sys.platform.startswith("win") else ":"
+
+    args = [
         sys.executable,
         "-m",
-        "nuitka",
-        "--standalone",
-        "--assume-yes-for-downloads",
-        "--lto=no",
-        f"--jobs={os.cpu_count() or 1}",
-        f"--output-dir={build_dir}",
-        "--output-filename=grammar-ai.exe",
-        "--enable-plugin=tk-inter",
-        f"--include-data-files={root / 'pyproject.toml'}=pyproject.toml",
-        f"--include-data-files={root / 'resources' / 'icon.png'}=resources/icon.png",
+        "PyInstaller",
+        "--onedir",
+        "--noconfirm",
+        "--clean",
+        f"--distpath={build_dir}",
+        f"--workpath={build_dir / '_work'}",
+        f"--specpath={build_dir}",
+        "--name=grammar-ai",
+        f"--add-data={root / 'pyproject.toml'}{sep}.",
+        f"--add-data={root / 'resources' / 'icon.png'}{sep}resources",
+        "--collect-all=openai",
+        "--collect-all=httpx",
+        "--collect-all=pystray",
+        "--exclude-module=openai.helpers",
     ]
 
     if sys.platform.startswith("win"):
         ico_path = root / "resources" / "icon.ico"
         _make_ico(root / "resources" / "icon.png", ico_path)
-        nuitka_args.append(f"--windows-icon-from-ico={ico_path}")
+        args.append(f"--icon={ico_path}")
         if not debug:
-            nuitka_args.append("--windows-disable-console")
+            args.append("--noconsole")
 
-    nuitka_args.append("main.py")
+    args.append("main.py")
 
-    print(f"Building Grammar AI v{version} with Nuitka...")
-    print(f"Output: {build_dir / 'main.dist'}")
-    result = subprocess.run(nuitka_args, cwd=root)
+    print(f"Building Grammar AI v{version} with PyInstaller...")
+    print(f"Output: {build_dir / 'grammar-ai'}")
+    result = subprocess.run(args, cwd=root)
     return result.returncode
 
 

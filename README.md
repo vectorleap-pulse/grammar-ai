@@ -85,7 +85,7 @@ To build a standalone executable:
 2. Run the build script:
    - Release build: `python build.py` or `build.bat`
    - Debug build (with console): `python build.py --debug` or `build.bat debug`
-3. The executable will be created in the `build/main.dist/` folder.
+3. The executable will be created in the `build/grammar-ai/` folder.
 
 ---
 
@@ -102,7 +102,7 @@ To build a standalone executable:
 * `main.py` — application entry point
 * `app/` — core application modules
 * `pyproject.toml` — project metadata, dependencies, and linting configuration
-* `build.py` — Nuitka build script
+* `build.py` — PyInstaller build script
 
 ---
 

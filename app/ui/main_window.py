@@ -21,6 +21,7 @@ from app.config import (
     WINDOW_GEOMETRY,
     WINDOW_MAX_SIZE,
     WINDOW_MIN_SIZE,
+    _frozen_base,
 )
 from app.core import updater
 from app.db.database import load_autorun
@@ -32,9 +33,8 @@ _NUITKA_COMPILED: bool = "__compiled__" in globals()
 
 def get_app_version() -> str:
     if getattr(sys, "frozen", False) or _NUITKA_COMPILED:
-        project_root = Path(sys.executable).parent
         try:
-            with open(project_root / "pyproject.toml", "rb") as f:
+            with open(_frozen_base() / "pyproject.toml", "rb") as f:
                 data = tomllib.load(f)
             return data["project"]["version"]
         except Exception as e:

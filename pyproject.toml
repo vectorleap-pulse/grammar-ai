@@ -16,7 +16,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "nuitka>=2.0",
+    "pyinstaller>=6.0",
     "tomli_w>=1.2.0",
     "ruff>=0.4",
     "mypy>=1.10",
@@ -61,3 +61,4 @@ ignore = [
 python_version = "3.12"
 ignore_missing_imports = true
 warn_return_any = false
+exclude = ["build/"]

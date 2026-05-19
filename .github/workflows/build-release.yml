@@ -37,33 +37,8 @@ jobs:
       id: bump_version
       run: uv run python .github/scripts/bump_version.py "${{ github.event.inputs.version_bump }}"
 
-    # Generate resources/icon.ico from the PNG before Nuitka runs.
-    - name: Generate Windows icon
-      run: uv run python -c "from pathlib import Path; from build import _make_ico; _make_ico(Path('resources/icon.png'), Path('resources/icon.ico'))"
-
-    # Expose the uv venv so Nuitka-Action picks up the installed packages.
-    - name: Add uv venv to PATH
-      shell: pwsh
-      run: |
-        "${{ github.workspace }}\.venv\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Append
-
-    # Nuitka-Action installs ccache, compiles through it, and caches the
-    # compiled C objects between runs — unchanged modules recompile in milliseconds.
-    - name: Build standalone executable (Nuitka)
-      uses: Nuitka/Nuitka-Action@main
-      with:
-        nuitka-version: "4.1"
-        script-name: main.py
-        mode: standalone
-        output-file: grammar-ai.exe
-        output-dir: build
-        enable-plugins: tk-inter
-        windows-icon-from-ico: resources/icon.ico
-        windows-console-mode: disable
-        include-data-files: |
-          pyproject.toml=pyproject.toml
-          resources/icon.png=resources/icon.png
-        assume-yes-for-downloads: true
+    - name: Build standalone executable (PyInstaller)
+      run: uv run python build.py
 
     - name: Build installer (Inno Setup)
       shell: pwsh

@@ -7,8 +7,16 @@ APP_NAME = "Grammar AI"
 
 _NUITKA_COMPILED: bool = "__compiled__" in globals()
 
+
+def _frozen_base() -> Path:
+    # PyInstaller 6+: data files live in _internal/ (sys._MEIPASS), not next to the exe.
+    # Nuitka has no _MEIPASS; data files live next to the exe.
+    meipass = getattr(sys, "_MEIPASS", None)
+    return Path(meipass) if meipass else Path(sys.executable).parent
+
+
 if getattr(sys, "frozen", False) or _NUITKA_COMPILED:
-    ICON_PATH = Path(sys.executable).parent / "resources" / "icon.png"
+    ICON_PATH = _frozen_base() / "resources" / "icon.png"
 else:
     ICON_PATH = Path(__file__).resolve().parent.parent / "resources" / "icon.png"
 
