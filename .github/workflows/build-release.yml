@@ -44,7 +44,8 @@ jobs:
     # Expose the uv venv so Nuitka-Action picks up the installed packages.
     - name: Add uv venv to PATH
       shell: pwsh
-      run: "${{ github.workspace }}\.venv\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Append
+      run: |
+        "${{ github.workspace }}\.venv\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Append
 
     # Nuitka-Action installs ccache, compiles through it, and caches the
     # compiled C objects between runs — unchanged modules recompile in milliseconds.
