@@ -13,11 +13,11 @@ from loguru import logger
 
 _IS_WIN = sys.platform == "win32"
 
-WM_HOTKEY   = 0x0312
-WM_QUIT     = 0x0012
+WM_HOTKEY = 0x0312
+WM_QUIT = 0x0012
 MOD_CONTROL = 0x0002
-MOD_SHIFT   = 0x0004
-VK_SPACE    = 0x20
+MOD_SHIFT = 0x0004
+VK_SPACE = 0x20
 
 _HOTKEY_ID = 1
 
