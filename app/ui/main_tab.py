@@ -144,11 +144,12 @@ class MainTab(ttk.Frame):
         tone_combo.pack(side="left", padx=(4, 8))
         tone_combo.bind("<<ComboboxSelected>>", self._on_tone_change)
 
-        ttk.Button(
+        self._trigger_btn = ttk.Button(
             bar,
             text=f"Trigger ({'+'.join([h.capitalize() for h in HOTKEYS])})",
             command=self._trigger_manual,
-        ).pack(side="left", padx=2)
+        )
+        self._trigger_btn.pack(side="left", padx=2)
 
     def _build_status(self) -> None:
         row = ttk.Frame(self, padding=(8, 0, 8, 4))
@@ -257,6 +258,8 @@ class MainTab(ttk.Frame):
     # ------------------------------------------------------------------ LLM
 
     def _run_llm(self, text: str) -> None:
+        if str(self._trigger_btn.cget("state")) == "disabled":
+            return
         if not self._config.api_key:
             messagebox.showwarning(
                 "No API key",
@@ -268,6 +271,7 @@ class MainTab(ttk.Frame):
         self._clear_results()
         self._received = 0
         self._set_status("Polishing…", "blue")
+        self._trigger_btn.config(state="disabled")
         config = self._config
 
         def on_result(r: PolishedText) -> None:
@@ -285,6 +289,8 @@ class MainTab(ttk.Frame):
                 error_msg = str(exc)
                 logger.error(f"LLM error: {error_msg}")
                 self.after(0, lambda: self._show_llm_error(error_msg))
+            finally:
+                self.after(0, lambda: self._trigger_btn.config(state="normal"))
 
         threading.Thread(target=worker, daemon=True).start()
 
