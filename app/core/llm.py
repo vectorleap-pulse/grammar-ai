@@ -101,12 +101,15 @@ def polish_text(
 ) -> list[PolishedText]:
     active_goals: list[Goal] = goals if goals else list(ALL_GOALS)
     client = _get_client(config)
+
+    system_prompt = _SYSTEM if config.use_default_prompt else config.custom_prompt
+
     response = client.chat.completions.create(
         model=config.model,
         response_format={"type": "json_object"},
         max_tokens=8192,
         messages=[
-            {"role": "system", "content": _SYSTEM},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": _format_batch_request(text, tone, active_goals)},
         ],
     )
