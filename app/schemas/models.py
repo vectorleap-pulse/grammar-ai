@@ -33,6 +33,7 @@ class LLMConfig(BaseModel):
     base_url: str = "https://api.openai.com/v1"
     model: str = "gpt-4o-mini"
     api_key: str = ""
+    output_language: str = "English"
     use_default_prompt: bool = True
     custom_prompt: str = ""
 

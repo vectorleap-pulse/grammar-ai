@@ -26,6 +26,44 @@ DB_PATH = DATA_DIR / "data.db"
 LOG_PATH = DATA_DIR / "grammar_ai.log"
 ERROR_LOG_PATH = DATA_DIR / "error.log"
 
+# Cross-lingual polishing — output language for polished text.
+# Maps the friendly label shown in Settings to the value passed to the model. The
+# combobox stays editable, so any language name the model understands also works.
+DEFAULT_OUTPUT_LANGUAGE = "English"
+OUTPUT_LANGUAGES: dict[str, str] = {
+    "English": "English",
+    "Spanish (Español)": "Spanish",
+    "French (Français)": "French",
+    "German (Deutsch)": "German",
+    "Italian (Italiano)": "Italian",
+    "Portuguese (Português)": "Portuguese",
+    "Dutch (Nederlands)": "Dutch",
+    "Russian (Русский)": "Russian",
+    "Ukrainian (Українська)": "Ukrainian",
+    "Polish (Polski)": "Polish",
+    "Turkish (Türkçe)": "Turkish",
+    "Arabic (العربية)": "Arabic",
+    "Hindi (हिन्दी)": "Hindi",
+    "Chinese — Simplified (简体中文)": "Chinese (Simplified)",
+    "Chinese — Traditional (繁體中文)": "Chinese (Traditional)",
+    "Japanese (日本語)": "Japanese",
+    "Korean (한국어)": "Korean",
+    "Vietnamese (Tiếng Việt)": "Vietnamese",
+    "Indonesian (Bahasa Indonesia)": "Indonesian",
+}
+
+# Interface localization — language of the app UI itself (distinct from output_language).
+# Maps the friendly label shown in Settings to the i18n language code.
+DEFAULT_UI_LANGUAGE = "en"
+UI_LANGUAGES: dict[str, str] = {
+    "English": "en",
+    "Spanish (Español)": "es",
+    "French (Français)": "fr",
+    "German (Deutsch)": "de",
+    "Japanese (日本語)": "ja",
+    "Korean (한국어)": "ko",
+}
+
 # Text polishing
 TONES: list[Tone] = [
     Tone.PROFESSIONAL,

@@ -4,6 +4,24 @@ from tkinter import ttk
 from loguru import logger
 
 from app.db.database import clear_history, get_history_count, load_history
+from app.i18n import Msg, goal_name, t, tone_name
+from app.schemas.models import Goal, Tone
+
+
+def _tone_label(value: str) -> str:
+    try:
+        return tone_name(Tone(value))
+    except ValueError:
+        return value.capitalize()
+
+
+def _goal_label(value: str) -> str:
+    if not value:
+        return ""
+    try:
+        return goal_name(Goal(value))
+    except ValueError:
+        return value.capitalize()
 
 
 class HistoryTab(ttk.Frame):
@@ -17,14 +35,14 @@ class HistoryTab(ttk.Frame):
     def _build(self) -> None:
         bar = ttk.Frame(self, padding=(6, 4))
         bar.pack(fill="x")
-        ttk.Button(bar, text="Refresh", command=self.refresh).pack(side="left")
-        ttk.Button(bar, text="Clear", command=self.clear).pack(side="left", padx=(4, 0))
+        ttk.Button(bar, text=t(Msg.REFRESH), command=self.refresh).pack(side="left")
+        ttk.Button(bar, text=t(Msg.CLEAR), command=self.clear).pack(side="left", padx=(4, 0))
 
         # Pagination controls
         pagination_frame = ttk.Frame(self, padding=(6, 4))
         pagination_frame.pack(fill="x")
 
-        ttk.Label(pagination_frame, text="Page size:").pack(side="left")
+        ttk.Label(pagination_frame, text=t(Msg.PAGE_SIZE)).pack(side="left")
         self.page_size_var = tk.StringVar(value=str(self.page_size))
         page_size_combo = ttk.Combobox(
             pagination_frame,
@@ -35,22 +53,24 @@ class HistoryTab(ttk.Frame):
         page_size_combo.pack(side="left", padx=(4, 0))
         page_size_combo.bind("<<ComboboxSelected>>", self._on_page_size_change)
 
-        ttk.Button(pagination_frame, text="Prev", command=self.prev_page).pack(
+        ttk.Button(pagination_frame, text=t(Msg.PREV), command=self.prev_page).pack(
             side="left", padx=(10, 0)
         )
-        self.page_label = ttk.Label(pagination_frame, text="Page 1 of 1")
+        self.page_label = ttk.Label(
+            pagination_frame, text=t(Msg.PAGE_X_OF_Y).format(cur=1, total=1)
+        )
         self.page_label.pack(side="left", padx=(4, 0))
-        ttk.Button(pagination_frame, text="Next", command=self.next_page).pack(
+        ttk.Button(pagination_frame, text=t(Msg.NEXT), command=self.next_page).pack(
             side="left", padx=(4, 0)
         )
 
         cols = ("used_at", "tone", "goal", "polished_text")
         self._tree = ttk.Treeview(self, columns=cols, show="headings", selectmode="browse")
 
-        self._tree.heading("used_at", text="Used At")
-        self._tree.heading("tone", text="Tone")
-        self._tree.heading("goal", text="Goal")
-        self._tree.heading("polished_text", text="Polished Text")
+        self._tree.heading("used_at", text=t(Msg.USED_AT))
+        self._tree.heading("tone", text=t(Msg.TONE))
+        self._tree.heading("goal", text=t(Msg.GOAL))
+        self._tree.heading("polished_text", text=t(Msg.POLISHED_TEXT))
 
         self._tree.column("used_at", width=110, stretch=False)
         self._tree.column("tone", width=80, stretch=False)
@@ -76,8 +96,8 @@ class HistoryTab(ttk.Frame):
                 iid=str(e.id),
                 values=(
                     e.used_at.strftime("%Y-%m-%d %H:%M"),
-                    e.tone.capitalize(),
-                    e.goal.capitalize() if e.goal else "",
+                    _tone_label(e.tone),
+                    _goal_label(e.goal),
                     first_line,
                 ),
                 tags=(e.polished_text, e.original_text),  # Keep both in tags for detail view
@@ -101,7 +121,7 @@ class HistoryTab(ttk.Frame):
         py = parent.winfo_y() + (parent.winfo_height() - dlg_h) // 2
 
         dlg = tk.Toplevel(self)
-        dlg.title("History Entry")
+        dlg.title(t(Msg.HISTORY_ENTRY))
         dlg.geometry(f"{dlg_w}x{dlg_h}+{px}+{py}")
         dlg.resizable(True, True)
         dlg.transient(parent)
@@ -112,7 +132,12 @@ class HistoryTab(ttk.Frame):
 
         meta = ttk.Frame(dlg)
         meta.pack(fill="x", padx=8, pady=(8, 4))
-        for label, value in [("ID", item), ("Tone", tone), ("Goal", goal), ("Used At", used_at)]:
+        for label, value in [
+            (t(Msg.ID), item),
+            (t(Msg.TONE), tone),
+            (t(Msg.GOAL), goal),
+            (t(Msg.USED_AT), used_at),
+        ]:
             row = ttk.Frame(meta)
             row.pack(fill="x", pady=1)
             ttk.Label(row, text=f"{label}:", font=("", 9, "bold"), width=8, anchor="w").pack(
@@ -122,7 +147,7 @@ class HistoryTab(ttk.Frame):
 
         ttk.Separator(dlg, orient="horizontal").pack(fill="x", padx=8, pady=4)
 
-        for label, content in [("Original Text", original), ("Polished Text", polished)]:
+        for label, content in [(t(Msg.ORIGINAL_TEXT), original), (t(Msg.POLISHED_TEXT), polished)]:
             ttk.Label(dlg, text=label, font=("", 9, "bold")).pack(anchor="w", padx=8, pady=(4, 2))
             frame = ttk.Frame(dlg)
             frame.pack(fill="both", expand=True, padx=8)
@@ -134,7 +159,7 @@ class HistoryTab(ttk.Frame):
             vsb.pack(side="right", fill="y")
             txt.pack(side="left", fill="both", expand=True)
 
-        ttk.Button(dlg, text="Close", command=dlg.destroy).pack(pady=8)
+        ttk.Button(dlg, text=t(Msg.CLOSE), command=dlg.destroy).pack(pady=8)
 
     def clear(self) -> None:
         clear_history()
@@ -166,4 +191,6 @@ class HistoryTab(ttk.Frame):
     def _update_page_label(self) -> None:
         total_count = get_history_count()
         total_pages = max(1, (total_count + self.page_size - 1) // self.page_size)
-        self.page_label.config(text=f"Page {self.current_page + 1} of {total_pages}")
+        self.page_label.config(
+            text=t(Msg.PAGE_X_OF_Y).format(cur=self.current_page + 1, total=total_pages)
+        )

@@ -47,6 +47,7 @@ def load_config() -> LLMConfig:
         base_url=data.get("base_url", "https://api.openai.com/v1"),
         model=data.get("model", "gpt-4o-mini"),
         api_key=data.get("api_key", ""),
+        output_language=data.get("output_language", "English"),
         use_default_prompt=data.get("use_default_prompt", "True") == "True",
         custom_prompt=data.get("custom_prompt", ""),
     )
@@ -147,6 +148,23 @@ def save_selected_goals(goals: list[Goal]) -> None:
             (json.dumps(goals),),
         )
     logger.debug(f"Selected goals saved: {goals}")
+
+
+def load_ui_language() -> str:
+    from app.config import DEFAULT_UI_LANGUAGE
+
+    with _connect() as conn:
+        row = conn.execute("SELECT value FROM settings WHERE key = 'ui_language'").fetchone()
+    return row["value"] if row else DEFAULT_UI_LANGUAGE
+
+
+def save_ui_language(code: str) -> None:
+    with _connect() as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES ('ui_language', ?)",
+            (code,),
+        )
+    logger.info(f"UI language saved: {code}")
 
 
 def load_autorun() -> bool:

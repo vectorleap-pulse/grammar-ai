@@ -25,6 +25,7 @@ from app.config import (
 )
 from app.core import updater
 from app.db.database import load_autorun
+from app.i18n import Msg, t
 from app.ui.history_tab import HistoryTab
 from app.ui.main_tab import MainTab
 
@@ -81,7 +82,7 @@ class MainWindow(tk.Tk):
         self._update_bar = ttk.Frame(self, padding=(6, 2))
         self._update_lbl = ttk.Label(self._update_bar, font=("", 9))
         self._update_lbl.pack(side="left")
-        ttk.Button(self._update_bar, text="Update Now", command=self._do_update, width=20).pack(
+        ttk.Button(self._update_bar, text=t(Msg.UPDATE_NOW), command=self._do_update, width=20).pack(
             side="right"
         )
         self._update_url = ""
@@ -92,13 +93,13 @@ class MainWindow(tk.Tk):
         self._main_tab = MainTab(self._nb, on_autorun_change=self.apply_autorun)
         self._history_tab = HistoryTab(self._nb)
 
-        self._nb.add(self._main_tab, text="  Main  ")
-        self._nb.add(self._history_tab, text="  History  ")
+        self._nb.add(self._main_tab, text=f"  {t(Msg.MAIN)}  ")
+        self._nb.add(self._history_tab, text=f"  {t(Msg.HISTORY)}  ")
         self._nb.bind("<<NotebookTabChanged>>", self._on_tab_change)
 
     def _on_tab_change(self, event: tk.Event) -> None:  # type: ignore[type-arg]
         nb: ttk.Notebook = event.widget  # type: ignore[assignment]
-        if nb.tab(nb.select(), "text").strip() == "History":
+        if nb.select() == str(self._history_tab):
             self._history_tab.refresh()
 
     def _remove_maximize_button(self) -> None:
@@ -123,8 +124,8 @@ class MainWindow(tk.Tk):
         try:
             icon_image = Image.open(ICON_PATH).convert("RGBA")
             menu = pystray.Menu(
-                pystray.MenuItem("Open", self._tray_open, default=True),
-                pystray.MenuItem("Quit", self._tray_quit),
+                pystray.MenuItem(t(Msg.OPEN), self._tray_open, default=True),
+                pystray.MenuItem(t(Msg.QUIT), self._tray_quit),
             )
             self._tray = pystray.Icon(APP_NAME, icon_image, f"{APP_NAME} v{self._version}", menu)
             if self._tray is not None:
@@ -186,7 +187,7 @@ class MainWindow(tk.Tk):
         if result:
             new_version, url = result
             self._update_url = url
-            self._update_lbl.config(text=f"Update v{new_version} available")
+            self._update_lbl.config(text=t(Msg.UPDATE_AVAILABLE).format(version=new_version))
             self._update_bar.pack(fill="x", padx=4, pady=(0, 2), before=self._nb)
         else:
             self.after(UPDATE_CHECK_INTERVAL_MS, self._start_update_check)
