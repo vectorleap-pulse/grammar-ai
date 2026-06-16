@@ -7,7 +7,44 @@ from openai import OpenAI, OpenAIError
 from app.config import GOALS as ALL_GOALS
 from app.schemas.models import Goal, LLMConfig, PolishedText, Tone
 
-_SYSTEM = """
+
+def _is_english(language: str) -> bool:
+    return (language or "").strip().lower() in ("", "english")
+
+
+def _build_system_prompt(language: str) -> str:
+    """Build the system prompt, targeting `language` for the polished output.
+
+    For English the wording matches the original English-only prompt. For any other
+    language the role, correction rules, and an explicit translate-if-needed rule are
+    swapped in so input in any language can be polished into the target language.
+    """
+    lang = (language or "English").strip() or "English"
+    english = _is_english(lang)
+
+    role = (
+        "You are a native American writer."
+        if english
+        else f"You are a native {lang} writer."
+    )
+
+    if english:
+        language_rules = (
+            "- Correct all grammar, spelling, punctuation, and capitalization using American English.\n"
+            "- Sharpen word choice — cut filler, replace weak phrases with crisp ones.\n"
+            '  Examples: "I\'ll let you know" → "I\'ll share", "in order to" → "to", '
+            '"utilize" → "use", "at this point in time" → "now".'
+        )
+    else:
+        language_rules = (
+            f"- Write the polished output in {lang}. If the input is in another language, "
+            f"translate it into {lang} first, then polish it.\n"
+            f"- Correct all grammar, spelling, punctuation, and capitalization using natural, "
+            f"idiomatic {lang}.\n"
+            "- Sharpen word choice — cut filler and replace weak phrases with crisp, natural ones."
+        )
+
+    return f"""
 ## HARD RULE — Line endings (enforce before anything else)
 Count the line breaks in the input. The output MUST contain the same number of line breaks in the same positions. This is non-negotiable.
 - Never merge two lines into one, no matter how short or related they seem.
@@ -25,12 +62,10 @@ Examples:
   Good:   "Oh, found the core reason.\nApplying changes."
 
 ## Role
-You are a native American writer. Write the way a confident, articulate person talks: direct, clear, and natural.
+{role} Write the way a confident, articulate person talks: direct, clear, and natural.
 
 ## Language rules
-- Correct all grammar, spelling, punctuation, and capitalization using American English.
-- Sharpen word choice — cut filler, replace weak phrases with crisp ones.
-  Examples: "I'll let you know" → "I'll share", "in order to" → "to", "utilize" → "use", "at this point in time" → "now".
+{language_rules}
 
 ## What to preserve
 - Pronouns, original meaning, intent, and perspective — if it says "you helped me", keep it exactly that way.
@@ -108,7 +143,17 @@ def polish_text(
     active_goals: list[Goal] = goals if goals else list(ALL_GOALS)
     client = _get_client(config)
 
-    system_prompt = _SYSTEM if config.use_default_prompt else config.custom_prompt
+    if config.use_default_prompt:
+        system_prompt = _build_system_prompt(config.output_language)
+    else:
+        system_prompt = config.custom_prompt
+        # The custom prompt is user-owned, but still honor the cross-lingual target.
+        if not _is_english(config.output_language):
+            system_prompt += (
+                f"\n\nWrite the polished output in {config.output_language}. "
+                f"If the input is in another language, translate it into "
+                f"{config.output_language} first, then polish it."
+            )
 
     response = client.chat.completions.create(
         model=config.model,

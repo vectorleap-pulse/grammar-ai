@@ -26,6 +26,31 @@ DB_PATH = DATA_DIR / "data.db"
 LOG_PATH = DATA_DIR / "grammar_ai.log"
 ERROR_LOG_PATH = DATA_DIR / "error.log"
 
+# Cross-lingual polishing — output language for polished text.
+# The settings combobox is editable, so any language name the model understands works.
+DEFAULT_OUTPUT_LANGUAGE = "English"
+LANGUAGES: list[str] = [
+    "English",
+    "Spanish",
+    "French",
+    "German",
+    "Italian",
+    "Portuguese",
+    "Dutch",
+    "Russian",
+    "Ukrainian",
+    "Polish",
+    "Turkish",
+    "Arabic",
+    "Hindi",
+    "Chinese (Simplified)",
+    "Chinese (Traditional)",
+    "Japanese",
+    "Korean",
+    "Vietnamese",
+    "Indonesian",
+]
+
 # Text polishing
 TONES: list[Tone] = [
     Tone.PROFESSIONAL,

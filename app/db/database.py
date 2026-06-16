@@ -47,6 +47,7 @@ def load_config() -> LLMConfig:
         base_url=data.get("base_url", "https://api.openai.com/v1"),
         model=data.get("model", "gpt-4o-mini"),
         api_key=data.get("api_key", ""),
+        output_language=data.get("output_language", "English"),
         use_default_prompt=data.get("use_default_prompt", "True") == "True",
         custom_prompt=data.get("custom_prompt", ""),
     )
