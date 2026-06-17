@@ -5,6 +5,7 @@
 ## Overview
 
 **Grammar AI** is a lightweight desktop application built with Python for grammar correction and text polishing. Tired of premium grammar tools like Grammarly and LanguageTool? Enjoy **FREE FOREVER** grammar correction with the free tier of [Groq](https://groq.com/) API key. It provides a simple local UI for entering text, sending it to an AI service, and reviewing polished output.
+It can also translate and polish text into the selected output language, so cross-lingual rewriting works naturally.
 
 ---
 
@@ -22,22 +23,23 @@
 
 ## Goals
 
-* Provide fast grammar correction and writing-style polishing
-* Offer multiple tone variations for output
-* Keep the UI simple and easy to use
-* Store history for future reference
+- Provide fast grammar correction and writing-style polishing
+- Offer multiple tone variations for output
+- Keep the UI simple and easy to use
+- Support cross-lingual polishing — input can be rewritten into the chosen target language
+- Store history for future reference
 
 ---
 
 ## Tech Stack
 
-* Python 3.12
-* tkinter for UI
-* `openai`-compatible AI integration
-* `pystray` and `Pillow` for system tray
-* `loguru` for logging
-* `pydantic` for schema validation
-* `ruff` and `mypy` for linting
+- Python 3.12
+- tkinter for UI
+- `openai`-compatible AI integration
+- `pystray` and `Pillow` for system tray
+- `loguru` for logging
+- `pydantic` for schema validation
+- `ruff` and `mypy` for linting
 
 ---
 
@@ -58,8 +60,16 @@ Grammar AI supports any LLM provider that is OpenAI-compatible, including OpenAI
 - **API Key**: `YOUR_OPENAI_API_KEY`
 
 To configure:
+
 1. Launch the application.
 2. Open Settings and enter your API configuration.
+
+### Cross-lingual polishing
+
+- Choose an output language in Settings.
+- The model will translate any source language into the selected output language before polishing.
+- If you choose English, the app polishes text using American English conventions.
+- If you choose another language, the app writes polished text naturally in that language.
 
 ---
 
@@ -91,18 +101,18 @@ To build a standalone executable:
 
 ## Storage
 
-* Local SQLite database and log files are stored in `~/.grammar-ai/`.
-* History entries include original text, polished text, tone, and timestamp.
-* API keys are stored locally in the app database.
+- Local SQLite database and log files are stored in `~/.grammar-ai/`.
+- History entries include original text, polished text, tone, and timestamp.
+- API keys are stored locally in the app database.
 
 ---
 
 ## Project Files
 
-* `main.py` — application entry point
-* `app/` — core application modules
-* `pyproject.toml` — project metadata, dependencies, and linting configuration
-* `build.py` — PyInstaller build script
+- `main.py` — application entry point
+- `app/` — core application modules
+- `pyproject.toml` — project metadata, dependencies, and linting configuration
+- `build.py` — PyInstaller build script
 
 ---
 
