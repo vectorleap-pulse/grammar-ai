@@ -1,6 +1,6 @@
 # Grammar AI
 
-[![Latest Release](https://img.shields.io/github/v/release/vectorleap-pulse/grammar-ai?label=Download&color=blue)](https://github.com/vectorleap-pulse/grammar-ai/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/vectorleap-pulse/grammar-ai?label=Download&color=blue&cacheSeconds=86400)](https://github.com/vectorleap-pulse/grammar-ai/releases/latest)
 
 ## Overview
 
