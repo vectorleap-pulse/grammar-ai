@@ -209,7 +209,6 @@ def polish_text(
         client,
         model=config.model,
         response_format={"type": "json_object"},
-        max_tokens=8192,
         messages=[
             {"role": "system", "content": system_prompt},
             {
