@@ -152,7 +152,7 @@ class MainTab(ttk.Frame):
             textvariable=self._tone_var,
             values=[tone_name(tn) for tn in TONES],
             state="readonly",
-            width=11,
+            width=18,
         )
         tone_combo.pack(side="left", padx=(4, 8))
         tone_combo.bind("<<ComboboxSelected>>", self._on_tone_change)
