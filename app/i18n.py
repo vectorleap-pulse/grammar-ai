@@ -86,6 +86,8 @@ class Msg(StrEnum):
     NO_GOALS_SELECTED = "No goals selected"
     SELECT_AT_LEAST_ONE_GOAL = "Select at least one goal."
     RESTART_TO_APPLY_LANGUAGE = "Restart Grammar AI to apply the new interface language."
+    RESTART_NOW = "Restart Now"
+    RESTART_LATER = "Restart Later"
 
     # history tab
     REFRESH = "Refresh"
@@ -160,6 +162,8 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.NO_GOALS_SELECTED: "Ningún objetivo seleccionado",
         Msg.SELECT_AT_LEAST_ONE_GOAL: "Selecciona al menos un objetivo.",
         Msg.RESTART_TO_APPLY_LANGUAGE: "Reinicia Grammar AI para aplicar el nuevo idioma de la interfaz.",
+        Msg.RESTART_NOW: "Reiniciar ahora",
+        Msg.RESTART_LATER: "Reiniciar más tarde",
         Msg.REFRESH: "Actualizar",
         Msg.PAGE_SIZE: "Tamaño de página:",
         Msg.PREV: "Anterior",
@@ -229,6 +233,8 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.NO_GOALS_SELECTED: "Aucun objectif sélectionné",
         Msg.SELECT_AT_LEAST_ONE_GOAL: "Sélectionnez au moins un objectif.",
         Msg.RESTART_TO_APPLY_LANGUAGE: "Redémarrez Grammar AI pour appliquer la nouvelle langue de l'interface.",
+        Msg.RESTART_NOW: "Redémarrer maintenant",
+        Msg.RESTART_LATER: "Redémarrer plus tard",
         Msg.REFRESH: "Actualiser",
         Msg.PAGE_SIZE: "Taille de page :",
         Msg.PREV: "Préc.",
@@ -298,6 +304,8 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.NO_GOALS_SELECTED: "Keine Ziele ausgewählt",
         Msg.SELECT_AT_LEAST_ONE_GOAL: "Wähle mindestens ein Ziel aus.",
         Msg.RESTART_TO_APPLY_LANGUAGE: "Starte Grammar AI neu, um die neue Oberflächensprache anzuwenden.",
+        Msg.RESTART_NOW: "Jetzt neu starten",
+        Msg.RESTART_LATER: "Später neu starten",
         Msg.REFRESH: "Aktualisieren",
         Msg.PAGE_SIZE: "Seitengröße:",
         Msg.PREV: "Zurück",
@@ -367,6 +375,8 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.NO_GOALS_SELECTED: "目標が選択されていません",
         Msg.SELECT_AT_LEAST_ONE_GOAL: "少なくとも1つの目標を選択してください。",
         Msg.RESTART_TO_APPLY_LANGUAGE: "新しいインターフェース言語を適用するにはGrammar AIを再起動してください。",
+        Msg.RESTART_NOW: "今すぐ再起動",
+        Msg.RESTART_LATER: "後で再起動",
         Msg.REFRESH: "更新",
         Msg.PAGE_SIZE: "ページサイズ:",
         Msg.PREV: "前へ",
@@ -436,6 +446,8 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.NO_GOALS_SELECTED: "선택된 목표 없음",
         Msg.SELECT_AT_LEAST_ONE_GOAL: "최소 한 개의 목표를 선택하세요.",
         Msg.RESTART_TO_APPLY_LANGUAGE: "새 인터페이스 언어를 적용하려면 Grammar AI를 다시 시작하세요.",
+        Msg.RESTART_NOW: "지금 다시 시작",
+        Msg.RESTART_LATER: "나중에 다시 시작",
         Msg.REFRESH: "새로 고침",
         Msg.PAGE_SIZE: "페이지 크기:",
         Msg.PREV: "이전",
