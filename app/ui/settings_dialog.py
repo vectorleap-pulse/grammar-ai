@@ -157,16 +157,12 @@ class SettingsDialog(tk.Toplevel):
         ).grid(row=disclaimer_row, column=0, columnspan=3, sticky="w", padx=6, pady=(4, 2))
 
         # Context section
-        ctx_lf = ttk.LabelFrame(f, text=t(Msg.CONTEXT).rstrip(":"), padding=(8, 4))
+        ctx_lf = ttk.LabelFrame(f, text=t(Msg.CONTEXT).rstrip(": "), padding=(8, 4))
         ctx_lf.grid(row=7, column=0, columnspan=2, sticky="ew", padx=8, pady=(8, 0))
         ctx_lf.columnconfigure(0, weight=1)
 
-        ctx_label = ttk.Label(ctx_lf, text=t(Msg.CONTEXT))
-        ctx_label.grid(row=0, column=0, sticky="w", pady=(0, 2))
-        _Tooltip(ctx_label, t(Msg.CONTEXT_TOOLTIP))
-
         ctx_text_frame = ttk.Frame(ctx_lf)
-        ctx_text_frame.grid(row=1, column=0, sticky="ew")
+        ctx_text_frame.grid(row=0, column=0, sticky="ew")
         ctx_text_frame.columnconfigure(0, weight=1)
 
         self._context_text = tk.Text(ctx_text_frame, height=3, width=44, font=("", 9), wrap="word")
@@ -174,6 +170,7 @@ class SettingsDialog(tk.Toplevel):
         self._context_text.configure(yscrollcommand=ctx_scroll.set)
         self._context_text.grid(row=0, column=0, sticky="ew")
         ctx_scroll.grid(row=0, column=1, sticky="ns")
+        _Tooltip(self._context_text, t(Msg.CONTEXT_TOOLTIP))
 
         ttk.Label(
             ctx_lf,
@@ -181,7 +178,7 @@ class SettingsDialog(tk.Toplevel):
             foreground="gray",
             font=("", 8, "italic"),
             wraplength=340,
-        ).grid(row=2, column=0, sticky="w", pady=(4, 0))
+        ).grid(row=1, column=0, sticky="w", pady=(4, 0))
 
         # Advanced section
         adv_lf = ttk.LabelFrame(f, text=t(Msg.ADVANCED), padding=(8, 4))
