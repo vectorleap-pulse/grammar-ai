@@ -205,6 +205,13 @@ def polish_text(
                 f"{config.output_language} first, then polish it."
             )
 
+    if config.context.strip():
+        system_prompt += (
+            f"\n\n## CONTEXT (follow strictly — this overrides general defaults where they conflict)\n"
+            f"{config.context.strip()}\n"
+            f"Always keep this context in mind. Every polished version must sound appropriate for this context."
+        )
+
     response = _create_chat_completion(
         client,
         model=config.model,

@@ -36,6 +36,7 @@ class LLMConfig(BaseModel):
     output_language: str = "English"
     use_default_prompt: bool = True
     custom_prompt: str = ""
+    context: str = ""
 
 
 class PolishedText(BaseModel):

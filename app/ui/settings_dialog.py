@@ -156,9 +156,36 @@ class SettingsDialog(tk.Toplevel):
             font=("", 8, "italic"),
         ).grid(row=disclaimer_row, column=0, columnspan=3, sticky="w", padx=6, pady=(4, 2))
 
+        # Context section
+        ctx_lf = ttk.LabelFrame(f, text=t(Msg.CONTEXT).rstrip(":"), padding=(8, 4))
+        ctx_lf.grid(row=7, column=0, columnspan=2, sticky="ew", padx=8, pady=(8, 0))
+        ctx_lf.columnconfigure(0, weight=1)
+
+        ctx_label = ttk.Label(ctx_lf, text=t(Msg.CONTEXT))
+        ctx_label.grid(row=0, column=0, sticky="w", pady=(0, 2))
+        _Tooltip(ctx_label, t(Msg.CONTEXT_TOOLTIP))
+
+        ctx_text_frame = ttk.Frame(ctx_lf)
+        ctx_text_frame.grid(row=1, column=0, sticky="ew")
+        ctx_text_frame.columnconfigure(0, weight=1)
+
+        self._context_text = tk.Text(ctx_text_frame, height=3, width=44, font=("", 9), wrap="word")
+        ctx_scroll = ttk.Scrollbar(ctx_text_frame, orient="vertical", command=self._context_text.yview)
+        self._context_text.configure(yscrollcommand=ctx_scroll.set)
+        self._context_text.grid(row=0, column=0, sticky="ew")
+        ctx_scroll.grid(row=0, column=1, sticky="ns")
+
+        ttk.Label(
+            ctx_lf,
+            text=t(Msg.CONTEXT_TOOLTIP).replace("\n", " "),
+            foreground="gray",
+            font=("", 8, "italic"),
+            wraplength=340,
+        ).grid(row=2, column=0, sticky="w", pady=(4, 0))
+
         # Advanced section
         adv_lf = ttk.LabelFrame(f, text=t(Msg.ADVANCED), padding=(8, 4))
-        adv_lf.grid(row=7, column=0, columnspan=2, sticky="ew", padx=8, pady=(8, 0))
+        adv_lf.grid(row=8, column=0, columnspan=2, sticky="ew", padx=8, pady=(8, 0))
         adv_lf.columnconfigure(0, weight=1)
 
         self._use_default_prompt_var = tk.BooleanVar(value=True)
@@ -188,10 +215,10 @@ class SettingsDialog(tk.Toplevel):
         scroll.pack(side="right", fill="y")
 
         self._status = ttk.Label(f, text="", foreground="gray", font=("", 8), wraplength=400)
-        self._status.grid(row=8, column=0, columnspan=2, sticky="w", padx=8, pady=2)
+        self._status.grid(row=9, column=0, columnspan=2, sticky="w", padx=8, pady=2)
 
         btn_row = ttk.Frame(f)
-        btn_row.grid(row=9, column=0, columnspan=2, pady=(8, 0))
+        btn_row.grid(row=10, column=0, columnspan=2, pady=(8, 0))
         ttk.Button(btn_row, text=t(Msg.TEST_CONNECTION), command=self._test).pack(side="left", padx=4)
         ttk.Button(btn_row, text=t(Msg.SAVE), command=self._save).pack(side="left", padx=4)
         ttk.Button(btn_row, text=t(Msg.CANCEL), command=self.destroy).pack(side="left", padx=4)
@@ -228,6 +255,10 @@ class SettingsDialog(tk.Toplevel):
         code_to_label = {code: label for label, code in UI_LANGUAGES.items()}
         self._ui_language.set(code_to_label.get(self._initial_ui_lang, "English"))
 
+        self._context_text.delete("1.0", "end")
+        if config.context:
+            self._context_text.insert("1.0", config.context)
+
         self._use_default_prompt_var.set(config.use_default_prompt)
         self._custom_prompt_text.delete("1.0", "end")
         if config.custom_prompt:
@@ -246,6 +277,7 @@ class SettingsDialog(tk.Toplevel):
             output_language=output_language,
             use_default_prompt=self._use_default_prompt_var.get(),
             custom_prompt=self._custom_prompt_text.get("1.0", "end-1c").strip(),
+            context=self._context_text.get("1.0", "end-1c").strip(),
         )
 
     def _set_goals(self, preset: list[Goal]) -> None:

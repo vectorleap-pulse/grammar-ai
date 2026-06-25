@@ -74,6 +74,12 @@ class Msg(StrEnum):
     DEFAULT = "Default"
     ALL = "All"
     MORE_GOALS_DISCLAIMER = "More goals = longer generation time."
+    CONTEXT = "Context:"
+    CONTEXT_TOOLTIP = (
+        "Describe the domain or situation your text belongs to\n"
+        "(e.g. 'customer support', 'technical docs', 'sales emails').\n"
+        "The LLM will strongly follow this context when polishing."
+    )
     ADVANCED = "Advanced"
     USE_DEFAULT_PROMPT = "Use Default System Prompt"
     CUSTOM_PROMPT = "Custom Prompt:"
@@ -165,6 +171,8 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.RESTART_TO_APPLY_LANGUAGE: "Reinicia Grammar AI para aplicar el nuevo idioma de la interfaz.",
         Msg.RESTART_NOW: "Reiniciar ahora",
         Msg.RESTART_LATER: "Reiniciar más tarde",
+        Msg.CONTEXT: "Contexto:",
+        Msg.CONTEXT_TOOLTIP: "Describe el dominio o situación de tu texto\n(p. ej. 'soporte al cliente', 'docs técnicos', 'emails de ventas').\nEl LLM seguirá este contexto estrictamente al pulir el texto.",
         Msg.REFRESH: "Actualizar",
         Msg.PAGE_SIZE: "Tamaño de página:",
         Msg.PREV: "Anterior",
@@ -236,6 +244,8 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.RESTART_TO_APPLY_LANGUAGE: "Redémarrez Grammar AI pour appliquer la nouvelle langue de l'interface.",
         Msg.RESTART_NOW: "Redémarrer maintenant",
         Msg.RESTART_LATER: "Redémarrer plus tard",
+        Msg.CONTEXT: "Contexte :",
+        Msg.CONTEXT_TOOLTIP: "Décrivez le domaine ou la situation de votre texte\n(ex. 'support client', 'docs techniques', 'e-mails commerciaux').\nLe LLM respectera strictement ce contexte lors du peaufinage.",
         Msg.REFRESH: "Actualiser",
         Msg.PAGE_SIZE: "Taille de page :",
         Msg.PREV: "Préc.",
@@ -307,6 +317,8 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.RESTART_TO_APPLY_LANGUAGE: "Starte Grammar AI neu, um die neue Oberflächensprache anzuwenden.",
         Msg.RESTART_NOW: "Jetzt neu starten",
         Msg.RESTART_LATER: "Später neu starten",
+        Msg.CONTEXT: "Kontext:",
+        Msg.CONTEXT_TOOLTIP: "Beschreibe die Domäne oder Situation deines Textes\n(z. B. 'Kundensupport', 'technische Doku', 'Verkaufs-E-Mails').\nDas LLM folgt diesem Kontext strikt beim Verfeinern.",
         Msg.REFRESH: "Aktualisieren",
         Msg.PAGE_SIZE: "Seitengröße:",
         Msg.PREV: "Zurück",
@@ -378,6 +390,8 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.RESTART_TO_APPLY_LANGUAGE: "新しいインターフェース言語を適用するにはGrammar AIを再起動してください。",
         Msg.RESTART_NOW: "今すぐ再起動",
         Msg.RESTART_LATER: "後で再起動",
+        Msg.CONTEXT: "コンテキスト:",
+        Msg.CONTEXT_TOOLTIP: "テキストのドメインや状況を説明してください\n(例: 'カスタマーサポート', '技術ドキュメント', '営業メール')。\nLLMは推敲時にこのコンテキストを厳守します。",
         Msg.REFRESH: "更新",
         Msg.PAGE_SIZE: "ページサイズ:",
         Msg.PREV: "前へ",
@@ -449,6 +463,8 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.RESTART_TO_APPLY_LANGUAGE: "새 인터페이스 언어를 적용하려면 Grammar AI를 다시 시작하세요.",
         Msg.RESTART_NOW: "지금 다시 시작",
         Msg.RESTART_LATER: "나중에 다시 시작",
+        Msg.CONTEXT: "컨텍스트:",
+        Msg.CONTEXT_TOOLTIP: "텍스트의 도메인이나 상황을 설명하세요\n(예: '고객 지원', '기술 문서', '영업 이메일').\nLLM은 다듬기 시 이 컨텍스트를 엄격히 따릅니다.",
         Msg.REFRESH: "새로 고침",
         Msg.PAGE_SIZE: "페이지 크기:",
         Msg.PREV: "이전",
