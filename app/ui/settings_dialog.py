@@ -87,25 +87,25 @@ class SettingsDialog(tk.Toplevel):
         f.pack(fill="both", expand=True)
 
         ttk.Label(f, text=t(Msg.BASE_URL)).grid(row=0, column=0, sticky="w", **pad)  # type:ignore
-        self._url = ttk.Entry(f, width=44)
+        self._url = ttk.Entry(f, width=32)
         self._url.grid(row=0, column=1, sticky="ew", **pad)  # type: ignore
 
         ttk.Label(f, text=t(Msg.MODEL)).grid(row=1, column=0, sticky="w", **pad)  # type: ignore
-        self._model = ttk.Entry(f, width=44)
+        self._model = ttk.Entry(f, width=32)
         self._model.grid(row=1, column=1, sticky="ew", **pad)  # type: ignore
 
         ttk.Label(f, text=t(Msg.API_KEY)).grid(row=2, column=0, sticky="w", **pad)  # type: ignore
-        self._key = ttk.Entry(f, width=44, show="*")
+        self._key = ttk.Entry(f, width=32, show="*")
         self._key.grid(row=2, column=1, sticky="ew", **pad)  # type: ignore
 
         ttk.Label(f, text=t(Msg.OUTPUT_LANGUAGE)).grid(row=3, column=0, sticky="w", **pad)  # type: ignore
-        self._language = ttk.Combobox(f, width=42, values=list(OUTPUT_LANGUAGES.keys()))
+        self._language = ttk.Combobox(f, width=30, values=list(OUTPUT_LANGUAGES.keys()))
         self._language.grid(row=3, column=1, sticky="ew", **pad)  # type: ignore
         self._tooltips_misc = _Tooltip(self._language, t(Msg.OUTPUT_LANGUAGE_TOOLTIP))
 
         ttk.Label(f, text=t(Msg.INTERFACE_LANGUAGE)).grid(row=4, column=0, sticky="w", **pad)  # type: ignore
         self._ui_language = ttk.Combobox(
-            f, width=42, values=list(UI_LANGUAGES.keys()), state="readonly"
+            f, width=30, values=list(UI_LANGUAGES.keys()), state="readonly"
         )
         self._ui_language.grid(row=4, column=1, sticky="ew", **pad)  # type: ignore
 
@@ -165,14 +165,14 @@ class SettingsDialog(tk.Toplevel):
         ctx_text_frame.grid(row=0, column=0, sticky="ew")
         ctx_text_frame.columnconfigure(0, weight=1)
 
-        self._context_text = tk.Text(ctx_text_frame, height=3, width=44, font=("", 9), wrap="word")
+        self._context_text = tk.Text(ctx_text_frame, height=3, width=32, font=("", 9), wrap="word")
         ctx_scroll = ttk.Scrollbar(ctx_text_frame, orient="vertical", command=self._context_text.yview)
         self._context_text.configure(yscrollcommand=ctx_scroll.set)
         self._context_text.grid(row=0, column=0, sticky="ew")
         ctx_scroll.grid(row=0, column=1, sticky="ns")
         _Tooltip(self._context_text, t(Msg.CONTEXT_TOOLTIP))
 
-        self._status = ttk.Label(f, text="", foreground="gray", font=("", 8), wraplength=400)
+        self._status = ttk.Label(f, text="", foreground="gray", font=("", 8), wraplength=300)
         self._status.grid(row=8, column=0, columnspan=2, sticky="w", padx=8, pady=2)
 
         btn_row = ttk.Frame(f)
