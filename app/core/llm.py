@@ -199,8 +199,10 @@ def polish_text(
         system_prompt += (
             f"\n\n## Additional context about the writer and their audience\n"
             f"{config.context.strip()}\n"
-            f"Use this context to inform vocabulary, level of formality, and domain-specific conventions "
-            f"when polishing. Do not contradict or override the grammar and structure rules above."
+            f"IMPORTANT: You MUST factor this context into every polished version. "
+            f"It should shape your word choice, level of formality, and domain-specific conventions. "
+            f"A polished result that ignores this context is unacceptable. "
+            f"Do not contradict or override the grammar and structure rules above."
         )
 
     response = _create_chat_completion(
