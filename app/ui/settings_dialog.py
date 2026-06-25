@@ -172,14 +172,6 @@ class SettingsDialog(tk.Toplevel):
         ctx_scroll.grid(row=0, column=1, sticky="ns")
         _Tooltip(self._context_text, t(Msg.CONTEXT_TOOLTIP))
 
-        ttk.Label(
-            ctx_lf,
-            text=t(Msg.CONTEXT_TOOLTIP).replace("\n", " "),
-            foreground="gray",
-            font=("", 8, "italic"),
-            wraplength=340,
-        ).grid(row=1, column=0, sticky="w", pady=(4, 0))
-
         self._status = ttk.Label(f, text="", foreground="gray", font=("", 8), wraplength=400)
         self._status.grid(row=8, column=0, columnspan=2, sticky="w", padx=8, pady=2)
 

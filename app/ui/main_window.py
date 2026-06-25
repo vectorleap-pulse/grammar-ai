@@ -82,6 +82,9 @@ class MainWindow(tk.Tk):
         self._update_bar = ttk.Frame(self, padding=(6, 2))
         self._update_lbl = ttk.Label(self._update_bar, font=("", 9))
         self._update_lbl.pack(side="left")
+        ttk.Button(self._update_bar, text="✕", width=2, command=self._dismiss_update).pack(
+            side="right", padx=(4, 0)
+        )
         ttk.Button(self._update_bar, text=t(Msg.UPDATE_NOW), command=self._do_update, width=20).pack(
             side="right"
         )
@@ -191,6 +194,10 @@ class MainWindow(tk.Tk):
             self._update_bar.pack(fill="x", padx=4, pady=(0, 2), before=self._nb)
         else:
             self.after(UPDATE_CHECK_INTERVAL_MS, self._start_update_check)
+
+    def _dismiss_update(self) -> None:
+        self._update_bar.pack_forget()
+        self.after(UPDATE_CHECK_INTERVAL_MS, self._start_update_check)
 
     def _do_update(self) -> None:
         if not self._update_url:

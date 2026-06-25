@@ -29,6 +29,7 @@ class HistoryTab(ttk.Frame):
         super().__init__(parent)
         self.current_page = 0
         self.page_size = 50
+        self._entry_texts: dict[str, tuple[str, str]] = {}  # iid → (polished, original)
         self._build()
         self.refresh()
 
@@ -87,31 +88,30 @@ class HistoryTab(ttk.Frame):
     def refresh(self) -> None:
         for row in self._tree.get_children():
             self._tree.delete(row)
+        self._entry_texts.clear()
         offset = self.current_page * self.page_size
         for e in load_history(limit=self.page_size, offset=offset):
-            first_line = e.polished_text.split("\n")[0][:120]  # Show only first line, truncated
+            iid = str(e.id)
+            first_line = e.polished_text.split("\n")[0][:120]
             self._tree.insert(
                 "",
                 "end",
-                iid=str(e.id),
+                iid=iid,
                 values=(
                     e.used_at.strftime("%Y-%m-%d %H:%M"),
                     _tone_label(e.tone),
                     _goal_label(e.goal),
                     first_line,
                 ),
-                tags=(e.polished_text, e.original_text),  # Keep both in tags for detail view
             )
+            self._entry_texts[iid] = (e.polished_text, e.original_text)
         self._update_page_label()
 
     def _on_double_click(self, event: tk.Event) -> None:  # type: ignore[type-arg]
         item = self._tree.identify_row(event.y)
-        if not item:
+        if not item or item not in self._entry_texts:
             return
-        tags = self._tree.item(item, "tags")
-        if not tags or len(tags) < 2:
-            return
-        polished, original = tags[0], tags[1]
+        polished, original = self._entry_texts[item]
         values = self._tree.item(item, "values")
         used_at, tone, goal = values[0], values[1], values[2]
 

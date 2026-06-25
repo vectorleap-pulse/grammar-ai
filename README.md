@@ -35,7 +35,7 @@ It can also translate and polish text into the selected output language, so cros
 | | |
 |---|---|
 | ⚡ **Fast** | Grammar correction and writing-style polishing in seconds |
-| 🎭 **Multiple tones** | Generate several tone variations of the same text |
+| 🎭 **Multiple goals** | Generate variations for different writing goals — inform, persuade, clarify, and more |
 | 🌍 **Cross-lingual** | Rewrite input into any chosen target language |
 | 🆓 **Free forever** | Works with the Groq free-tier API key |
 | 🕘 **History** | Every polished result is stored for later reference |
@@ -47,9 +47,10 @@ It can also translate and polish text into the selected output language, so cros
 
 1. Launch the application. It runs in the system tray and starts automatically with Windows.
 2. Configure your API settings in Settings (see [Configuration](#configuration)).
-3. Enter or paste the text you want to polish.
-4. Press `Ctrl+Shift+Space` to capture selected text from any window, or use the **Trigger** button in the app.
-5. Click the **Use** button next to the polished version you want to apply.
+3. In Settings, choose which **goals** to generate (e.g. Inform, Persuade, Clarify) and optionally set a **context** to tailor output to your domain.
+4. Enter or paste the text you want to polish.
+5. Select a **tone** and press `Ctrl+Shift+Space` to capture selected text from any window, or use the **Trigger** button in the app.
+6. Click the **Use** button next to the polished version you want to apply.
 
 > 🎬 Prefer video? See [`media/how-to-use.mp4`](media/how-to-use.mp4) for the full walkthrough.
 

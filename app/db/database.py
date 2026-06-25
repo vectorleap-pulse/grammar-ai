@@ -62,7 +62,7 @@ def save_config(config: LLMConfig) -> None:
     logger.info("Config saved")
 
 
-def save_history(original: str, polished: str, tone: str, goal: str = "") -> None:
+def save_history(original: str, polished: str, tone: Tone, goal: Goal) -> None:
     with _connect() as conn:
         conn.execute(
             "INSERT INTO history (original_text, polished_text, tone, goal) VALUES (?, ?, ?, ?)",
