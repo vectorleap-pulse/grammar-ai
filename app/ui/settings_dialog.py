@@ -180,61 +180,16 @@ class SettingsDialog(tk.Toplevel):
             wraplength=340,
         ).grid(row=1, column=0, sticky="w", pady=(4, 0))
 
-        # Advanced section
-        adv_lf = ttk.LabelFrame(f, text=t(Msg.ADVANCED), padding=(8, 4))
-        adv_lf.grid(row=8, column=0, columnspan=2, sticky="ew", padx=8, pady=(8, 0))
-        adv_lf.columnconfigure(0, weight=1)
-
-        self._use_default_prompt_var = tk.BooleanVar(value=True)
-        cb_default_prompt = ttk.Checkbutton(
-            adv_lf,
-            text=t(Msg.USE_DEFAULT_PROMPT),
-            variable=self._use_default_prompt_var,
-            command=self._toggle_custom_prompt,
-        )
-        cb_default_prompt.grid(row=0, column=0, sticky="w", pady=(0, 4))
-
-        self._custom_prompt_frame = ttk.Frame(adv_lf)
-
-        ttk.Label(self._custom_prompt_frame, text=t(Msg.CUSTOM_PROMPT)).pack(anchor="w")
-        text_frame = ttk.Frame(self._custom_prompt_frame)
-        text_frame.pack(fill="both", expand=True, pady=(2, 0))
-
-        self._custom_prompt_text = tk.Text(
-            text_frame, height=5, width=44, font=("", 9), wrap="word"
-        )
-        scroll = ttk.Scrollbar(
-            text_frame, orient="vertical", command=self._custom_prompt_text.yview
-        )
-        self._custom_prompt_text.configure(yscrollcommand=scroll.set)
-
-        self._custom_prompt_text.pack(side="left", fill="both", expand=True)
-        scroll.pack(side="right", fill="y")
-
         self._status = ttk.Label(f, text="", foreground="gray", font=("", 8), wraplength=400)
-        self._status.grid(row=9, column=0, columnspan=2, sticky="w", padx=8, pady=2)
+        self._status.grid(row=8, column=0, columnspan=2, sticky="w", padx=8, pady=2)
 
         btn_row = ttk.Frame(f)
-        btn_row.grid(row=10, column=0, columnspan=2, pady=(8, 0))
+        btn_row.grid(row=9, column=0, columnspan=2, pady=(8, 0))
         ttk.Button(btn_row, text=t(Msg.TEST_CONNECTION), command=self._test).pack(side="left", padx=4)
         ttk.Button(btn_row, text=t(Msg.SAVE), command=self._save).pack(side="left", padx=4)
         ttk.Button(btn_row, text=t(Msg.CANCEL), command=self.destroy).pack(side="left", padx=4)
 
         f.columnconfigure(1, weight=1)
-
-    def _toggle_custom_prompt(self) -> None:
-        if self._use_default_prompt_var.get():
-            self._custom_prompt_frame.grid_remove()
-        else:
-            self._custom_prompt_frame.grid(row=1, column=0, sticky="ew", pady=(0, 4))
-
-        # Force the window to recalculate its minimum size based on current content
-        self.update_idletasks()
-
-        new_width = self.winfo_reqwidth()
-        new_height = self.winfo_reqheight()
-
-        self.geometry(f"{new_width}x{new_height}")
 
     def _load(self, config: LLMConfig) -> None:
         self._url.delete(0, "end")
@@ -256,12 +211,6 @@ class SettingsDialog(tk.Toplevel):
         if config.context:
             self._context_text.insert("1.0", config.context)
 
-        self._use_default_prompt_var.set(config.use_default_prompt)
-        self._custom_prompt_text.delete("1.0", "end")
-        if config.custom_prompt:
-            self._custom_prompt_text.insert("1.0", config.custom_prompt)
-        self._toggle_custom_prompt()
-
     def _current(self) -> LLMConfig:
         # Map the friendly label back to the plain language value sent to the model;
         # free-typed custom languages pass through unchanged.
@@ -272,8 +221,6 @@ class SettingsDialog(tk.Toplevel):
             model=self._model.get().strip(),
             api_key=self._key.get().strip(),
             output_language=output_language,
-            use_default_prompt=self._use_default_prompt_var.get(),
-            custom_prompt=self._custom_prompt_text.get("1.0", "end-1c").strip(),
             context=self._context_text.get("1.0", "end-1c").strip(),
         )
 

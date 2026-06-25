@@ -80,9 +80,6 @@ class Msg(StrEnum):
         "(e.g. 'customer support', 'technical docs', 'sales emails').\n"
         "The LLM will strongly follow this context when polishing."
     )
-    ADVANCED = "Advanced"
-    USE_DEFAULT_PROMPT = "Use Default System Prompt"
-    CUSTOM_PROMPT = "Custom Prompt:"
     TEST_CONNECTION = "Test Connection"
     SAVE = "Save"
     CANCEL = "Cancel"
@@ -156,9 +153,6 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.DEFAULT: "Predeterminado",
         Msg.ALL: "Todos",
         Msg.MORE_GOALS_DISCLAIMER: "Más objetivos = mayor tiempo de generación.",
-        Msg.ADVANCED: "Avanzado",
-        Msg.USE_DEFAULT_PROMPT: "Usar el prompt de sistema predeterminado",
-        Msg.CUSTOM_PROMPT: "Prompt personalizado:",
         Msg.TEST_CONNECTION: "Probar conexión",
         Msg.SAVE: "Guardar",
         Msg.CANCEL: "Cancelar",
@@ -229,9 +223,6 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.DEFAULT: "Par défaut",
         Msg.ALL: "Tous",
         Msg.MORE_GOALS_DISCLAIMER: "Plus d'objectifs = temps de génération plus long.",
-        Msg.ADVANCED: "Avancé",
-        Msg.USE_DEFAULT_PROMPT: "Utiliser l'invite système par défaut",
-        Msg.CUSTOM_PROMPT: "Invite personnalisée :",
         Msg.TEST_CONNECTION: "Tester la connexion",
         Msg.SAVE: "Enregistrer",
         Msg.CANCEL: "Annuler",
@@ -302,9 +293,6 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.DEFAULT: "Standard",
         Msg.ALL: "Alle",
         Msg.MORE_GOALS_DISCLAIMER: "Mehr Ziele = längere Generierungszeit.",
-        Msg.ADVANCED: "Erweitert",
-        Msg.USE_DEFAULT_PROMPT: "Standard-System-Prompt verwenden",
-        Msg.CUSTOM_PROMPT: "Benutzerdefinierter Prompt:",
         Msg.TEST_CONNECTION: "Verbindung testen",
         Msg.SAVE: "Speichern",
         Msg.CANCEL: "Abbrechen",
@@ -375,9 +363,6 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.DEFAULT: "デフォルト",
         Msg.ALL: "すべて",
         Msg.MORE_GOALS_DISCLAIMER: "目標が多いほど生成時間が長くなります。",
-        Msg.ADVANCED: "詳細設定",
-        Msg.USE_DEFAULT_PROMPT: "デフォルトのシステムプロンプトを使用",
-        Msg.CUSTOM_PROMPT: "カスタムプロンプト:",
         Msg.TEST_CONNECTION: "接続をテスト",
         Msg.SAVE: "保存",
         Msg.CANCEL: "キャンセル",
@@ -448,9 +433,6 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.DEFAULT: "기본값",
         Msg.ALL: "전체",
         Msg.MORE_GOALS_DISCLAIMER: "목표가 많을수록 생성 시간이 길어집니다.",
-        Msg.ADVANCED: "고급",
-        Msg.USE_DEFAULT_PROMPT: "기본 시스템 프롬프트 사용",
-        Msg.CUSTOM_PROMPT: "사용자 지정 프롬프트:",
         Msg.TEST_CONNECTION: "연결 테스트",
         Msg.SAVE: "저장",
         Msg.CANCEL: "취소",

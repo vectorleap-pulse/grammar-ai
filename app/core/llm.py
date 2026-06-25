@@ -193,17 +193,7 @@ def polish_text(
     active_goals: list[Goal] = goals if goals else list(ALL_GOALS)
     client = _get_client(config)
 
-    if config.use_default_prompt:
-        system_prompt = _build_system_prompt(config.output_language)
-    else:
-        system_prompt = config.custom_prompt
-        # The custom prompt is user-owned, but still honor the cross-lingual target.
-        if not _is_english(config.output_language):
-            system_prompt += (
-                f"\n\nWrite the polished output in {config.output_language}. "
-                f"If the input is in another language, translate it into "
-                f"{config.output_language} first, then polish it."
-            )
+    system_prompt = _build_system_prompt(config.output_language)
 
     if config.context.strip():
         system_prompt += (
