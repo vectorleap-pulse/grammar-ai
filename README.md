@@ -24,7 +24,7 @@ It can also translate and polish text into the selected output language, so cros
 
 ![Usage demo](media/how-to-use.gif)
 
-*Select text anywhere, press the hotkey, pick a polished version - done.*
+_Select text anywhere, press the hotkey, pick a polished version - done._
 
 </div>
 
@@ -32,14 +32,14 @@ It can also translate and polish text into the selected output language, so cros
 
 ## Highlights
 
-| | |
-|---|---|
-| ⚡ **Fast** | Grammar correction and writing-style polishing in seconds |
+|                       |                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| ⚡ **Fast**           | Grammar correction and writing-style polishing in seconds                             |
 | 🎭 **Multiple goals** | Generate variations for different writing goals — inform, persuade, clarify, and more |
-| 🌍 **Cross-lingual** | Rewrite input into any chosen target language |
-| 🆓 **Free forever** | Works with the Groq free-tier API key |
-| 🕘 **History** | Every polished result is stored for later reference |
-| 🪟 **Tray-native** | Runs quietly in the system tray, launches on startup |
+| 🌍 **Cross-lingual**  | Rewrite input into any chosen target language                                         |
+| 🆓 **Free forever**   | Works with the Groq free-tier API key                                                 |
+| 🕘 **History**        | Every polished result is stored for later reference                                   |
+| 🪟 **Tray-native**    | Runs quietly in the system tray, launches on startup                                  |
 
 ---
 
@@ -64,7 +64,7 @@ Choose an output language in Settings and Grammar AI will translate any source l
 
 <img src="media/cfg-output-langs.png" alt="Output language selection" width="420" />
 
-*Pick from a curated list of output languages - or type any language the model understands.*
+_Pick from a curated list of output languages - or type any language the model understands._
 
 </div>
 
@@ -82,7 +82,7 @@ The whole interface is localized, so you can use Grammar AI in your own language
 
 <img src="media/cfg-ui-langs.png" alt="Interface language selection" width="420" />
 
-*Switch the interface language independently of the output language.*
+_Switch the interface language independently of the output language._
 
 </div>
 
@@ -108,7 +108,7 @@ Grammar AI supports any LLM provider that is OpenAI-compatible, including OpenAI
 ### Example Configuration ([Groq](https://groq.com/) Free Tier)
 
 - **Base URL**: `https://api.groq.com/openai/v1/`
-- **Model**: `meta-llama/llama-4-scout-17b-16e-instruct`
+- **Model**: `openai/gpt-oss-120b`
 - **API Key**: `YOUR_GROQ_API_KEY`
 
 ### Example Configuration (OpenAI)
