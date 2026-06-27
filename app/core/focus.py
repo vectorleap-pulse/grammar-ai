@@ -21,6 +21,8 @@ def restore_focus_and_paste(hwnd: int, original: str, polished: str) -> bool:
     """Focus hwnd, read full window text via Ctrl+A+C, replace original with polished, paste back."""
     if not _IS_WIN or not hwnd:
         return False
+
+    original_clipboard = pyperclip.paste() or ""
     try:
         ctypes.windll.user32.SetForegroundWindow(hwnd)  # type: ignore[attr-defined]
         time.sleep(0.15)
@@ -38,8 +40,11 @@ def restore_focus_and_paste(hwnd: int, original: str, polished: str) -> bool:
 
         pyperclip.copy(result)
         pyautogui.hotkey("ctrl", "v")
+        time.sleep(0.05)
         logger.debug(f"Pasted to hwnd={hwnd}")
         return True
     except Exception as e:
         logger.warning(f"restore_focus_and_paste failed: {e}")
         return False
+    finally:
+        pyperclip.copy(original_clipboard)

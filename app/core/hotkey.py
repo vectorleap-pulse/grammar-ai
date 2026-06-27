@@ -107,8 +107,7 @@ class HotkeyManager:
             else:
                 logger.debug("Clipboard was empty after hotkey capture")
         finally:
-            if original_clipboard:
-                pyperclip.copy(original_clipboard)
+            pyperclip.copy(original_clipboard or "")
 
     @staticmethod
     def _poll_clipboard(timeout: float) -> str:
