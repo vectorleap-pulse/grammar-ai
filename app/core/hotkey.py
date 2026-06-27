@@ -87,23 +87,28 @@ class HotkeyManager:
         pyautogui.keyUp("ctrl")
         time.sleep(0.05)
 
-        pyperclip.copy("")
-        pyautogui.hotkey("ctrl", "c")
-        text = self._poll_clipboard(timeout=0.4)
-
-        if not text or not text.strip():
-            # Nothing selected - select all then copy.
-            pyautogui.hotkey("ctrl", "a")
-            time.sleep(0.05)
+        original_clipboard = pyperclip.paste()
+        try:
             pyperclip.copy("")
             pyautogui.hotkey("ctrl", "c")
             text = self._poll_clipboard(timeout=0.4)
 
-        if text and text.strip():
-            logger.info(f"Hotkey captured {len(text)} chars")
-            self.on_text(text.strip())
-        else:
-            logger.debug("Clipboard was empty after hotkey capture")
+            if not text or not text.strip():
+                # Nothing selected - select all then copy.
+                pyautogui.hotkey("ctrl", "a")
+                time.sleep(0.05)
+                pyperclip.copy("")
+                pyautogui.hotkey("ctrl", "c")
+                text = self._poll_clipboard(timeout=0.4)
+
+            if text and text.strip():
+                logger.info(f"Hotkey captured {len(text)} chars")
+                self.on_text(text.strip())
+            else:
+                logger.debug("Clipboard was empty after hotkey capture")
+        finally:
+            if original_clipboard:
+                pyperclip.copy(original_clipboard)
 
     @staticmethod
     def _poll_clipboard(timeout: float) -> str:
