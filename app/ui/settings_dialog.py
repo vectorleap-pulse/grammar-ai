@@ -172,11 +172,30 @@ class SettingsDialog(tk.Toplevel):
         ctx_scroll.grid(row=0, column=1, sticky="ns")
         _Tooltip(self._context_text, t(Msg.CONTEXT_TOOLTIP))
 
-        self._status = ttk.Label(f, text="", foreground="gray", font=("", 8), wraplength=300)
-        self._status.grid(row=8, column=0, columnspan=2, sticky="w", padx=8, pady=2)
+        self._status_label = ttk.Label(f, text="", font=("", 8))
+        self._status_label.grid(row=8, column=0, columnspan=2, sticky="w", padx=8, pady=(2, 0))
+
+        self._status_frame = ttk.Frame(f)
+        self._status_frame.grid(row=9, column=0, columnspan=2, sticky="ew", padx=8, pady=(2, 0))
+        self._status_frame.columnconfigure(0, weight=1)
+        self._status_box = tk.Text(
+            self._status_frame,
+            height=4,
+            width=40,
+            font=("", 8),
+            wrap="word",
+            state="disabled",
+            relief="sunken",
+            borderwidth=1,
+        )
+        _status_scroll = ttk.Scrollbar(self._status_frame, orient="vertical", command=self._status_box.yview)
+        self._status_box.configure(yscrollcommand=_status_scroll.set)
+        self._status_box.grid(row=0, column=0, sticky="ew")
+        _status_scroll.grid(row=0, column=1, sticky="ns")
+        self._status_frame.grid_remove()
 
         btn_row = ttk.Frame(f)
-        btn_row.grid(row=9, column=0, columnspan=2, pady=(8, 0))
+        btn_row.grid(row=10, column=0, columnspan=2, pady=(8, 0))
         ttk.Button(btn_row, text=t(Msg.TEST_CONNECTION), command=self._test).pack(side="left", padx=4)
         ttk.Button(btn_row, text=t(Msg.SAVE), command=self._save).pack(side="left", padx=4)
         ttk.Button(btn_row, text=t(Msg.CANCEL), command=self.destroy).pack(side="left", padx=4)
@@ -223,11 +242,27 @@ class SettingsDialog(tk.Toplevel):
     def _selected_goals(self) -> list[Goal]:
         return [g for g in GOALS if self._goal_vars[g].get()]
 
+    def _set_status(self, text: str, color: str) -> None:
+        is_error = color == "red"
+        self._status_label.configure(
+            text="Connection failed:" if is_error else text,
+            foreground=color,
+        )
+        if is_error:
+            self._status_box.configure(state="normal")
+            self._status_box.delete("1.0", "end")
+            self._status_box.insert("1.0", text)
+            self._status_box.configure(state="disabled")
+            self._status_frame.grid()
+        else:
+            self._status_frame.grid_remove()
+        self.update()
+        self.geometry(f"{self.winfo_width()}x{self.winfo_reqheight()}")
+
     def _test(self) -> None:
-        self._status.config(text=t(Msg.TESTING), foreground="gray")
-        self.update_idletasks()
+        self._set_status(t(Msg.TESTING), "gray")
         ok, msg = check_connection(self._current())
-        self._status.config(text=msg, foreground="green" if ok else "red")
+        self._set_status(msg, "green" if ok else "red")
         logger.info(f"Config test result: {ok} - {msg}")
 
     def _save(self) -> None:

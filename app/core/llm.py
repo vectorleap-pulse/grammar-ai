@@ -162,9 +162,17 @@ def _create_chat_completion(client: OpenAI, **kwargs):
 
 def _format_batch_request(text: str, tone: Tone, goals: list[Goal], language: str) -> str:
     line_count = text.count("\n")
-    goal_entries = "\n".join(f'  "{g}": "<polished text with {g} goal>"' for g in goals)
+    lang = (language or "English").strip() or "English"
+    goal_entries = "\n".join(f'  "{g}": "<polished text in {lang} with {g} goal>"' for g in goals)
     tone_extra = _tone_extra(tone, language)
+    lang_constraint = (
+        f"OUTPUT LANGUAGE: You MUST write every polished version in {lang}. "
+        f"Do NOT use English or any other language in your output.\n\n"
+        if not _is_english(lang)
+        else ""
+    )
     return (
+        f"{lang_constraint}"
         f"Polish the text inside <input_text> tags in a {tone} tone, "
         f"for each of these goals: {', '.join(goals)}.\n\n"
         f"CRITICAL: The input contains {line_count} line break(s). "
