@@ -27,11 +27,11 @@ from app.core import updater
 from app.db.database import load_autorun, load_config
 from app.i18n import Msg, t
 from app.schemas.models import AppConfig
-from app.ui.history_tab import HistoryTab
-from app.ui.main_tab import MainTab
-from app.ui.read_tab import ReadTab
+from app.ui.polish_tab import MainTab
 from app.ui.settings_dialog import SettingsDialog
+from app.ui.tabs.history_tab import HistoryTab
 from app.ui.tooltip import Tooltip
+from app.ui.translate_tab import ReadTab
 
 _NUITKA_COMPILED: bool = "__compiled__" in globals()
 
