@@ -64,7 +64,7 @@ class Msg(StrEnum):
     BASE_URL = "Base URL:"
     MODEL = "Model:"
     API_KEY = "API Key:"
-    OUTPUT_LANGUAGE = "Output language:"
+    OUTPUT_LANGUAGE = "Polish language:"
     INTERFACE_LANGUAGE = "Interface language:"
     OUTPUT_LANGUAGE_TOOLTIP = (
         "Polished text is written in this language.\nInput in any language is translated into it."
@@ -100,7 +100,7 @@ class Msg(StrEnum):
     TRANSLATING = "Translating…"
     TRANSLATION_READY = "Translation ready"
     ENTER_TEXT_TO_TRANSLATE = "Enter or paste text to translate."
-    TARGET_LANGUAGE = "Target language:"
+    TARGET_LANGUAGE = "Translate language:"
 
     # history tab
     REFRESH = "Refresh"
@@ -153,7 +153,7 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.BASE_URL: "URL base:",
         Msg.MODEL: "Modelo:",
         Msg.API_KEY: "Clave de API:",
-        Msg.OUTPUT_LANGUAGE: "Idioma de salida:",
+        Msg.OUTPUT_LANGUAGE: "Idioma de pulido:",
         Msg.INTERFACE_LANGUAGE: "Idioma de la interfaz:",
         Msg.OUTPUT_LANGUAGE_TOOLTIP: "El texto pulido se escribe en este idioma.\nLa entrada en cualquier idioma se traduce a él.",
         Msg.RUN_AT_STARTUP: "Ejecutar al iniciar Windows",
@@ -194,7 +194,7 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.TRANSLATING: "Traduciendo…",
         Msg.TRANSLATION_READY: "Traducción lista",
         Msg.ENTER_TEXT_TO_TRANSLATE: "Escribe o pega texto para traducir.",
-        Msg.TARGET_LANGUAGE: "Idioma destino:",
+        Msg.TARGET_LANGUAGE: "Idioma de traducción:",
     },
     "fr": {
         Msg.CLEAR: "Effacer",
@@ -231,7 +231,7 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.BASE_URL: "URL de base :",
         Msg.MODEL: "Modèle :",
         Msg.API_KEY: "Clé API :",
-        Msg.OUTPUT_LANGUAGE: "Langue de sortie :",
+        Msg.OUTPUT_LANGUAGE: "Langue de polissage :",
         Msg.INTERFACE_LANGUAGE: "Langue de l'interface :",
         Msg.OUTPUT_LANGUAGE_TOOLTIP: "Le texte peaufiné est rédigé dans cette langue.\nUne entrée dans n'importe quelle langue y est traduite.",
         Msg.RUN_AT_STARTUP: "Lancer au démarrage de Windows",
@@ -272,7 +272,7 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.TRANSLATING: "Traduction…",
         Msg.TRANSLATION_READY: "Traduction prête",
         Msg.ENTER_TEXT_TO_TRANSLATE: "Saisissez ou collez le texte à traduire.",
-        Msg.TARGET_LANGUAGE: "Langue cible :",
+        Msg.TARGET_LANGUAGE: "Langue de traduction :",
     },
     "de": {
         Msg.CLEAR: "Leeren",
@@ -309,7 +309,7 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.BASE_URL: "Basis-URL:",
         Msg.MODEL: "Modell:",
         Msg.API_KEY: "API-Schlüssel:",
-        Msg.OUTPUT_LANGUAGE: "Ausgabesprache:",
+        Msg.OUTPUT_LANGUAGE: "Poliersprache:",
         Msg.INTERFACE_LANGUAGE: "Oberflächensprache:",
         Msg.OUTPUT_LANGUAGE_TOOLTIP: "Der verfeinerte Text wird in dieser Sprache verfasst.\nEingaben in jeder Sprache werden in sie übersetzt.",
         Msg.RUN_AT_STARTUP: "Beim Windows-Start ausführen",
@@ -350,7 +350,7 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.TRANSLATING: "Übersetzen…",
         Msg.TRANSLATION_READY: "Übersetzung bereit",
         Msg.ENTER_TEXT_TO_TRANSLATE: "Text zum Übersetzen eingeben oder einfügen.",
-        Msg.TARGET_LANGUAGE: "Zielsprache:",
+        Msg.TARGET_LANGUAGE: "Übersetzungssprache:",
     },
     "ja": {
         Msg.CLEAR: "クリア",
@@ -387,7 +387,7 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.BASE_URL: "ベースURL:",
         Msg.MODEL: "モデル:",
         Msg.API_KEY: "APIキー:",
-        Msg.OUTPUT_LANGUAGE: "出力言語:",
+        Msg.OUTPUT_LANGUAGE: "推敲言語:",
         Msg.INTERFACE_LANGUAGE: "インターフェース言語:",
         Msg.OUTPUT_LANGUAGE_TOOLTIP: "推敲されたテキストはこの言語で書かれます。\nどの言語の入力もこの言語に翻訳されます。",
         Msg.RUN_AT_STARTUP: "Windows起動時に実行",
@@ -428,7 +428,7 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.TRANSLATING: "翻訳中…",
         Msg.TRANSLATION_READY: "翻訳完了",
         Msg.ENTER_TEXT_TO_TRANSLATE: "翻訳するテキストを入力または貼り付けてください。",
-        Msg.TARGET_LANGUAGE: "翻訳先言語:",
+        Msg.TARGET_LANGUAGE: "翻訳言語:",
     },
     "ko": {
         Msg.CLEAR: "지우기",
@@ -465,7 +465,7 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.BASE_URL: "기본 URL:",
         Msg.MODEL: "모델:",
         Msg.API_KEY: "API 키:",
-        Msg.OUTPUT_LANGUAGE: "출력 언어:",
+        Msg.OUTPUT_LANGUAGE: "다듬기 언어:",
         Msg.INTERFACE_LANGUAGE: "인터페이스 언어:",
         Msg.OUTPUT_LANGUAGE_TOOLTIP: "다듬어진 텍스트는 이 언어로 작성됩니다.\n어떤 언어의 입력도 이 언어로 번역됩니다.",
         Msg.RUN_AT_STARTUP: "Windows 시작 시 실행",
@@ -506,7 +506,7 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.TRANSLATING: "번역 중…",
         Msg.TRANSLATION_READY: "번역 완료",
         Msg.ENTER_TEXT_TO_TRANSLATE: "번역할 텍스트를 입력하거나 붙여넣으세요.",
-        Msg.TARGET_LANGUAGE: "대상 언어:",
+        Msg.TARGET_LANGUAGE: "번역 언어:",
     },
 }
 
