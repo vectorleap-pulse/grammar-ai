@@ -6,7 +6,7 @@ import pyperclip
 from loguru import logger
 
 from app.config import OUTPUT_LANGUAGES, TRANSLATE_HOTKEYS
-from app.core.hotkey import _HOTKEY_ID_TRANSLATE, MOD_ALT, MOD_CONTROL, VK_SPACE, HotkeyManager
+from app.core.hotkey import _HOTKEY_ID_TRANSLATE, MOD_CONTROL, MOD_SHIFT, VK_SPACE, HotkeyManager
 from app.core.llm import translate_text
 from app.db.database import load_config, load_translate_language
 from app.i18n import Msg, t
@@ -18,7 +18,7 @@ class TranslateTab(ttk.Frame):
         hotkey_desc = "+".join(h.capitalize() for h in TRANSLATE_HOTKEYS)
         self._hotkey = HotkeyManager(
             self._on_hotkey_text,
-            modifiers=MOD_CONTROL | MOD_ALT,
+            modifiers=MOD_CONTROL | MOD_SHIFT,
             vk=VK_SPACE,
             hotkey_id=_HOTKEY_ID_TRANSLATE,
             description=hotkey_desc,

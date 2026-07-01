@@ -103,10 +103,10 @@ GOALS_PRESET_DEFAULT: list[Goal] = [
 ]
 
 # Global hotkey
-HOTKEYS: list[str] = ["ctrl", "shift", "space"]
+HOTKEYS: list[str] = ["shift", "space"]
 HOTKEY: str = "+".join(HOTKEYS)
 
-TRANSLATE_HOTKEYS: list[str] = ["ctrl", "alt", "space"]
+TRANSLATE_HOTKEYS: list[str] = ["ctrl", "shift", "space"]
 TRANSLATE_HOTKEY: str = "+".join(TRANSLATE_HOTKEYS)
 
 # Auto-updater
