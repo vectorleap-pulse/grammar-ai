@@ -6,6 +6,7 @@ from loguru import logger
 
 from app import i18n
 from app.config import DATA_DIR, ERROR_LOG_PATH, LOG_PATH
+from app.core import single_instance
 from app.core.autorun import configure_autorun
 from app.db.database import init_db, load_autorun, load_ui_language
 from app.ui.main_window import MainWindow
@@ -20,6 +21,11 @@ def main() -> None:
 
         if sys.stderr:
             logger.add(sys.stderr, level="WARNING")
+
+        if not single_instance.acquire_lock():
+            logger.info("Grammar AI already running - signaling existing instance and exiting")
+            single_instance.signal_existing_instance()
+            return
 
         parser = argparse.ArgumentParser(add_help=False)
         parser.add_argument("--tray-only", action="store_true")

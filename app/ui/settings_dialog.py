@@ -18,53 +18,25 @@ from app.core.llm import check_connection
 from app.db.database import (
     load_autorun,
     load_selected_goals,
+    load_translate_language,
     load_ui_language,
     save_autorun,
     save_config,
     save_selected_goals,
+    save_translate_language,
     save_ui_language,
 )
 from app.i18n import Msg, goal_description, goal_name, t
-from app.schemas.models import Goal, LLMConfig
-
-
-class _Tooltip:
-    def __init__(self, widget: tk.Widget, text: str) -> None:
-        self._widget = widget
-        self._text = text
-        self._tip: Optional[tk.Toplevel] = None
-        widget.bind("<Enter>", self._show)
-        widget.bind("<Leave>", self._hide)
-
-    def _show(self, _event: tk.Event) -> None:  # type: ignore[type-arg]
-        x = self._widget.winfo_rootx() + 20
-        y = self._widget.winfo_rooty() + self._widget.winfo_height() + 2
-        self._tip = tk.Toplevel(self._widget)
-        self._tip.wm_overrideredirect(True)
-        self._tip.wm_geometry(f"+{x}+{y}")
-        tk.Label(
-            self._tip,
-            text=self._text,
-            background="#ffffe0",
-            relief="solid",
-            borderwidth=1,
-            font=("", 8),
-            padx=4,
-            pady=2,
-        ).pack()
-
-    def _hide(self, _event: tk.Event) -> None:  # type: ignore[type-arg]
-        if self._tip:
-            self._tip.destroy()
-            self._tip = None
+from app.schemas.models import AppConfig, Goal
+from app.ui.tooltip import Tooltip
 
 
 class SettingsDialog(tk.Toplevel):
     def __init__(
         self,
-        parent: tk.Widget,
-        config: LLMConfig,
-        on_save: Callable[[LLMConfig], None],
+        parent: tk.Misc,
+        config: AppConfig,
+        on_save: Callable[[AppConfig], None],
         on_autorun_change: Optional[Callable[[bool], None]] = None,
     ) -> None:
         super().__init__(parent)
@@ -98,25 +70,31 @@ class SettingsDialog(tk.Toplevel):
         self._key = ttk.Entry(f, width=32, show="*")
         self._key.grid(row=2, column=1, sticky="ew", **pad)  # type: ignore
 
-        ttk.Label(f, text=t(Msg.OUTPUT_LANGUAGE)).grid(row=3, column=0, sticky="w", **pad)  # type: ignore
+        ttk.Label(f, text=t(Msg.POLISH_LANGUAGE)).grid(row=3, column=0, sticky="w", **pad)  # type: ignore
         self._language = ttk.Combobox(f, width=30, values=list(OUTPUT_LANGUAGES.keys()))
         self._language.grid(row=3, column=1, sticky="ew", **pad)  # type: ignore
-        self._tooltips_misc = _Tooltip(self._language, t(Msg.OUTPUT_LANGUAGE_TOOLTIP))
+        self._tooltips_misc = Tooltip(self._language, t(Msg.OUTPUT_LANGUAGE_TOOLTIP))
 
-        ttk.Label(f, text=t(Msg.INTERFACE_LANGUAGE)).grid(row=4, column=0, sticky="w", **pad)  # type: ignore
+        ttk.Label(f, text=t(Msg.TRANSLATE_LANGUAGE)).grid(row=4, column=0, sticky="w", **pad)  # type: ignore
+        self._translate_language = ttk.Combobox(
+            f, width=30, values=list(OUTPUT_LANGUAGES.keys()), state="readonly"
+        )
+        self._translate_language.grid(row=4, column=1, sticky="ew", **pad)  # type: ignore
+
+        ttk.Label(f, text=t(Msg.INTERFACE_LANGUAGE)).grid(row=5, column=0, sticky="w", **pad)  # type: ignore
         self._ui_language = ttk.Combobox(
             f, width=30, values=list(UI_LANGUAGES.keys()), state="readonly"
         )
-        self._ui_language.grid(row=4, column=1, sticky="ew", **pad)  # type: ignore
+        self._ui_language.grid(row=5, column=1, sticky="ew", **pad)  # type: ignore
 
         self._autorun_var = tk.BooleanVar(value=load_autorun())
         ttk.Checkbutton(f, text=t(Msg.RUN_AT_STARTUP), variable=self._autorun_var).grid(
-            row=5, column=0, columnspan=2, sticky="w", padx=8, pady=4
+            row=6, column=0, columnspan=2, sticky="w", padx=8, pady=4
         )
 
         # Goal selection
         goals_lf = ttk.LabelFrame(f, text=t(Msg.GOALS_TO_GENERATE), padding=(8, 4))
-        goals_lf.grid(row=6, column=0, columnspan=2, sticky="ew", padx=8, pady=(4, 0))
+        goals_lf.grid(row=7, column=0, columnspan=2, sticky="ew", padx=8, pady=(4, 0))
 
         preset_row = ttk.Frame(goals_lf)
         preset_row.grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 4))
@@ -132,13 +110,13 @@ class SettingsDialog(tk.Toplevel):
             width=9,
             command=lambda: self._set_goals(GOALS_PRESET_DEFAULT),
         ).pack(side="left", padx=4)
-        ttk.Button(preset_row, text=t(Msg.ALL), width=9, command=lambda: self._set_goals(GOALS)).pack(
-            side="left", padx=4
-        )
+        ttk.Button(
+            preset_row, text=t(Msg.ALL), width=9, command=lambda: self._set_goals(GOALS)
+        ).pack(side="left", padx=4)
 
         saved_goals = load_selected_goals()
         self._goal_vars: dict[Goal, tk.BooleanVar] = {}
-        self._tooltips: list[_Tooltip] = []
+        self._tooltips: list[Tooltip] = []
         for i, goal in enumerate(GOALS):
             var = tk.BooleanVar(value=goal in saved_goals)
             self._goal_vars[goal] = var
@@ -146,7 +124,7 @@ class SettingsDialog(tk.Toplevel):
             cb.grid(row=(i // 3) + 1, column=i % 3, sticky="w", padx=6, pady=2)
             desc = goal_description(goal)
             if desc:
-                self._tooltips.append(_Tooltip(cb, desc))
+                self._tooltips.append(Tooltip(cb, desc))
 
         disclaimer_row = (len(GOALS) - 1) // 3 + 2
         ttk.Label(
@@ -158,7 +136,7 @@ class SettingsDialog(tk.Toplevel):
 
         # Context section
         ctx_lf = ttk.LabelFrame(f, text=t(Msg.CONTEXT).rstrip(": "), padding=(8, 4))
-        ctx_lf.grid(row=7, column=0, columnspan=2, sticky="ew", padx=8, pady=(8, 0))
+        ctx_lf.grid(row=8, column=0, columnspan=2, sticky="ew", padx=8, pady=(8, 0))
         ctx_lf.columnconfigure(0, weight=1)
 
         ctx_text_frame = ttk.Frame(ctx_lf)
@@ -166,17 +144,19 @@ class SettingsDialog(tk.Toplevel):
         ctx_text_frame.columnconfigure(0, weight=1)
 
         self._context_text = tk.Text(ctx_text_frame, height=3, width=32, font=("", 9), wrap="word")
-        ctx_scroll = ttk.Scrollbar(ctx_text_frame, orient="vertical", command=self._context_text.yview)
+        ctx_scroll = ttk.Scrollbar(
+            ctx_text_frame, orient="vertical", command=self._context_text.yview
+        )
         self._context_text.configure(yscrollcommand=ctx_scroll.set)
         self._context_text.grid(row=0, column=0, sticky="ew")
         ctx_scroll.grid(row=0, column=1, sticky="ns")
-        _Tooltip(self._context_text, t(Msg.CONTEXT_TOOLTIP))
+        Tooltip(self._context_text, t(Msg.CONTEXT_TOOLTIP))
 
         self._status_label = ttk.Label(f, text="", font=("", 8))
-        self._status_label.grid(row=8, column=0, columnspan=2, sticky="w", padx=8, pady=(2, 0))
+        self._status_label.grid(row=9, column=0, columnspan=2, sticky="w", padx=8, pady=(2, 0))
 
         self._status_frame = ttk.Frame(f)
-        self._status_frame.grid(row=9, column=0, columnspan=2, sticky="ew", padx=8, pady=(2, 0))
+        self._status_frame.grid(row=10, column=0, columnspan=2, sticky="ew", padx=8, pady=(2, 0))
         self._status_frame.columnconfigure(0, weight=1)
         self._status_box = tk.Text(
             self._status_frame,
@@ -188,21 +168,24 @@ class SettingsDialog(tk.Toplevel):
             relief="sunken",
             borderwidth=1,
         )
-        _status_scroll = ttk.Scrollbar(self._status_frame, orient="vertical", command=self._status_box.yview)
+        _status_scroll = ttk.Scrollbar(
+            self._status_frame, orient="vertical", command=self._status_box.yview
+        )
         self._status_box.configure(yscrollcommand=_status_scroll.set)
         self._status_box.grid(row=0, column=0, sticky="ew")
         _status_scroll.grid(row=0, column=1, sticky="ns")
         self._status_frame.grid_remove()
 
         btn_row = ttk.Frame(f)
-        btn_row.grid(row=10, column=0, columnspan=2, pady=(8, 0))
-        ttk.Button(btn_row, text=t(Msg.TEST_CONNECTION), command=self._test).pack(side="left", padx=4)
+        btn_row.grid(row=11, column=0, columnspan=2, pady=(8, 0))
+        self._test_btn = ttk.Button(btn_row, text=t(Msg.TEST_CONNECTION), command=self._test)
+        self._test_btn.pack(side="left", padx=4)
         ttk.Button(btn_row, text=t(Msg.SAVE), command=self._save).pack(side="left", padx=4)
         ttk.Button(btn_row, text=t(Msg.CANCEL), command=self.destroy).pack(side="left", padx=4)
 
         f.columnconfigure(1, weight=1)
 
-    def _load(self, config: LLMConfig) -> None:
+    def _load(self, config: AppConfig) -> None:
         self._url.delete(0, "end")
         self._url.insert(0, config.base_url)
         self._model.delete(0, "end")
@@ -214,6 +197,8 @@ class SettingsDialog(tk.Toplevel):
         out_label = {v: k for k, v in OUTPUT_LANGUAGES.items()}
         self._language.set(out_label.get(value, value))
 
+        self._translate_language.set(load_translate_language())
+
         self._initial_ui_lang = load_ui_language()
         code_to_label = {code: label for label, code in UI_LANGUAGES.items()}
         self._ui_language.set(code_to_label.get(self._initial_ui_lang, "English"))
@@ -222,12 +207,12 @@ class SettingsDialog(tk.Toplevel):
         if config.context:
             self._context_text.insert("1.0", config.context)
 
-    def _current(self) -> LLMConfig:
+    def _current(self) -> AppConfig:
         # Map the friendly label back to the plain language value sent to the model;
         # free-typed custom languages pass through unchanged.
         label = self._language.get().strip()
         output_language = OUTPUT_LANGUAGES.get(label, label) or "English"
-        return LLMConfig(
+        return AppConfig(
             base_url=self._url.get().strip(),
             model=self._model.get().strip(),
             api_key=self._key.get().strip(),
@@ -255,15 +240,24 @@ class SettingsDialog(tk.Toplevel):
             self._status_box.configure(state="disabled")
             self._status_frame.grid()
         else:
+            self._status_box.configure(state="normal")
+            self._status_box.delete("1.0", "end")
+            self._status_box.configure(state="disabled")
             self._status_frame.grid_remove()
         self.update()
         self.geometry(f"{self.winfo_width()}x{self.winfo_reqheight()}")
 
     def _test(self) -> None:
+        self._test_btn.configure(state="disabled")
         self._set_status(t(Msg.TESTING), "gray")
         ok, msg = check_connection(self._current())
-        self._set_status(msg, "green" if ok else "red")
-        logger.info(f"Config test result: {ok} - {msg}")
+        if not self.winfo_exists():
+            return
+        try:
+            self._set_status(msg, "green" if ok else "red")
+            logger.info(f"Config test result: {ok} - {msg}")
+        finally:
+            self._test_btn.configure(state="normal")
 
     def _save(self) -> None:
         cfg = self._current()
@@ -283,6 +277,7 @@ class SettingsDialog(tk.Toplevel):
 
         save_config(cfg)
         save_selected_goals(goals)
+        save_translate_language(self._translate_language.get())
         self._on_save(cfg)
 
         autorun = self._autorun_var.get()
@@ -333,9 +328,7 @@ class SettingsDialog(tk.Toplevel):
         restart_btn = ttk.Button(button_row, text=t(Msg.RESTART_NOW), command=restart_now)
         restart_btn.pack(side="left", padx=(0, 8))
         restart_btn.focus()
-        ttk.Button(button_row, text=t(Msg.RESTART_LATER), command=restart_later).pack(
-            side="left"
-        )
+        ttk.Button(button_row, text=t(Msg.RESTART_LATER), command=restart_later).pack(side="left")
 
         dlg.protocol("WM_DELETE_WINDOW", restart_later)
         dlg.update_idletasks()
@@ -355,7 +348,7 @@ class SettingsDialog(tk.Toplevel):
             pass
         os.execv(sys.executable, [sys.executable, *sys.argv])
 
-    def _center(self, parent: tk.Widget) -> None:
+    def _center(self, parent: tk.Misc) -> None:
         parent_win = parent.winfo_toplevel()
 
         pw = parent_win.winfo_width()

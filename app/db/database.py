@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from loguru import logger
 
 from app.config import DB_PATH, HISTORY_MAX_ENTRIES
-from app.schemas.models import Goal, HistoryEntry, LLMConfig, Tone
+from app.schemas.models import AppConfig, Goal, HistoryEntry, Tone
 
 
 def _connect() -> sqlite3.Connection:
@@ -39,11 +39,11 @@ def init_db() -> None:
     logger.info(f"Database initialized at {DB_PATH}")
 
 
-def load_config() -> LLMConfig:
+def load_config() -> AppConfig:
     with _connect() as conn:
         rows = conn.execute("SELECT key, value FROM settings").fetchall()
     data = {row["key"]: row["value"] for row in rows}
-    return LLMConfig(
+    return AppConfig(
         base_url=data.get("base_url", "https://api.openai.com/v1"),
         model=data.get("model", "gpt-4o-mini"),
         api_key=data.get("api_key", ""),
@@ -52,7 +52,7 @@ def load_config() -> LLMConfig:
     )
 
 
-def save_config(config: LLMConfig) -> None:
+def save_config(config: AppConfig) -> None:
     with _connect() as conn:
         for key, value in config.model_dump().items():
             conn.execute(
@@ -164,6 +164,23 @@ def save_ui_language(code: str) -> None:
             (code,),
         )
     logger.info(f"UI language saved: {code}")
+
+
+def load_translate_language() -> str:
+    from app.config import DEFAULT_OUTPUT_LANGUAGE
+
+    with _connect() as conn:
+        row = conn.execute("SELECT value FROM settings WHERE key = 'translate_language'").fetchone()
+    return row["value"] if row else DEFAULT_OUTPUT_LANGUAGE
+
+
+def save_translate_language(label: str) -> None:
+    with _connect() as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES ('translate_language', ?)",
+            (label,),
+        )
+    logger.debug(f"Translate language saved: {label}")
 
 
 def load_autorun() -> bool:

@@ -16,9 +16,9 @@
 
 ## Overview
 
-**Grammar AI** is a lightweight desktop application built with Python for grammar correction and text polishing. Tired of premium grammar tools like Grammarly and LanguageTool? Enjoy **FREE FOREVER** grammar correction with the free tier of the [Groq](https://groq.com/) API key. It provides a simple local UI for entering text, sending it to an AI service, and reviewing polished output.
+**Grammar AI** is a lightweight desktop application built with Python for grammar correction and text polishing. Tired of premium grammar tools like Grammarly and LanguageTool? Enjoy **FREE FOREVER** grammar correction with the free tier of the [Groq](https://groq.com/) API key.
 
-It can also translate and polish text into the selected output language, so cross-lingual rewriting works naturally.
+It has two core modes, each with its own tab and global hotkey: **Polish**, for rewriting text in a chosen tone and goal, and **Translate**, for quick, direct translation.
 
 <div align="center">
 
@@ -28,49 +28,74 @@ _Select text anywhere, press the hotkey, pick a polished version - done._
 
 </div>
 
----
-
-## Highlights
-
-|                       |                                                                                       |
-| --------------------- | ------------------------------------------------------------------------------------- |
-| ⚡ **Fast**           | Grammar correction and writing-style polishing in seconds                             |
-| 🎭 **Multiple goals** | Generate variations for different writing goals — inform, persuade, clarify, and more |
-| 🌍 **Cross-lingual**  | Rewrite input into any chosen target language                                         |
-| 🆓 **Free forever**   | Works with the Groq free-tier API key                                                 |
-| 🕘 **History**        | Every polished result is stored for later reference                                   |
-| 🪟 **Tray-native**    | Runs quietly in the system tray, launches on startup                                  |
-
----
-
-## Usage
-
-1. Launch the application. It runs in the system tray and starts automatically with Windows.
-2. Configure your API settings in Settings (see [Configuration](#configuration)).
-3. In Settings, choose which **goals** to generate (e.g. Inform, Persuade, Clarify) and optionally set a **context** to tailor output to your domain.
-4. Enter or paste the text you want to polish.
-5. Select a **tone** and press `Ctrl+Shift+Space` to capture selected text from any window, or use the **Trigger** button in the app.
-6. Click the **Use** button next to the polished version you want to apply.
-
 > 🎬 Prefer video? See [`media/how-to-use.mp4`](media/how-to-use.mp4) for the full walkthrough.
 
 ---
 
-## Cross-lingual Polishing
+## ✍️ Polish
 
-Choose an output language in Settings and Grammar AI will translate any source language into it before polishing.
+Rewrite text into one or more **tones**, each generated for several writing **goals** (inform, persuade, clarify, and more) at once.
+
+1. In Settings, choose which **goals** to generate and optionally set a **context** to tailor output to your domain (see [Configuration](#configuration)).
+2. Enter or paste text on the **Polish** tab, or select text anywhere and press `Ctrl+Shift+Space` to send it there directly. You can also use the **Trigger** button in the app.
+3. Select a **tone** and review the generated polished versions.
+4. Click **Use** next to the version you want, to paste it back where you copied it from.
+
+Every polished result is saved to **History** for later reference.
 
 <div align="center">
 
-<img src="media/cfg-output-langs.png" alt="Output language selection" width="420" />
+<img src="media/feat-polish.png" alt="Polish tab" width="420" />
 
-_Pick from a curated list of output languages - or type any language the model understands._
+_The Polish tab, with several goals generated at once for the chosen tone._
 
 </div>
 
-- The model translates any source language into the selected output language before polishing.
+### Cross-lingual polishing
+
+Choose a **Polish language** in Settings and Grammar AI translates any source language into it before polishing.
+
+<div align="center">
+
+<img src="media/cfg-polish-langs.png" alt="Polish language selection" width="420" />
+
+_Pick from a curated list of languages - or type any language the model understands._
+
+</div>
+
+- The model translates any source language into the selected Polish language before polishing.
 - If you choose **English**, the app polishes text using American English conventions.
 - If you choose another language, the app writes polished text naturally in that language.
+
+---
+
+## 🌐 Translate
+
+Need a straight translation without a tone/goal rewrite? The **Translate** tab is a dedicated mode for that, separate from Polish.
+
+1. Enter or paste text on the **Translate** tab, or select text anywhere and press `Shift+Space` to send it there directly.
+2. Pick a **target language** from the dropdown - your choice is remembered independently of the Polish tab's language.
+3. Click **Translate** (or use the hotkey) to get the translated text, then **Copy** it to your clipboard.
+
+Translations are not written to the History log; only Polish results are saved there.
+
+<div align="center">
+
+<img src="media/feat-trans.png" alt="Translate tab" width="420" />
+
+_The Translate tab, for quick, direct translation._
+
+</div>
+
+The **Translate language** can also be set in advance from Settings:
+
+<div align="center">
+
+<img src="media/cfg-ui-translate-langs.png" alt="Translate language selection" width="420" />
+
+_Choose a default target language for the Translate tab._
+
+</div>
 
 ---
 
@@ -82,7 +107,7 @@ The whole interface is localized, so you can use Grammar AI in your own language
 
 <img src="media/cfg-ui-langs.png" alt="Interface language selection" width="420" />
 
-_Switch the interface language independently of the output language._
+_Switch the interface language independently of the Polish and Translate languages._
 
 </div>
 

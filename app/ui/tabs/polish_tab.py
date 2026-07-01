@@ -3,7 +3,7 @@ import threading
 import tkinter as tk
 import tkinter.font as tkFont
 from tkinter import messagebox, ttk
-from typing import Callable, Optional
+from typing import Callable
 
 import pyperclip
 from loguru import logger
@@ -20,8 +20,7 @@ from app.db.database import (
     save_selected_tone,
 )
 from app.i18n import Msg, goal_name, t, tone_name
-from app.schemas.models import Goal, LLMConfig, PolishedText, Tone
-from app.ui.settings_dialog import SettingsDialog
+from app.schemas.models import AppConfig, Goal, PolishedText, Tone
 
 
 class _PolishedItem(ttk.Frame):
@@ -99,19 +98,14 @@ class _PolishedItem(ttk.Frame):
         self.after(1500, lambda: self._copy_btn.config(text=t(Msg.COPY)))
 
 
-class MainTab(ttk.Frame):
-    def __init__(
-        self,
-        parent: tk.Widget,
-        on_autorun_change: Optional[Callable[[bool], None]] = None,
-    ) -> None:
+class PolishTab(ttk.Frame):
+    def __init__(self, parent: tk.Widget) -> None:
         super().__init__(parent)
-        self._config: LLMConfig = load_config()
+        self._config: AppConfig = load_config()
         self._selected_goals: list[Goal] = load_selected_goals()
         self._hotkey = HotkeyManager(self._on_hotkey_text)
         self._items: list[_PolishedItem] = []
         self._received = 0
-        self._on_autorun_change = on_autorun_change
         # Localized tone labels map back to the Tone enum (display text is not the value).
         self._tone_by_label: dict[str, Tone] = {tone_name(tn): tn for tn in TONES}
         self._tone_var = tk.StringVar(value=tone_name(load_selected_tone()))
@@ -121,21 +115,14 @@ class MainTab(ttk.Frame):
     # ------------------------------------------------------------------ build
 
     def _build(self) -> None:
-        self._build_toolbar()
         self._build_original()
         self._build_action_bar()
         self._build_status()
         self._build_results()
 
-    def _build_toolbar(self) -> None:
-        bar = ttk.Frame(self, padding=(6, 4))
-        bar.pack(fill="x")
-        ttk.Button(bar, text=t(Msg.CLEAR), command=self._clear_all).pack(side="left", padx=2)
-        ttk.Button(bar, text=t(Msg.SETTINGS), command=self._open_settings).pack(side="right", padx=2)
-
     def _build_original(self) -> None:
         lf = ttk.LabelFrame(self, text=t(Msg.ORIGINAL_TEXT), padding=4)
-        lf.pack(fill="x", padx=6, pady=(0, 4))
+        lf.pack(fill="x", padx=6, pady=(6, 4))
 
         self._orig = tk.Text(lf, height=4, wrap="word", font=("", 9))
         self._orig.pack(fill="x")
@@ -233,10 +220,7 @@ class MainTab(ttk.Frame):
 
     # ------------------------------------------------------------------ settings
 
-    def _open_settings(self) -> None:
-        SettingsDialog(self, self._config, self._on_config_saved, self._on_autorun_change)
-
-    def _on_config_saved(self, config: LLMConfig) -> None:
+    def apply_config(self, config: AppConfig) -> None:
         self._config = config
         self._selected_goals = load_selected_goals()
         self._results_lf.config(text=self._results_title())
@@ -394,9 +378,7 @@ class MainTab(ttk.Frame):
         tone = self._current_tone()
         save_history(original, text, tone, goal)
         self._set_status(
-            t(Msg.COPIED_TO_CLIPBOARD).format(
-                tone=tone_name(tone), goal=goal_name(goal)
-            ),
+            t(Msg.COPIED_TO_CLIPBOARD).format(tone=tone_name(tone), goal=goal_name(goal)),
             "green",
         )
 
@@ -406,21 +388,17 @@ class MainTab(ttk.Frame):
         hwnd = self._hotkey.last_hwnd
         if hwnd and restore_focus_and_paste(hwnd, original, text):
             self._set_status(
-                t(Msg.PASTED).format(
-                    tone=tone_name(tone), goal=goal_name(goal)
-                ),
+                t(Msg.PASTED).format(tone=tone_name(tone), goal=goal_name(goal)),
                 "green",
             )
         else:
             pyperclip.copy(text)
             self._set_status(
-                t(Msg.COPIED).format(
-                    tone=tone_name(tone), goal=goal_name(goal)
-                ),
+                t(Msg.COPIED).format(tone=tone_name(tone), goal=goal_name(goal)),
                 "gray",
             )
 
-    def _clear_all(self) -> None:
+    def clear_all(self) -> None:
         self._orig.delete("1.0", "end")
         self._update_original_height()
         self._clear_results()
