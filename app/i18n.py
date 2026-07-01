@@ -54,8 +54,8 @@ class Msg(StrEnum):
     UPDATE_NOW = "Update Now"
     UPDATE_AVAILABLE = "Update v{version} available"
     MAIN = "Main"
-    WRITE = "Polish"
-    READ = "Translate"
+    POLISH = "Polish"
+    TRANSLATE = "Translate"
     HISTORY = "History"
     OPEN = "Open"
     QUIT = "Quit"
@@ -67,8 +67,7 @@ class Msg(StrEnum):
     OUTPUT_LANGUAGE = "Output language:"
     INTERFACE_LANGUAGE = "Interface language:"
     OUTPUT_LANGUAGE_TOOLTIP = (
-        "Polished text is written in this language.\n"
-        "Input in any language is translated into it."
+        "Polished text is written in this language.\nInput in any language is translated into it."
     )
     RUN_AT_STARTUP = "Run at Windows startup"
     GOALS_TO_GENERATE = "Goals to generate"
@@ -96,7 +95,7 @@ class Msg(StrEnum):
     RESTART_LATER = "Restart Later"
 
     # read tab
-    TRANSLATE = "Translate"
+    TRANSLATE_ACTION = "Translate"
     TRANSLATED_TEXT = "Translated Text"
     TRANSLATING = "Translating…"
     TRANSLATION_READY = "Translation ready"
@@ -188,9 +187,9 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.POLISHED_TEXT: "Texto pulido",
         Msg.HISTORY_ENTRY: "Entrada del historial",
         Msg.ID: "ID",
-        Msg.WRITE: "Pulir",
-        Msg.READ: "Traducir",
+        Msg.POLISH: "Pulir",
         Msg.TRANSLATE: "Traducir",
+        Msg.TRANSLATE_ACTION: "Traducir",
         Msg.TRANSLATED_TEXT: "Texto traducido",
         Msg.TRANSLATING: "Traduciendo…",
         Msg.TRANSLATION_READY: "Traducción lista",
@@ -266,9 +265,9 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.POLISHED_TEXT: "Texte peaufiné",
         Msg.HISTORY_ENTRY: "Entrée d'historique",
         Msg.ID: "ID",
-        Msg.WRITE: "Peaufiner",
-        Msg.READ: "Traduire",
+        Msg.POLISH: "Peaufiner",
         Msg.TRANSLATE: "Traduire",
+        Msg.TRANSLATE_ACTION: "Traduire",
         Msg.TRANSLATED_TEXT: "Texte traduit",
         Msg.TRANSLATING: "Traduction…",
         Msg.TRANSLATION_READY: "Traduction prête",
@@ -344,9 +343,9 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.POLISHED_TEXT: "Verfeinerter Text",
         Msg.HISTORY_ENTRY: "Verlaufseintrag",
         Msg.ID: "ID",
-        Msg.WRITE: "Polieren",
-        Msg.READ: "Übersetzen",
+        Msg.POLISH: "Polieren",
         Msg.TRANSLATE: "Übersetzen",
+        Msg.TRANSLATE_ACTION: "Übersetzen",
         Msg.TRANSLATED_TEXT: "Übersetzter Text",
         Msg.TRANSLATING: "Übersetzen…",
         Msg.TRANSLATION_READY: "Übersetzung bereit",
@@ -422,9 +421,9 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.POLISHED_TEXT: "推敲されたテキスト",
         Msg.HISTORY_ENTRY: "履歴エントリ",
         Msg.ID: "ID",
-        Msg.WRITE: "推敲",
-        Msg.READ: "翻訳",
+        Msg.POLISH: "推敲",
         Msg.TRANSLATE: "翻訳",
+        Msg.TRANSLATE_ACTION: "翻訳",
         Msg.TRANSLATED_TEXT: "翻訳テキスト",
         Msg.TRANSLATING: "翻訳中…",
         Msg.TRANSLATION_READY: "翻訳完了",
@@ -500,9 +499,9 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.POLISHED_TEXT: "다듬어진 텍스트",
         Msg.HISTORY_ENTRY: "기록 항목",
         Msg.ID: "ID",
-        Msg.WRITE: "다듬기",
-        Msg.READ: "번역",
+        Msg.POLISH: "다듬기",
         Msg.TRANSLATE: "번역",
+        Msg.TRANSLATE_ACTION: "번역",
         Msg.TRANSLATED_TEXT: "번역된 텍스트",
         Msg.TRANSLATING: "번역 중…",
         Msg.TRANSLATION_READY: "번역 완료",

@@ -23,11 +23,7 @@ def _build_system_prompt(language: str) -> str:
     lang = (language or "English").strip() or "English"
     english = _is_english(lang)
 
-    role = (
-        "You are a native American writer."
-        if english
-        else f"You are a native {lang} writer."
-    )
+    role = "You are a native American writer." if english else f"You are a native {lang} writer."
 
     if english:
         language_rules = (
@@ -86,6 +82,7 @@ Examples:
 Return only plain polished text. Every output must read like something a real person would actually say or write - fluent, confident, no fluff.
 """
 
+
 # Extra instructions injected into the user message for the chatting tone.
 # The English contraction list is English-specific, so non-English output gets a
 # language-neutral version that defers to the target language's own chat slang.
@@ -117,6 +114,7 @@ def _tone_extra(tone: Tone, language: str) -> str:
         "- Drop unnecessary end punctuation on short or casual lines.\n"
         "- Keep it punchy: short phrases, skip formal transitions."
     )
+
 
 # Reuse one client per (api_key, base_url) pair to avoid repeated connection pool creation.
 _clients: dict[tuple[str, str], OpenAI] = {}
@@ -221,9 +219,7 @@ def polish_text(
             {"role": "system", "content": system_prompt},
             {
                 "role": "user",
-                "content": _format_batch_request(
-                    text, tone, active_goals, config.output_language
-                ),
+                "content": _format_batch_request(text, tone, active_goals, config.output_language),
             },
         ],
     )

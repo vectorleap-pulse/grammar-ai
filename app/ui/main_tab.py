@@ -131,7 +131,9 @@ class MainTab(ttk.Frame):
         bar = ttk.Frame(self, padding=(6, 4))
         bar.pack(fill="x")
         ttk.Button(bar, text=t(Msg.CLEAR), command=self._clear_all).pack(side="left", padx=2)
-        ttk.Button(bar, text=t(Msg.SETTINGS), command=self._open_settings).pack(side="right", padx=2)
+        ttk.Button(bar, text=t(Msg.SETTINGS), command=self._open_settings).pack(
+            side="right", padx=2
+        )
 
     def _build_original(self) -> None:
         lf = ttk.LabelFrame(self, text=t(Msg.ORIGINAL_TEXT), padding=4)
@@ -394,9 +396,7 @@ class MainTab(ttk.Frame):
         tone = self._current_tone()
         save_history(original, text, tone, goal)
         self._set_status(
-            t(Msg.COPIED_TO_CLIPBOARD).format(
-                tone=tone_name(tone), goal=goal_name(goal)
-            ),
+            t(Msg.COPIED_TO_CLIPBOARD).format(tone=tone_name(tone), goal=goal_name(goal)),
             "green",
         )
 
@@ -406,17 +406,13 @@ class MainTab(ttk.Frame):
         hwnd = self._hotkey.last_hwnd
         if hwnd and restore_focus_and_paste(hwnd, original, text):
             self._set_status(
-                t(Msg.PASTED).format(
-                    tone=tone_name(tone), goal=goal_name(goal)
-                ),
+                t(Msg.PASTED).format(tone=tone_name(tone), goal=goal_name(goal)),
                 "green",
             )
         else:
             pyperclip.copy(text)
             self._set_status(
-                t(Msg.COPIED).format(
-                    tone=tone_name(tone), goal=goal_name(goal)
-                ),
+                t(Msg.COPIED).format(tone=tone_name(tone), goal=goal_name(goal)),
                 "gray",
             )
 

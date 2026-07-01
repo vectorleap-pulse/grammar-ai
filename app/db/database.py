@@ -170,9 +170,7 @@ def load_translate_language() -> str:
     from app.config import DEFAULT_OUTPUT_LANGUAGE
 
     with _connect() as conn:
-        row = conn.execute(
-            "SELECT value FROM settings WHERE key = 'translate_language'"
-        ).fetchone()
+        row = conn.execute("SELECT value FROM settings WHERE key = 'translate_language'").fetchone()
     return row["value"] if row else DEFAULT_OUTPUT_LANGUAGE
 
 

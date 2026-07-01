@@ -6,7 +6,7 @@ import pyperclip
 from loguru import logger
 
 from app.config import OUTPUT_LANGUAGES, TRANSLATE_HOTKEYS
-from app.core.hotkey import MOD_ALT, MOD_CONTROL, VK_SPACE, HotkeyManager, _HOTKEY_ID_TRANSLATE
+from app.core.hotkey import _HOTKEY_ID_TRANSLATE, MOD_ALT, MOD_CONTROL, VK_SPACE, HotkeyManager
 from app.core.llm import translate_text
 from app.db.database import load_config, load_translate_language, save_translate_language
 from app.i18n import Msg, t
@@ -64,7 +64,7 @@ class ReadTab(ttk.Frame):
         hotkey = "+".join(h.capitalize() for h in TRANSLATE_HOTKEYS)
         self._translate_btn = ttk.Button(
             bar,
-            text=t(Msg.TRANSLATE) + f" ({hotkey})",
+            text=t(Msg.TRANSLATE_ACTION) + f" ({hotkey})",
             command=self._trigger_manual,
         )
         self._translate_btn.pack(side="left", padx=2)
@@ -81,8 +81,13 @@ class ReadTab(ttk.Frame):
         lf.pack(fill="both", expand=True, padx=6, pady=(0, 4))
 
         self._output = tk.Text(
-            lf, wrap="word", font=("", 9), state="disabled",
-            borderwidth=0, highlightthickness=0, relief="flat",
+            lf,
+            wrap="word",
+            font=("", 9),
+            state="disabled",
+            borderwidth=0,
+            highlightthickness=0,
+            relief="flat",
         )
         vsb = ttk.Scrollbar(lf, orient="vertical", command=self._output.yview)
         self._output.configure(yscrollcommand=vsb.set)
@@ -125,7 +130,8 @@ class ReadTab(ttk.Frame):
         text = self._orig.get("1.0", "end-1c").strip()
         if not text:
             messagebox.showinfo(
-                t(Msg.EMPTY), t(Msg.ENTER_TEXT_TO_TRANSLATE),
+                t(Msg.EMPTY),
+                t(Msg.ENTER_TEXT_TO_TRANSLATE),
                 parent=self.winfo_toplevel(),
             )
             return
@@ -140,7 +146,8 @@ class ReadTab(ttk.Frame):
         config = load_config()
         if not config.api_key:
             messagebox.showwarning(
-                t(Msg.NO_API_KEY), t(Msg.CONFIGURE_API_KEY),
+                t(Msg.NO_API_KEY),
+                t(Msg.CONFIGURE_API_KEY),
                 parent=self.winfo_toplevel(),
             )
             return

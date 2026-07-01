@@ -86,9 +86,9 @@ class MainWindow(tk.Tk):
         ttk.Button(self._update_bar, text="✕", width=2, command=self._dismiss_update).pack(
             side="right", padx=(4, 0)
         )
-        ttk.Button(self._update_bar, text=t(Msg.UPDATE_NOW), command=self._do_update, width=20).pack(
-            side="right"
-        )
+        ttk.Button(
+            self._update_bar, text=t(Msg.UPDATE_NOW), command=self._do_update, width=20
+        ).pack(side="right")
         self._update_url = ""
 
         self._nb = ttk.Notebook(self)
@@ -98,8 +98,8 @@ class MainWindow(tk.Tk):
         self._read_tab = ReadTab(self._nb)
         self._history_tab = HistoryTab(self._nb)
 
-        self._nb.add(self._main_tab, text=f"  {t(Msg.WRITE)}  ")
-        self._nb.add(self._read_tab, text=f"  {t(Msg.READ)}  ")
+        self._nb.add(self._main_tab, text=f"  {t(Msg.POLISH)}  ")
+        self._nb.add(self._read_tab, text=f"  {t(Msg.TRANSLATE)}  ")
         self._nb.add(self._history_tab, text=f"  {t(Msg.HISTORY)}  ")
         self._nb.bind("<<NotebookTabChanged>>", self._on_tab_change)
 

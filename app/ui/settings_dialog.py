@@ -132,9 +132,9 @@ class SettingsDialog(tk.Toplevel):
             width=9,
             command=lambda: self._set_goals(GOALS_PRESET_DEFAULT),
         ).pack(side="left", padx=4)
-        ttk.Button(preset_row, text=t(Msg.ALL), width=9, command=lambda: self._set_goals(GOALS)).pack(
-            side="left", padx=4
-        )
+        ttk.Button(
+            preset_row, text=t(Msg.ALL), width=9, command=lambda: self._set_goals(GOALS)
+        ).pack(side="left", padx=4)
 
         saved_goals = load_selected_goals()
         self._goal_vars: dict[Goal, tk.BooleanVar] = {}
@@ -166,7 +166,9 @@ class SettingsDialog(tk.Toplevel):
         ctx_text_frame.columnconfigure(0, weight=1)
 
         self._context_text = tk.Text(ctx_text_frame, height=3, width=32, font=("", 9), wrap="word")
-        ctx_scroll = ttk.Scrollbar(ctx_text_frame, orient="vertical", command=self._context_text.yview)
+        ctx_scroll = ttk.Scrollbar(
+            ctx_text_frame, orient="vertical", command=self._context_text.yview
+        )
         self._context_text.configure(yscrollcommand=ctx_scroll.set)
         self._context_text.grid(row=0, column=0, sticky="ew")
         ctx_scroll.grid(row=0, column=1, sticky="ns")
@@ -188,7 +190,9 @@ class SettingsDialog(tk.Toplevel):
             relief="sunken",
             borderwidth=1,
         )
-        _status_scroll = ttk.Scrollbar(self._status_frame, orient="vertical", command=self._status_box.yview)
+        _status_scroll = ttk.Scrollbar(
+            self._status_frame, orient="vertical", command=self._status_box.yview
+        )
         self._status_box.configure(yscrollcommand=_status_scroll.set)
         self._status_box.grid(row=0, column=0, sticky="ew")
         _status_scroll.grid(row=0, column=1, sticky="ns")
@@ -343,9 +347,7 @@ class SettingsDialog(tk.Toplevel):
         restart_btn = ttk.Button(button_row, text=t(Msg.RESTART_NOW), command=restart_now)
         restart_btn.pack(side="left", padx=(0, 8))
         restart_btn.focus()
-        ttk.Button(button_row, text=t(Msg.RESTART_LATER), command=restart_later).pack(
-            side="left"
-        )
+        ttk.Button(button_row, text=t(Msg.RESTART_LATER), command=restart_later).pack(side="left")
 
         dlg.protocol("WM_DELETE_WINDOW", restart_later)
         dlg.update_idletasks()
