@@ -31,10 +31,10 @@ class HotkeyManager:
     def __init__(
         self,
         on_text: Callable[[str], None],
-        modifiers: int = MOD_SHIFT,
+        modifiers: int = MOD_CONTROL | MOD_SHIFT,
         vk: int = VK_SPACE,
         hotkey_id: int = _HOTKEY_ID_POLISH,
-        description: str = "Shift+Space",
+        description: str = "Ctrl+Shift+Space",
     ) -> None:
         self.on_text = on_text
         self.last_hwnd: int = 0

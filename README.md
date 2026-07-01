@@ -37,7 +37,7 @@ _Select text anywhere, press the hotkey, pick a polished version - done._
 Rewrite text into one or more **tones**, each generated for several writing **goals** (inform, persuade, clarify, and more) at once.
 
 1. In Settings, choose which **goals** to generate and optionally set a **context** to tailor output to your domain (see [Configuration](#configuration)).
-2. Enter or paste text on the **Polish** tab, or select text anywhere and press `Shift+Space` to send it there directly. You can also use the **Trigger** button in the app.
+2. Enter or paste text on the **Polish** tab, or select text anywhere and press `Ctrl+Shift+Space` to send it there directly. You can also use the **Trigger** button in the app.
 3. Select a **tone** and review the generated polished versions.
 4. Click **Use** next to the version you want, to paste it back where you copied it from.
 
@@ -73,7 +73,7 @@ _Pick from a curated list of languages - or type any language the model understa
 
 Need a straight translation without a tone/goal rewrite? The **Translate** tab is a dedicated mode for that, separate from Polish.
 
-1. Enter or paste text on the **Translate** tab, or select text anywhere and press `Ctrl+Shift+Space` to send it there directly.
+1. Enter or paste text on the **Translate** tab, or select text anywhere and press `Shift+Space` to send it there directly.
 2. Pick a **target language** from the dropdown - your choice is remembered independently of the Polish tab's language.
 3. Click **Translate** (or use the hotkey) to get the translated text, then **Copy** it to your clipboard.
 
