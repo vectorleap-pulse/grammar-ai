@@ -27,7 +27,7 @@ from app.db.database import (
     save_ui_language,
 )
 from app.i18n import Msg, goal_description, goal_name, t
-from app.schemas.models import Goal, LLMConfig
+from app.schemas.models import AppConfig, Goal
 
 
 class _Tooltip:
@@ -64,9 +64,9 @@ class _Tooltip:
 class SettingsDialog(tk.Toplevel):
     def __init__(
         self,
-        parent: tk.Widget,
-        config: LLMConfig,
-        on_save: Callable[[LLMConfig], None],
+        parent: tk.Misc,
+        config: AppConfig,
+        on_save: Callable[[AppConfig], None],
         on_autorun_change: Optional[Callable[[bool], None]] = None,
     ) -> None:
         super().__init__(parent)
@@ -215,7 +215,7 @@ class SettingsDialog(tk.Toplevel):
 
         f.columnconfigure(1, weight=1)
 
-    def _load(self, config: LLMConfig) -> None:
+    def _load(self, config: AppConfig) -> None:
         self._url.delete(0, "end")
         self._url.insert(0, config.base_url)
         self._model.delete(0, "end")
@@ -237,12 +237,12 @@ class SettingsDialog(tk.Toplevel):
         if config.context:
             self._context_text.insert("1.0", config.context)
 
-    def _current(self) -> LLMConfig:
+    def _current(self) -> AppConfig:
         # Map the friendly label back to the plain language value sent to the model;
         # free-typed custom languages pass through unchanged.
         label = self._language.get().strip()
         output_language = OUTPUT_LANGUAGES.get(label, label) or "English"
-        return LLMConfig(
+        return AppConfig(
             base_url=self._url.get().strip(),
             model=self._model.get().strip(),
             api_key=self._key.get().strip(),
@@ -378,7 +378,7 @@ class SettingsDialog(tk.Toplevel):
             pass
         os.execv(sys.executable, [sys.executable, *sys.argv])
 
-    def _center(self, parent: tk.Widget) -> None:
+    def _center(self, parent: tk.Misc) -> None:
         parent_win = parent.winfo_toplevel()
 
         pw = parent_win.winfo_width()

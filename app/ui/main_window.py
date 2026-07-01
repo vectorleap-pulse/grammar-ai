@@ -24,11 +24,13 @@ from app.config import (
     _frozen_base,
 )
 from app.core import updater
-from app.db.database import load_autorun
+from app.db.database import load_autorun, load_config
 from app.i18n import Msg, t
+from app.schemas.models import AppConfig
 from app.ui.history_tab import HistoryTab
 from app.ui.main_tab import MainTab
 from app.ui.read_tab import ReadTab
+from app.ui.settings_dialog import SettingsDialog
 
 _NUITKA_COMPILED: bool = "__compiled__" in globals()
 
@@ -72,6 +74,7 @@ class MainWindow(tk.Tk):
         self._set_window_icon()
         self._tray = None
         self._autorun = load_autorun()
+        self._config: AppConfig = load_config()
         self._build()
         self.protocol("WM_DELETE_WINDOW", self._on_close)
         self.after(10, self._remove_maximize_button)
@@ -91,10 +94,16 @@ class MainWindow(tk.Tk):
         ).pack(side="right")
         self._update_url = ""
 
+        self._toolbar = ttk.Frame(self, padding=(6, 4, 6, 0))
+        self._toolbar.pack(fill="x")
+        ttk.Button(self._toolbar, text=t(Msg.SETTINGS), command=self._open_settings).pack(
+            side="right", padx=2
+        )
+
         self._nb = ttk.Notebook(self)
         self._nb.pack(fill="both", expand=True, padx=4, pady=4)
 
-        self._main_tab = MainTab(self._nb, on_autorun_change=self.apply_autorun)
+        self._main_tab = MainTab(self._nb)
         self._read_tab = ReadTab(self._nb)
         self._history_tab = HistoryTab(self._nb)
 
@@ -102,6 +111,13 @@ class MainWindow(tk.Tk):
         self._nb.add(self._read_tab, text=f"  {t(Msg.TRANSLATE)}  ")
         self._nb.add(self._history_tab, text=f"  {t(Msg.HISTORY)}  ")
         self._nb.bind("<<NotebookTabChanged>>", self._on_tab_change)
+
+    def _open_settings(self) -> None:
+        SettingsDialog(self, self._config, self._on_config_saved, self.apply_autorun)
+
+    def _on_config_saved(self, config: AppConfig) -> None:
+        self._config = config
+        self._main_tab.apply_config(config)
 
     def _on_tab_change(self, event: tk.Event) -> None:  # type: ignore[type-arg]
         nb: ttk.Notebook = event.widget  # type: ignore[assignment]

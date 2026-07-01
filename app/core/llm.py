@@ -6,7 +6,7 @@ from loguru import logger
 from openai import OpenAI, OpenAIError
 
 from app.config import GOALS as ALL_GOALS
-from app.schemas.models import Goal, LLMConfig, PolishedText, Tone
+from app.schemas.models import AppConfig, Goal, PolishedText, Tone
 
 
 def _is_english(language: str) -> bool:
@@ -122,7 +122,7 @@ _MAX_INFERENCE_ATTEMPTS = 3
 _BACKOFF_INITIAL_SECONDS = 1
 
 
-def _get_client(config: LLMConfig) -> OpenAI:
+def _get_client(config: AppConfig) -> OpenAI:
     key = (config.api_key, config.base_url)
     if key not in _clients:
         _clients[key] = OpenAI(api_key=config.api_key, base_url=config.base_url)
@@ -192,7 +192,7 @@ def _format_batch_request(text: str, tone: Tone, goals: list[Goal], language: st
 def polish_text(
     text: str,
     tone: Tone,
-    config: LLMConfig,
+    config: AppConfig,
     goals: Optional[list[Goal]] = None,
     on_result: Optional[Callable[[PolishedText], None]] = None,
 ) -> list[PolishedText]:
@@ -240,7 +240,7 @@ def polish_text(
     return results
 
 
-def translate_text(text: str, target_language: str, config: LLMConfig) -> str:
+def translate_text(text: str, target_language: str, config: AppConfig) -> str:
     client = _get_client(config)
     system = (
         f"You are a professional translator. "
@@ -258,7 +258,7 @@ def translate_text(text: str, target_language: str, config: LLMConfig) -> str:
     return (response.choices[0].message.content or "").strip()
 
 
-def check_connection(config: LLMConfig) -> tuple[bool, str]:
+def check_connection(config: AppConfig) -> tuple[bool, str]:
     try:
         _get_client(config).models.list()
         return True, "Connection OK"
