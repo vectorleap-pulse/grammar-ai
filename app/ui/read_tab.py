@@ -8,7 +8,7 @@ from loguru import logger
 from app.config import OUTPUT_LANGUAGES, TRANSLATE_HOTKEYS
 from app.core.hotkey import MOD_ALT, MOD_CONTROL, VK_SPACE, HotkeyManager, _HOTKEY_ID_TRANSLATE
 from app.core.llm import translate_text
-from app.db.database import load_config
+from app.db.database import load_config, load_translate_language, save_translate_language
 from app.i18n import Msg, t
 
 
@@ -50,17 +50,16 @@ class ReadTab(ttk.Frame):
 
         ttk.Label(bar, text=t(Msg.TARGET_LANGUAGE)).pack(side="left")
 
-        lang_label = {v: k for k, v in OUTPUT_LANGUAGES.items()}.get(
-            load_config().output_language, "English"
-        )
-        self._lang_var = tk.StringVar(value=lang_label)
-        ttk.Combobox(
+        self._lang_var = tk.StringVar(value=load_translate_language())
+        lang_combo = ttk.Combobox(
             bar,
             textvariable=self._lang_var,
             values=list(OUTPUT_LANGUAGES.keys()),
             state="readonly",
             width=22,
-        ).pack(side="left", padx=(4, 8))
+        )
+        lang_combo.pack(side="left", padx=(4, 8))
+        lang_combo.bind("<<ComboboxSelected>>", self._on_lang_change)
 
         hotkey = "+".join(h.capitalize() for h in TRANSLATE_HOTKEYS)
         self._translate_btn = ttk.Button(
@@ -116,6 +115,9 @@ class ReadTab(ttk.Frame):
             top.deiconify()
             top.lift()
             top.focus_force()
+
+    def _on_lang_change(self, _event: tk.Event) -> None:  # type: ignore[type-arg]
+        save_translate_language(self._lang_var.get())
 
     # ------------------------------------------------------------------ trigger
 

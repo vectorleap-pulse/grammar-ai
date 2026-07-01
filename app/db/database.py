@@ -166,6 +166,25 @@ def save_ui_language(code: str) -> None:
     logger.info(f"UI language saved: {code}")
 
 
+def load_translate_language() -> str:
+    from app.config import DEFAULT_OUTPUT_LANGUAGE
+
+    with _connect() as conn:
+        row = conn.execute(
+            "SELECT value FROM settings WHERE key = 'translate_language'"
+        ).fetchone()
+    return row["value"] if row else DEFAULT_OUTPUT_LANGUAGE
+
+
+def save_translate_language(label: str) -> None:
+    with _connect() as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES ('translate_language', ?)",
+            (label,),
+        )
+    logger.debug(f"Translate language saved: {label}")
+
+
 def load_autorun() -> bool:
     with _connect() as conn:
         row = conn.execute("SELECT value FROM settings WHERE key = 'autorun'").fetchone()
