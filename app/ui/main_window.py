@@ -23,7 +23,7 @@ from app.config import (
     WINDOW_MIN_SIZE,
     _frozen_base,
 )
-from app.core import updater
+from app.core import single_instance, updater
 from app.db.database import load_autorun, load_config
 from app.i18n import Msg, t
 from app.schemas.models import AppConfig
@@ -80,6 +80,7 @@ class MainWindow(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self._on_close)
         self.after(10, self._remove_maximize_button)
         self.after(5000, self._start_update_check)
+        self.after(500, self._poll_show_signal)
         if self._autorun:
             self.after(100, self._start_tray)
 
@@ -187,6 +188,11 @@ class MainWindow(tk.Tk):
         self.lift()
         self.focus_force()
         self.attributes("-topmost", False)
+
+    def _poll_show_signal(self) -> None:
+        if single_instance.consume_show_signal():
+            self._show_window()
+        self.after(500, self._poll_show_signal)
 
     def apply_autorun(self, enabled: bool) -> None:
         self._autorun = enabled
