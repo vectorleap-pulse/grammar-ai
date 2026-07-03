@@ -180,10 +180,23 @@ To build a standalone executable:
 - Python 3.12
 - `tkinter` for UI
 - `openai`-compatible AI integration
+- `uiautomation` for reading/writing text in the focused window (no clipboard, no simulated keystrokes)
 - `pystray` and `Pillow` for system tray
 - `loguru` for logging
 - `pydantic` for schema validation
 - `ruff` and `mypy` for linting
+
+---
+
+## How capture works
+
+Pressing a hotkey reads the focused control's text directly via Windows UI Automation and, on
+"Use", writes the result back the same way. The app never reads, writes, or clears your system
+clipboard as part of this - clipboard is only touched when you explicitly click a "Copy" button.
+
+This means capture works in most modern apps and browsers, but not everywhere: an app has to
+expose its text field to Windows' accessibility APIs for this to work. Custom-rendered editors
+(for example, VS Code's code-editing pane) may not be supported.
 
 ---
 

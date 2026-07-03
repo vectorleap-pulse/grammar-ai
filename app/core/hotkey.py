@@ -1,17 +1,27 @@
-"""Global hotkey via Win32 RegisterHotKey - reliable across apps and system load."""
+"""Global hotkey via Win32 RegisterHotKey, capture via UI Automation.
+
+Text is read directly from the focused control's ValuePattern/TextPattern - no
+clipboard access and no synthetic keystrokes are involved. This matters beyond
+correctness: a hotkey handler that blanks the clipboard, simulates Ctrl+C, polls
+for the result, and restores the original contents is structurally identical to
+how clipboard-hijacking malware behaves, and gets flagged as such by some AV/EDR
+heuristics (Bitdefender among them). UI Automation reads the control's text as a
+direct, synchronous COM call instead.
+"""
 
 import ctypes
 import ctypes.wintypes
 import sys
 import threading
 import time
-from typing import Callable
+from typing import Callable, Optional
 
-import pyautogui
-import pyperclip
 from loguru import logger
 
 _IS_WIN = sys.platform == "win32"
+
+if _IS_WIN:
+    import uiautomation as auto
 
 WM_HOTKEY = 0x0312
 WM_QUIT = 0x0012
@@ -26,6 +36,46 @@ _HOTKEY_ID_TRANSLATE = 2
 # Keep for backward compat
 _HOTKEY_ID = _HOTKEY_ID_POLISH
 
+# Chromium/Electron (and some other frameworks) only build their full accessibility
+# tree once a UI Automation client is detected querying them, so the very first read
+# right after the hotkey fires can come back empty even though the control does
+# support the pattern. One short retry covers that "cold start" without adding a
+# perceptible delay for controls that were already accessibility-active.
+_COLD_START_RETRY_DELAY_SECONDS = 0.15
+
+
+def _read_control_text(control: "Optional[auto.Control]") -> str:
+    """Read the focused control's (selected, or full) text via UI Automation. No clipboard."""
+    if control is None:
+        return ""
+
+    try:
+        text_pattern = control.GetPattern(auto.PatternId.TextPattern)
+    except Exception:
+        text_pattern = None
+    if text_pattern:
+        try:
+            selection = text_pattern.GetSelection()
+            if selection:
+                selected = selection[0].GetText(-1)
+                if selected and selected.strip():
+                    return selected
+            return text_pattern.DocumentRange.GetText(-1)
+        except Exception as e:
+            logger.debug(f"TextPattern read failed: {e}")
+
+    try:
+        value_pattern = control.GetPattern(auto.PatternId.ValuePattern)
+    except Exception:
+        value_pattern = None
+    if value_pattern:
+        try:
+            return value_pattern.Value or ""
+        except Exception as e:
+            logger.debug(f"ValuePattern read failed: {e}")
+
+    return ""
+
 
 class HotkeyManager:
     def __init__(
@@ -38,9 +88,10 @@ class HotkeyManager:
     ) -> None:
         self.on_text = on_text
         self.last_hwnd: int = 0
+        self.last_control: Optional["auto.Control"] = None
         self._enabled = False
         self._tid: int = 0
-        self._thread: threading.Thread | None = None
+        self._thread: Optional[threading.Thread] = None
         self._capture_lock = threading.Lock()
         self._modifiers = modifiers
         self._vk = vk
@@ -98,44 +149,24 @@ class HotkeyManager:
             self._capture_lock.release()
 
     def _do_capture(self) -> None:
-        # Release all registered modifiers before sending ctrl+c.
-        if self._modifiers & MOD_SHIFT:
-            pyautogui.keyUp("shift")
-        if self._modifiers & MOD_CONTROL:
-            pyautogui.keyUp("ctrl")
-        if self._modifiers & MOD_ALT:
-            pyautogui.keyUp("alt")
-        time.sleep(0.05)
-
-        original_clipboard = pyperclip.paste()
         try:
-            pyperclip.copy("")
-            pyautogui.hotkey("ctrl", "c")
-            text = self._poll_clipboard(timeout=0.4)
+            control = auto.GetFocusedControl()
+            text = _read_control_text(control)
+            if not text.strip():
+                # Cold-start retry: give a Chromium/Electron accessibility tree a
+                # moment to activate before concluding there's nothing to read.
+                time.sleep(_COLD_START_RETRY_DELAY_SECONDS)
+                control = auto.GetFocusedControl()
+                text = _read_control_text(control)
+        except Exception as e:
+            logger.warning(f"UI Automation capture failed: {e}")
+            return
 
-            if not text or not text.strip():
-                # Nothing selected - select all then copy.
-                pyautogui.hotkey("ctrl", "a")
-                time.sleep(0.05)
-                pyperclip.copy("")
-                pyautogui.hotkey("ctrl", "c")
-                text = self._poll_clipboard(timeout=0.4)
-
-            if text and text.strip():
-                logger.info(f"Hotkey captured {len(text)} chars")
-                self.on_text(text.strip())
-            else:
-                logger.debug("Clipboard was empty after hotkey capture")
-        finally:
-            pyperclip.copy(original_clipboard or "")
-
-    @staticmethod
-    def _poll_clipboard(timeout: float) -> str:
-        """Return clipboard text as soon as it becomes non-empty, or after timeout."""
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            time.sleep(0.025)
-            text = pyperclip.paste()
-            if text:
-                return text
-        return ""
+        if text and text.strip():
+            logger.info(f"Hotkey captured {len(text)} chars via UI Automation")
+            self.last_control = control
+            self.on_text(text.strip())
+        else:
+            logger.debug(
+                "Focused control exposed no readable text (unsupported app or empty field)"
+            )

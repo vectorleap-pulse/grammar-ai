@@ -385,8 +385,9 @@ class PolishTab(ttk.Frame):
     def _use_text(self, original: str, goal: Goal, text: str) -> None:
         tone = self._current_tone()
         save_history(original, text, tone, goal)
+        control = self._hotkey.last_control
         hwnd = self._hotkey.last_hwnd
-        if hwnd and restore_focus_and_paste(hwnd, original, text):
+        if restore_focus_and_paste(control, hwnd, original, text):
             self._set_status(
                 t(Msg.PASTED).format(tone=tone_name(tone), goal=goal_name(goal)),
                 "green",
