@@ -23,11 +23,15 @@ from app.config import (
     WINDOW_MIN_SIZE,
     _frozen_base,
 )
-from app.core import updater
-from app.db.database import load_autorun
+from app.core import single_instance, updater
+from app.db.database import load_autorun, load_config
 from app.i18n import Msg, t
-from app.ui.history_tab import HistoryTab
-from app.ui.main_tab import MainTab
+from app.schemas.models import AppConfig
+from app.ui.settings_dialog import SettingsDialog
+from app.ui.tabs.history_tab import HistoryTab
+from app.ui.tabs.polish_tab import PolishTab
+from app.ui.tabs.translate_tab import TranslateTab
+from app.ui.tooltip import Tooltip
 
 _NUITKA_COMPILED: bool = "__compiled__" in globals()
 
@@ -71,10 +75,12 @@ class MainWindow(tk.Tk):
         self._set_window_icon()
         self._tray = None
         self._autorun = load_autorun()
+        self._config: AppConfig = load_config()
         self._build()
         self.protocol("WM_DELETE_WINDOW", self._on_close)
         self.after(10, self._remove_maximize_button)
         self.after(5000, self._start_update_check)
+        self.after(500, self._poll_show_signal)
         if self._autorun:
             self.after(100, self._start_tray)
 
@@ -85,25 +91,57 @@ class MainWindow(tk.Tk):
         ttk.Button(self._update_bar, text="✕", width=2, command=self._dismiss_update).pack(
             side="right", padx=(4, 0)
         )
-        ttk.Button(self._update_bar, text=t(Msg.UPDATE_NOW), command=self._do_update, width=20).pack(
-            side="right"
-        )
+        ttk.Button(
+            self._update_bar, text=t(Msg.UPDATE_NOW), command=self._do_update, width=20
+        ).pack(side="right")
         self._update_url = ""
 
         self._nb = ttk.Notebook(self)
         self._nb.pack(fill="both", expand=True, padx=4, pady=4)
 
-        self._main_tab = MainTab(self._nb, on_autorun_change=self.apply_autorun)
+        self._main_tab = PolishTab(self._nb)
+        self._read_tab = TranslateTab(self._nb)
         self._history_tab = HistoryTab(self._nb)
 
-        self._nb.add(self._main_tab, text=f"  {t(Msg.MAIN)}  ")
+        self._nb.add(self._main_tab, text=f"  {t(Msg.POLISH)}  ")
+        self._nb.add(self._read_tab, text=f"  {t(Msg.TRANSLATE)}  ")
         self._nb.add(self._history_tab, text=f"  {t(Msg.HISTORY)}  ")
         self._nb.bind("<<NotebookTabChanged>>", self._on_tab_change)
 
+        # Floats over the notebook's tab row, top-right, instead of its own row.
+        self._tab_toolbar = ttk.Frame(self._nb)
+        self._clear_btn = ttk.Button(
+            self._tab_toolbar, text="🗑", width=3, command=self._clear_active
+        )
+        self._clear_btn.pack(side="left", padx=(0, 2))
+        Tooltip(self._clear_btn, t(Msg.CLEAR))
+        settings_btn = ttk.Button(self._tab_toolbar, text="⚙", width=3, command=self._open_settings)
+        settings_btn.pack(side="left")
+        Tooltip(settings_btn, t(Msg.SETTINGS))
+        self._tab_toolbar.place(in_=self._nb, relx=1.0, x=-3, y=0, anchor="ne")
+
+    def _open_settings(self) -> None:
+        SettingsDialog(self, self._config, self._on_config_saved, self.apply_autorun)
+
+    def _on_config_saved(self, config: AppConfig) -> None:
+        self._config = config
+        self._main_tab.apply_config(config)
+        self._read_tab.refresh_translate_language()
+
+    def _clear_active(self) -> None:
+        current = self._nb.select()
+        if current == str(self._main_tab):
+            self._main_tab.clear_all()
+        elif current == str(self._read_tab):
+            self._read_tab.clear_all()
+
     def _on_tab_change(self, event: tk.Event) -> None:  # type: ignore[type-arg]
         nb: ttk.Notebook = event.widget  # type: ignore[assignment]
-        if nb.select() == str(self._history_tab):
+        selected = nb.select()
+        if selected == str(self._history_tab):
             self._history_tab.refresh()
+        can_clear = selected in (str(self._main_tab), str(self._read_tab))
+        self._clear_btn.configure(state="normal" if can_clear else "disabled")
 
     def _remove_maximize_button(self) -> None:
         if sys.platform != "win32":
@@ -151,6 +189,11 @@ class MainWindow(tk.Tk):
         self.focus_force()
         self.attributes("-topmost", False)
 
+    def _poll_show_signal(self) -> None:
+        if single_instance.consume_show_signal():
+            self._show_window()
+        self.after(500, self._poll_show_signal)
+
     def apply_autorun(self, enabled: bool) -> None:
         self._autorun = enabled
         if enabled and self._tray is None:
@@ -175,6 +218,7 @@ class MainWindow(tk.Tk):
             except Exception as e:
                 logger.debug(f"Tray stop error in _quit: {e}")
         self._main_tab.cleanup()
+        self._read_tab.cleanup()
         self.destroy()
 
     # ------------------------------------------------------------------ update

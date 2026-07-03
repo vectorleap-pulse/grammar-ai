@@ -1,0 +1,417 @@
+import os
+import threading
+import tkinter as tk
+import tkinter.font as tkFont
+from tkinter import messagebox, ttk
+from typing import Callable
+
+import pyperclip
+from loguru import logger
+
+from app.config import GOALS, HOTKEYS, LOG_PATH, OUTPUT_LANGUAGES, TONES
+from app.core.focus import restore_focus_and_paste
+from app.core.hotkey import HotkeyManager
+from app.core.llm import polish_text
+from app.db.database import (
+    load_config,
+    load_selected_goals,
+    load_selected_tone,
+    save_history,
+    save_selected_tone,
+)
+from app.i18n import Msg, goal_name, t, tone_name
+from app.schemas.models import AppConfig, Goal, PolishedText, Tone
+
+
+class _PolishedItem(ttk.Frame):
+    """One polished-text card: goal badge + editable text + Use button."""
+
+    def __init__(
+        self,
+        parent: tk.Widget,
+        goal: Goal,
+        text: str,
+        on_use: Callable[[Goal, str], None],
+        on_copy: Callable[[Goal, str], None],
+    ) -> None:
+        super().__init__(parent, relief="groove", borderwidth=1)
+        self._goal = goal
+        self._on_use = on_use
+        self._on_copy_callback = on_copy
+        self._build(goal, text)
+
+    def _build(self, goal: Goal, text: str) -> None:
+        header = ttk.Frame(self)
+        header.pack(fill="x", padx=4, pady=(4, 0))
+        ttk.Label(header, text=goal_name(goal), font=("", 8, "bold")).pack(side="left")
+
+        ttk.Button(header, text=t(Msg.USE), width=5, command=self._use).pack(side="right")
+        self._copy_btn = ttk.Button(header, text=t(Msg.COPY), width=6, command=self._copy)
+        self._copy_btn.pack(side="right", padx=(0, 4))
+
+        self._txt = tk.Text(
+            self, wrap="word", font=("", 9), borderwidth=0, highlightthickness=0, relief="flat"
+        )
+        self._txt.insert("1.0", text)
+        self._txt.pack(fill="both", expand=True, padx=4, pady=(2, 4))
+        # Schedule height update after rendering
+        self.after(10, self._update_height)
+
+    def _update_height(self) -> None:
+        self._txt.update_idletasks()
+
+        font = tkFont.Font(font=self._txt.cget("font"))
+
+        # Get parent frame width to calculate word wrap
+        parent_width = self.winfo_width() - 8  # Account for padding
+        if parent_width < 1:
+            self.after(10, self._update_height)
+            return
+
+        # Calculate char width for this font
+        char_width = font.measure("0")
+        chars_per_line = max(1, parent_width // char_width)
+
+        # Count lines with word wrapping
+        content = self._txt.get("1.0", "end-1c")
+        total_display_lines = 0
+        for logical_line in content.split("\n"):
+            if not logical_line:
+                total_display_lines += 1
+            else:
+                # Calculate wrapped lines for this logical line
+                wrapped = max(1, (len(logical_line) + chars_per_line - 1) // chars_per_line)
+                total_display_lines += wrapped
+
+        height = max(3, total_display_lines)
+        self._txt.config(height=height)
+
+    def get_text(self) -> str:
+        return self._txt.get("1.0", "end-1c")
+
+    def _use(self) -> None:
+        self._on_use(self._goal, self.get_text())
+
+    def _copy(self) -> None:
+        self._on_copy_callback(self._goal, self.get_text())
+        self._copy_btn.config(text=t(Msg.COPIED_EXCL))
+        self.after(1500, lambda: self._copy_btn.config(text=t(Msg.COPY)))
+
+
+class PolishTab(ttk.Frame):
+    def __init__(self, parent: tk.Widget) -> None:
+        super().__init__(parent)
+        self._config: AppConfig = load_config()
+        self._selected_goals: list[Goal] = load_selected_goals()
+        self._hotkey = HotkeyManager(self._on_hotkey_text)
+        self._items: list[_PolishedItem] = []
+        self._received = 0
+        # Localized tone labels map back to the Tone enum (display text is not the value).
+        self._tone_by_label: dict[str, Tone] = {tone_name(tn): tn for tn in TONES}
+        self._tone_var = tk.StringVar(value=tone_name(load_selected_tone()))
+        self._build()
+        self._hotkey.enable()
+
+    # ------------------------------------------------------------------ build
+
+    def _build(self) -> None:
+        self._build_original()
+        self._build_action_bar()
+        self._build_status()
+        self._build_results()
+
+    def _build_original(self) -> None:
+        lf = ttk.LabelFrame(self, text=t(Msg.ORIGINAL_TEXT), padding=4)
+        lf.pack(fill="x", padx=6, pady=(6, 4))
+
+        self._orig = tk.Text(lf, height=4, wrap="word", font=("", 9))
+        self._orig.pack(fill="x")
+        self._orig.bind("<KeyRelease>", lambda _e: self._update_original_height())
+        self.after(10, self._update_original_height)
+
+    def _build_action_bar(self) -> None:
+        bar = ttk.Frame(self, padding=(6, 4))
+        bar.pack(fill="x")
+
+        ttk.Label(bar, text=t(Msg.TONE_LABEL)).pack(side="left")
+        tone_combo = ttk.Combobox(
+            bar,
+            textvariable=self._tone_var,
+            values=[tone_name(tn) for tn in TONES],
+            state="readonly",
+            width=18,
+        )
+        tone_combo.pack(side="left", padx=(4, 8))
+        tone_combo.bind("<<ComboboxSelected>>", self._on_tone_change)
+
+        hotkey = "+".join(h.capitalize() for h in HOTKEYS)
+        self._trigger_btn = ttk.Button(
+            bar,
+            text=t(Msg.TRIGGER).format(hotkey=hotkey),
+            command=self._trigger_manual,
+        )
+        self._trigger_btn.pack(side="left", padx=2)
+
+    def _build_status(self) -> None:
+        row = ttk.Frame(self, padding=(8, 0, 8, 4))
+        row.pack(fill="x")
+        self._status_var = tk.StringVar(value="")
+        self._status_lbl = ttk.Label(row, textvariable=self._status_var, font=("", 8))
+        self._status_lbl.pack(side="left")
+
+    def _results_title(self) -> str:
+        value = self._config.output_language
+        label = {v: k for k, v in OUTPUT_LANGUAGES.items()}.get(value, value)
+        return t(Msg.POLISHED_VERSIONS) + ": " + label
+
+    def _build_results(self) -> None:
+        self._results_lf = ttk.LabelFrame(self, text=self._results_title(), padding=4)
+        lf = self._results_lf
+        lf.pack(fill="both", expand=True, padx=6, pady=(0, 6))
+
+        canvas = tk.Canvas(lf, borderwidth=0, highlightthickness=0)
+        vsb = ttk.Scrollbar(lf, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=vsb.set)
+        vsb.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+
+        self._results_frame = ttk.Frame(canvas)
+        self._cw = canvas.create_window((0, 0), window=self._results_frame, anchor="nw")
+
+        self._results_frame.bind(
+            "<Configure>",
+            lambda _e: canvas.configure(scrollregion=canvas.bbox("all")),
+        )
+        canvas.bind(
+            "<Configure>",
+            lambda e: canvas.itemconfig(self._cw, width=e.width),
+        )
+        canvas.bind("<MouseWheel>", lambda e: canvas.yview_scroll(-1 * (e.delta // 120), "units"))
+        self._canvas = canvas
+
+    def _update_original_height(self) -> None:
+        self._orig.update_idletasks()
+
+        font = tkFont.Font(font=self._orig.cget("font"))
+
+        # Get parent frame width to calculate word wrap
+        parent_width = self._orig.winfo_width()
+        if parent_width < 1:
+            self.after(10, self._update_original_height)
+            return
+
+        # Calculate char width for this font
+        char_width = font.measure("0")
+        chars_per_line = max(1, parent_width // char_width)
+
+        # Count lines with word wrapping
+        content = self._orig.get("1.0", "end-1c")
+        total_display_lines = 0
+        for logical_line in content.split("\n"):
+            if not logical_line:
+                total_display_lines += 1
+            else:
+                # Calculate wrapped lines for this logical line
+                wrapped = max(1, (len(logical_line) + chars_per_line - 1) // chars_per_line)
+                total_display_lines += wrapped
+
+        height = max(3, min(6, total_display_lines))
+        self._orig.config(height=height)
+
+    # ------------------------------------------------------------------ settings
+
+    def apply_config(self, config: AppConfig) -> None:
+        self._config = config
+        self._selected_goals = load_selected_goals()
+        self._results_lf.config(text=self._results_title())
+
+    def _current_tone(self) -> Tone:
+        return self._tone_by_label.get(self._tone_var.get(), TONES[0])
+
+    def _on_tone_change(self, _event: tk.Event) -> None:  # type: ignore[type-arg]
+        save_selected_tone(self._current_tone())
+
+    # ------------------------------------------------------------------ trigger
+
+    def _trigger_manual(self) -> None:
+        text = self._orig.get("1.0", "end-1c").strip()
+        if not text:
+            messagebox.showinfo(
+                t(Msg.EMPTY),
+                t(Msg.ENTER_OR_PASTE),
+                parent=self.winfo_toplevel(),
+            )
+            return
+        self._run_llm(text)
+
+    def _on_hotkey_text(self, text: str) -> None:
+        self.after(0, lambda: self._handle_hotkey_result(text))
+
+    def _handle_hotkey_result(self, text: str) -> None:
+        nb = self.master
+        if isinstance(nb, ttk.Notebook):
+            nb.select(self)
+        self._orig.delete("1.0", "end")
+        self._orig.insert("1.0", text)
+        self._update_original_height()
+        self._run_llm(text)
+        top = self.winfo_toplevel()
+        if hasattr(top, "_show_window"):
+            top._show_window()  # type: ignore[union-attr]
+        else:
+            top.deiconify()
+            top.lift()
+            top.focus_force()
+
+    # ------------------------------------------------------------------ LLM
+
+    def _run_llm(self, text: str) -> None:
+        if str(self._trigger_btn.cget("state")) == "disabled":
+            return
+        if not self._config.api_key:
+            messagebox.showwarning(
+                t(Msg.NO_API_KEY),
+                t(Msg.CONFIGURE_API_KEY),
+                parent=self.winfo_toplevel(),
+            )
+            return
+
+        self._clear_results()
+        self._received = 0
+        self._set_status(t(Msg.POLISHING), "blue")
+        self._trigger_btn.config(state="disabled")
+        config = self._config
+
+        def on_result(r: PolishedText) -> None:
+            self.after(0, lambda: self._add_result(text, r))
+
+        tone = self._current_tone()
+
+        goals = list(self._selected_goals)
+
+        def worker() -> None:
+            try:
+                polish_text(text, tone, config, goals=goals, on_result=on_result)
+                self.after(0, lambda: self._set_status(t(Msg.POLISHED_READY), "green"))
+            except Exception as exc:
+                error_msg = str(exc)
+                logger.error(f"LLM error: {error_msg}")
+                self.after(0, lambda: self._show_llm_error(error_msg))
+            finally:
+                self.after(0, lambda: self._trigger_btn.config(state="normal"))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _show_llm_error(self, error_msg: str) -> None:
+        self._set_status(t(Msg.ERROR), "red")
+        top = self.winfo_toplevel()
+
+        dlg = tk.Toplevel(top)
+        dlg.title(t(Msg.LLM_ERROR))
+        dlg.resizable(False, False)
+        dlg.transient(top)
+        dlg.grab_set()
+
+        ttk.Label(dlg, text=t(Msg.LLM_ERROR_BODY), font=("", 9)).pack(
+            padx=16, pady=(14, 4), anchor="w"
+        )
+        txt = tk.Text(dlg, height=6, width=54, wrap="word", font=("", 9), state="normal")
+        txt.insert("1.0", error_msg)
+        txt.config(state="disabled")
+        txt.pack(padx=16, pady=(0, 8))
+
+        btn_row = ttk.Frame(dlg)
+        btn_row.pack(pady=(0, 12))
+
+        def open_log() -> None:
+            dlg.destroy()
+            try:
+                os.startfile(str(LOG_PATH))  # type: ignore[attr-defined]
+            except Exception as e:
+                messagebox.showerror(
+                    t(Msg.ERROR),
+                    t(Msg.COULD_NOT_OPEN_LOG).format(error=e),
+                    parent=top,
+                )
+
+        ttk.Button(btn_row, text=t(Msg.OPEN_LOG), command=open_log).pack(side="left", padx=6)
+        ttk.Button(btn_row, text=t(Msg.CLOSE), command=dlg.destroy).pack(side="left", padx=6)
+
+        dlg.update_idletasks()
+        x = top.winfo_rootx() + (top.winfo_width() - dlg.winfo_width()) // 2
+        y = top.winfo_rooty() + (top.winfo_height() - dlg.winfo_height()) // 2
+        dlg.geometry(f"+{x}+{y}")
+
+    def _add_result(self, original: str, result: PolishedText) -> None:
+        self._received += 1
+        self._set_status(
+            t(Msg.POLISHING_PROGRESS).format(
+                received=self._received, total=len(self._selected_goals)
+            ),
+            "blue",
+        )
+        item = _PolishedItem(
+            self._results_frame,
+            goal=result.goal,
+            text=result.text,
+            on_use=lambda goal, txt, orig=original: self._use_text(orig, goal, txt),  # type: ignore
+            on_copy=lambda goal, txt, orig=original: self._copy_text(orig, goal, txt),  # type: ignore
+        )
+
+        insert_index = 0
+        for existing in self._items:
+            if GOALS.index(existing._goal) > GOALS.index(result.goal):
+                break
+            insert_index += 1
+
+        if insert_index < len(self._items):
+            item.pack(fill="x", padx=2, pady=2, before=self._items[insert_index])
+            self._items.insert(insert_index, item)
+        else:
+            item.pack(fill="x", padx=2, pady=2)
+            self._items.append(item)
+
+    # ------------------------------------------------------------------ Actions
+
+    def _copy_text(self, original: str, goal: Goal, text: str) -> None:
+        pyperclip.copy(text)
+        tone = self._current_tone()
+        save_history(original, text, tone, goal)
+        self._set_status(
+            t(Msg.COPIED_TO_CLIPBOARD).format(tone=tone_name(tone), goal=goal_name(goal)),
+            "green",
+        )
+
+    def _use_text(self, original: str, goal: Goal, text: str) -> None:
+        tone = self._current_tone()
+        save_history(original, text, tone, goal)
+        hwnd = self._hotkey.last_hwnd
+        if hwnd and restore_focus_and_paste(hwnd, original, text):
+            self._set_status(
+                t(Msg.PASTED).format(tone=tone_name(tone), goal=goal_name(goal)),
+                "green",
+            )
+        else:
+            pyperclip.copy(text)
+            self._set_status(
+                t(Msg.COPIED).format(tone=tone_name(tone), goal=goal_name(goal)),
+                "gray",
+            )
+
+    def clear_all(self) -> None:
+        self._orig.delete("1.0", "end")
+        self._update_original_height()
+        self._clear_results()
+        self._set_status("", "gray")
+
+    def _clear_results(self) -> None:
+        for w in self._results_frame.winfo_children():
+            w.destroy()
+        self._items.clear()
+
+    def _set_status(self, msg: str, color: str = "gray") -> None:
+        self._status_var.set(msg)
+        self._status_lbl.config(foreground=color)
+
+    def cleanup(self) -> None:
+        self._hotkey.disable()
