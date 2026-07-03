@@ -36,7 +36,7 @@ def acquire_lock() -> bool:
     kernel32.CreateMutexW.restype = ctypes.wintypes.HANDLE
     kernel32.SetLastError(0)
     kernel32.CreateMutexW(None, False, _MUTEX_NAME)
-    if ctypes.GetLastError() == _ERROR_ALREADY_EXISTS:
+    if ctypes.GetLastError() == _ERROR_ALREADY_EXISTS:  # type: ignore[attr-defined]
         logger.info("Another Grammar AI instance is already running")
         return False
 
