@@ -22,7 +22,7 @@ It has two core modes, each with its own tab and global hotkey: **Polish**, for 
 
 <div align="center">
 
-![Usage demo](media/how-to-use.gif)
+<img src="media/how-to-use.gif" alt="Usage demo" width="420" />
 
 _Select text anywhere, press the hotkey, pick a polished version - done._
 
