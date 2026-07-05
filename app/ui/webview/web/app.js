@@ -634,6 +634,36 @@
     $("error-modal").classList.remove("hidden");
   }
 
+  // ------------------------------------------------------------------ modals
+
+  // Escape dismisses whichever modal is open, the same as clicking its Cancel/Close
+  // button - checked in "most likely to be on top" order, since all modal-overlays
+  // share one z-index and only one is ever expected to be open at a time.
+  function initModalEscapeHandling() {
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+
+      const generic = $("generic-dialog-modal");
+      if (!generic.classList.contains("hidden")) {
+        const cancelBtn = $("generic-dialog-cancel-btn");
+        (cancelBtn.classList.contains("hidden") ? $("generic-dialog-ok-btn") : cancelBtn).click();
+        return;
+      }
+      if (!$("error-modal").classList.contains("hidden")) {
+        $("error-close-btn").click();
+        return;
+      }
+      if (!$("history-detail-modal").classList.contains("hidden")) {
+        $("detail-close-btn").click();
+        return;
+      }
+      if (!$("settings-modal").classList.contains("hidden")) {
+        $("settings-cancel-btn").click();
+        return;
+      }
+    });
+  }
+
   // ------------------------------------------------------------------ boot
 
   let BOOT_GOAL_ORDER = [];
@@ -648,6 +678,7 @@
     initHistory();
     initSettings();
     initResultShortcuts();
+    initModalEscapeHandling();
   }
 
   window.addEventListener("pywebviewready", boot);
