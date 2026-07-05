@@ -115,6 +115,21 @@ if _IS_WIN:
     _kernel32.GetModuleHandleW.restype = ctypes.c_void_p
 
 
+def _normalize_line_endings(text: str) -> str:
+    """Collapse \\r\\n and lone \\r into \\n.
+
+    RichEdit-based controls (e.g. modern Notepad's edit control) expose paragraph
+    breaks via TextPattern as a lone \\r, not \\n - unlike a clipboard copy of the
+    same text, which the OS normalizes on the way to CF_UNICODETEXT. Left as \\r,
+    downstream LLM calls have been observed to silently drop the character rather
+    than treat it as a meaningful line break, collapsing paragraphs together with
+    no separator at all. Normalizing here means every caller of
+    _read_control_text() gets the same \\n convention regardless of which pattern
+    or control it came from.
+    """
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def _read_control_text(control: "Optional[auto.Control]") -> str:
     """Read the focused control's (selected, or full) text via UI Automation. No clipboard."""
     if control is None:
@@ -130,8 +145,8 @@ def _read_control_text(control: "Optional[auto.Control]") -> str:
             if selection:
                 selected = selection[0].GetText(-1)
                 if selected and selected.strip():
-                    return selected
-            return text_pattern.DocumentRange.GetText(-1)
+                    return _normalize_line_endings(selected)
+            return _normalize_line_endings(text_pattern.DocumentRange.GetText(-1))
         except Exception as e:
             logger.debug(f"TextPattern read failed: {e}")
 
@@ -141,7 +156,7 @@ def _read_control_text(control: "Optional[auto.Control]") -> str:
         value_pattern = None
     if value_pattern:
         try:
-            return value_pattern.Value or ""
+            return _normalize_line_endings(value_pattern.Value or "")
         except Exception as e:
             logger.debug(f"ValuePattern read failed: {e}")
 
