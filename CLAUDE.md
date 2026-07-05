@@ -50,7 +50,7 @@ i18n strings are not duplicated in JS: `Api.get_bootstrap()` serializes the full
 string table (all `Msg` members) once at load, and `app.js` renders from that dict.
 
 **`app/core/` — OS integration, all Windows-specific (`ctypes` calls into `user32.dll`/`kernel32.dll`)**:
-- `hotkey.py` — global hotkeys are double-taps of a lone modifier (Polish: double-tap Shift,
+- `hotkey.py` — global hotkeys are double-taps of a lone modifier (Polish: double-tap Alt,
   Translate: double-tap Ctrl), not `RegisterHotKey` combos - `RegisterHotKey` can't represent
   "a modifier pressed twice alone", so `HotkeyManager` installs its own `WH_KEYBOARD_LL` low-level
   keyboard hook per instance and times taps itself, tracking every currently-held key so a tap

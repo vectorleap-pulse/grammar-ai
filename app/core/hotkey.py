@@ -1,6 +1,6 @@
 """Global hotkey via a low-level keyboard hook, triggered by double-tapping a modifier.
 
-Polish fires on double-tap Shift, Translate on double-tap Ctrl - no letter key
+Polish fires on double-tap Alt, Translate on double-tap Ctrl - no letter key
 involved. `RegisterHotKey` can't represent "a lone modifier pressed twice", so this
 watches every keystroke via a WH_KEYBOARD_LL hook and times modifier taps itself,
 tracking every currently-held key (not just the tracked modifier) so a tap that
@@ -55,6 +55,8 @@ VK_LSHIFT = 0xA0
 VK_RSHIFT = 0xA1
 VK_LCONTROL = 0xA2
 VK_RCONTROL = 0xA3
+VK_LMENU = 0xA4
+VK_RMENU = 0xA5
 
 _DOUBLE_TAP_WINDOW_SECONDS = 0.4
 
@@ -141,7 +143,7 @@ class HotkeyManager:
     def __init__(
         self,
         on_text: Callable[[str], None],
-        tap_key: Literal["shift", "control"] = "shift",
+        tap_key: Literal["shift", "control", "alt"] = "shift",
         description: str = "Double Shift",
         capture_via_clipboard: bool = False,
     ) -> None:
@@ -154,7 +156,11 @@ class HotkeyManager:
         self._capture_lock = threading.Lock()
         self._description = description
         self._capture_via_clipboard = capture_via_clipboard
-        self._own_vks = {VK_LSHIFT, VK_RSHIFT} if tap_key == "shift" else {VK_LCONTROL, VK_RCONTROL}
+        self._own_vks = {
+            "shift": {VK_LSHIFT, VK_RSHIFT},
+            "control": {VK_LCONTROL, VK_RCONTROL},
+            "alt": {VK_LMENU, VK_RMENU},
+        }[tap_key]
         self._keys_down: set[int] = set()
         self._pending_tap_time: Optional[float] = None
         self._hook_handle: Optional[int] = None

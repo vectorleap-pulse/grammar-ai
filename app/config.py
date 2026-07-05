@@ -103,7 +103,7 @@ GOALS_PRESET_DEFAULT: list[Goal] = [
 ]
 
 # Global hotkey (double-tap of a lone modifier - see app/core/hotkey.py)
-HOTKEY: str = "Double Shift"
+HOTKEY: str = "Double Alt"
 TRANSLATE_HOTKEY: str = "Double Ctrl"
 
 # Auto-updater

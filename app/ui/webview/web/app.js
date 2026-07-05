@@ -129,15 +129,13 @@
     if (name === "history") refreshHistory();
   }
 
-  // Shift+1..Shift+9,Shift+0 triggers "Use" on the Nth polished result card, while
-  // the Polish tab is active and focus isn't in any input/textarea/select (typing
-  // "!"/"@"/etc. produces the same e.code+shiftKey combo, so this guard is required
-  // to avoid misfiring during normal typing - see e.code vs e.key note below).
+  // Alt+1..Alt+9,Alt+0 triggers "Use" on the Nth polished result card, while
+  // the Polish tab is active and focus isn't in any input/textarea/select.
   function initResultShortcuts() {
     document.addEventListener("keydown", (e) => {
-      if (!e.shiftKey) return;
-      // e.key reflects the produced character (Shift+1 -> "!"), not the physical
-      // key, so digit detection must use e.code instead.
+      if (!e.altKey) return;
+      // Digit detection uses e.code (the physical key) rather than e.key, which
+      // can vary with keyboard layout under Alt.
       const m = /^Digit([0-9])$/.exec(e.code);
       if (!m) return;
       if (document.querySelector(".tab-btn.active")?.dataset.tab !== "polish") return;
@@ -297,7 +295,7 @@
     renumberShortcutHints();
   }
 
-  // The Shift+1..Shift+9,Shift+0 shortcut (initResultShortcuts) indexes cards by
+  // The Alt+1..Alt+9,Alt+0 shortcut (initResultShortcuts) indexes cards by
   // their actual DOM position, not by goal-list order, so the hint badges must be
   // recomputed for every card each time one is inserted (an earlier-goal card can
   // land before an already-displayed later-goal card, shifting everyone's position).
@@ -308,7 +306,7 @@
       if (!hint) return;
       if (i < 10) {
         const n = i === 9 ? "0" : String(i + 1);
-        hint.textContent = "⇧" + n;
+        hint.textContent = "Alt" + n;
         hint.title = "Shift+" + n;
         hint.classList.remove("hidden");
       } else {

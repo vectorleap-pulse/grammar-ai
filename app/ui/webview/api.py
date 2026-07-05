@@ -70,7 +70,7 @@ class Api:
         self._window: Optional[webview.Window] = None
         self._config: AppConfig = load_config()
         self._polish_hotkey = HotkeyManager(
-            self._on_polish_hotkey, tap_key="shift", description=HOTKEY
+            self._on_polish_hotkey, tap_key="alt", description=HOTKEY
         )
         self._translate_hotkey = HotkeyManager(
             self._on_translate_hotkey,

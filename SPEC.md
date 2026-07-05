@@ -16,7 +16,7 @@ feasibility analysis and the currently-in-progress Windows-only upgrade plan thi
 
 ### Polish
 
-- Global hotkey (double-tap **Shift**) captures the focused control's text (selection if present,
+- Global hotkey (double-tap **Alt**) captures the focused control's text (selection if present,
   otherwise the full field) and sends it to the Polish tab.
 - Rewrites the captured text into one or more **tones** (Professional, Casual, Chatting, Formal,
   Friendly, Empathetic, Assertive, Diplomatic), each generated for every configured **goal**
@@ -25,7 +25,7 @@ feasibility analysis and the currently-in-progress Windows-only upgrade plan thi
 - Optional **cross-lingual polishing**: a configurable output language translates the source text
   before applying tone/goal rewriting.
 - Each result has "Use" (paste back into the originating control) and "Copy" (explicit clipboard
-  copy) actions. Shift+1 through Shift+9 and Shift+0 (app-level, only while the Polish tab has
+  copy) actions. Alt+1 through Alt+9 and Alt+0 (app-level, only while the Polish tab has
   focus) trigger "Use" on the 1st through 10th result card, as a keyboard alternative to clicking.
 - Every Polish result is saved to History (original text, polished text, tone, goal, timestamp).
 
