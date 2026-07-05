@@ -69,7 +69,7 @@ table (all `Msg` members) once at load, and components render from that dict via
 `hooks/useBootstrap.tsx`'s context.
 
 **`app/core/` — OS integration, all Windows-specific (`ctypes` calls into `user32.dll`/`kernel32.dll`)**:
-- `hotkey.py` — global hotkeys are double-taps of a lone modifier (Polish: double-tap Alt,
+- `hotkey.py` — global hotkeys are double-taps of a lone modifier (Polish: double-tap Shift,
   Translate: double-tap Ctrl), not `RegisterHotKey` combos - `RegisterHotKey` can't represent
   "a modifier pressed twice alone", so `HotkeyManager` installs its own `WH_KEYBOARD_LL` low-level
   keyboard hook per instance and times taps itself, tracking every currently-held key so a tap

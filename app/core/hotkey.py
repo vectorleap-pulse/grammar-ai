@@ -1,11 +1,20 @@
 """Global hotkey via a low-level keyboard hook, triggered by double-tapping a modifier.
 
-Polish fires on double-tap Alt, Translate on double-tap Ctrl - no letter key
+Polish fires on double-tap Shift, Translate on double-tap Ctrl - no letter key
 involved. `RegisterHotKey` can't represent "a lone modifier pressed twice", so this
-watches every keystroke via a WH_KEYBOARD_LL hook and times modifier taps itself,
-tracking every currently-held key (not just the tracked modifier) so a tap that
-happens as part of any chord (Ctrl+Shift, Alt+Shift, Shift+Arrow, Shift+letter while
-typing, etc.) is never mistaken for a solo double-tap.
+watches every keystroke via a WH_KEYBOARD_LL hook and times modifier taps itself.
+
+A tap only counts as a candidate once the modifier is *released* with nothing else
+having been pressed during that entire hold (tracked via `_own_hold_tainted`), and any
+other key at all - even one pressed between the two taps, not during either hold -
+invalidates a pending first tap (`_pending_first_tap_time`). This two-part guard fixes
+a real race in an earlier, simpler design that marked a tap "pending" optimistically at
+key-down: the modifier key-down that *starts* a chord (e.g. Shift going down as the
+first half of "Shift+T") looked identical, at that instant, to the start of a genuine
+solo tap, since the chord partner key hadn't arrived yet - so a chord's own initiating
+key-down could land within a previous tap's window and fire the hotkey before the
+chord was revealed. Confirming at key-up instead means "was this solo" is only decided
+once the whole press-to-release span is known.
 
 Polish's capture (reading the focused control's text) is done directly via UI
 Automation ValuePattern/TextPattern - no clipboard access and no synthetic
@@ -58,7 +67,7 @@ VK_RCONTROL = 0xA3
 VK_LMENU = 0xA4
 VK_RMENU = 0xA5
 
-_DOUBLE_TAP_WINDOW_SECONDS = 0.4
+_DOUBLE_TAP_WINDOW_SECONDS = 0.25
 
 # Chromium/Electron (and some other frameworks) only build their full accessibility
 # tree once a UI Automation client is detected querying them, so the very first read
@@ -162,7 +171,12 @@ class HotkeyManager:
             "alt": {VK_LMENU, VK_RMENU},
         }[tap_key]
         self._keys_down: set[int] = set()
-        self._pending_tap_time: Optional[float] = None
+        # True if, during the modifier's *current* ongoing hold, any other key has gone
+        # down - only meaningful while the modifier is currently held.
+        self._own_hold_tainted = False
+        # Release time of the last confirmed clean solo tap, waiting for a second one
+        # within the window; None if there's nothing pending.
+        self._pending_first_tap_time: Optional[float] = None
         self._hook_handle: Optional[int] = None
         self._hook_proc: Optional[Any] = None
 
@@ -218,31 +232,38 @@ class HotkeyManager:
         is_up = w_param in (WM_KEYUP, WM_SYSKEYUP)
 
         if is_down and vk not in self._keys_down:
-            had_other_keys_down = bool(self._keys_down)
-            self._keys_down.add(vk)
             if vk in self._own_vks:
-                if had_other_keys_down:
-                    # This tap happened as part of a chord with something else
-                    # (Ctrl+Shift, Alt+Shift, Win+Shift, Shift+Arrow, Shift+letter
-                    # while typing, etc.) - not a solo tap, don't count it.
-                    self._pending_tap_time = None
+                if self._keys_down:
+                    # Another key is already held - this modifier press starts already
+                    # part of a chord (e.g. Shift going down while T is still held).
+                    self._own_hold_tainted = True
+                    self._pending_first_tap_time = None
                 else:
+                    self._own_hold_tainted = False
+            else:
+                # Any other key at all invalidates a pending first tap, even if it
+                # happens between the two taps rather than during either hold - the
+                # requirement is "nothing else touched at all in the whole window".
+                self._pending_first_tap_time = None
+                if self._keys_down & self._own_vks:
+                    # Our modifier is currently held - this hold is now a chord.
+                    self._own_hold_tainted = True
+            self._keys_down.add(vk)
+        elif is_up:
+            self._keys_down.discard(vk)
+            if vk in self._own_vks:
+                if not self._own_hold_tainted:
                     now = time.monotonic()
                     if (
-                        self._pending_tap_time is not None
-                        and now - self._pending_tap_time <= _DOUBLE_TAP_WINDOW_SECONDS
+                        self._pending_first_tap_time is not None
+                        and now - self._pending_first_tap_time <= _DOUBLE_TAP_WINDOW_SECONDS
                     ):
                         self.last_hwnd = ctypes.windll.user32.GetForegroundWindow()  # type: ignore[attr-defined]
                         threading.Thread(target=self._capture, daemon=True).start()
-                        self._pending_tap_time = None
+                        self._pending_first_tap_time = None
                     else:
-                        self._pending_tap_time = now
-            elif self._keys_down & self._own_vks:
-                # A real key was pressed while our modifier was held - that was a
-                # combo, not a solo tap.
-                self._pending_tap_time = None
-        elif is_up:
-            self._keys_down.discard(vk)
+                        self._pending_first_tap_time = now
+                self._own_hold_tainted = False
 
         return _user32.CallNextHookEx(self._hook_handle, n_code, w_param, l_param)
 

@@ -37,7 +37,7 @@ _Select text anywhere, press the hotkey, pick a polished version - done._
 Rewrite text into one or more **tones**, each generated for several writing **goals** (inform, persuade, clarify, and more) at once.
 
 1. In Settings, choose which **goals** to generate and optionally set a **context** to tailor output to your domain (see [Configuration](#configuration)).
-2. Enter or paste text on the **Polish** tab, or select text anywhere and double-tap **Alt** to send it there directly. You can also use the **Trigger** button in the app.
+2. Enter or paste text on the **Polish** tab, or select text anywhere and double-tap **Shift** to send it there directly. You can also use the **Trigger** button in the app.
 3. Select a **tone** and review the generated polished versions.
 4. Click **Use** next to the version you want, to paste it back where you copied it from.
 

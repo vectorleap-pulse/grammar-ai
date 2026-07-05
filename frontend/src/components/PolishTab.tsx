@@ -23,7 +23,7 @@ interface PolishTabProps {
 // Digit hint text for the Nth card, matching app.js's renumberShortcutHints() (app.js:313-327).
 function shortcutHintFor(index: number): string | null {
   if (index >= 10) return null;
-  return "Alt" + (index === 9 ? "0" : String(index + 1));
+  return "Shift" + (index === 9 ? "0" : String(index + 1));
 }
 
 export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function PolishTab(
@@ -49,11 +49,11 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
   const goalMetaByValue = useMemo(() => new Map(boot.goals.map((g) => [g.value, g])), [boot.goals]);
   const toneMetaByValue = useMemo(() => new Map(boot.tones.map((t) => [t.value, t])), [boot.tones]);
 
-  // Alt+1..Alt+9,Alt+0 triggers "Use" on the Nth result card, while this tab is active
+  // Shift+1..Shift+9,Shift+0 triggers "Use" on the Nth result card, while this tab is active
   // and focus isn't in an input/textarea/select - mirrors app.js:143-163.
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (!active || !e.altKey) return;
+      if (!active || !e.shiftKey) return;
       const match = /^Digit([0-9])$/.exec(e.code);
       if (!match) return;
       const tag = (document.activeElement as HTMLElement | null)?.tagName;
