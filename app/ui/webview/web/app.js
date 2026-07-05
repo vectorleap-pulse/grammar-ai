@@ -43,6 +43,17 @@
 
   // ------------------------------------------------------------------ i18n
 
+  // BOOT.config.output_language holds the plain value sent to the model (e.g.
+  // "Japanese"), not the friendly label shown in Settings (e.g. "Japanese (日本語)")
+  // - outputLanguageMap is {friendly label -> model value}, so this reverses it.
+  // Falls back to the raw value for a custom, freely-typed language (not in the map).
+  function outputLanguageLabel() {
+    const label = Object.keys(BOOT.outputLanguageMap).find(
+      (k) => BOOT.outputLanguageMap[k] === BOOT.config.output_language
+    );
+    return label || BOOT.config.output_language;
+  }
+
   function applyStrings() {
     const s = BOOT.strings;
     const map = {
@@ -77,7 +88,7 @@
       "#lbl-detail-polished": s.POLISHED_TEXT,
       "#lbl-llm-error": s.LLM_ERROR,
       "#lbl-llm-error-body": s.LLM_ERROR_BODY,
-      "#lbl-polished-versions": s.POLISHED_VERSIONS + ": " + BOOT.config.output_language,
+      "#lbl-polished-versions": s.POLISHED_VERSIONS + ": " + outputLanguageLabel(),
     };
     for (const [selector, text] of Object.entries(map)) {
       const el = selector.startsWith("#") ? $(selector.slice(1)) : document.querySelector(`.${selector}`);
@@ -498,18 +509,13 @@
   }
 
   function openSettings() {
-    // outputLanguageMap is {friendly label -> model value}; reverse it to show the
-    // friendly label for the currently saved value (mirrors the old Tkinter dialog).
-    const outLabel = Object.keys(BOOT.outputLanguageMap).find(
-      (k) => BOOT.outputLanguageMap[k] === BOOT.config.output_language
-    );
     const uiLabel = Object.keys(BOOT.uiLanguageMap).find(
       (k) => BOOT.uiLanguageMap[k] === BOOT.uiLanguageCode
     );
     $("set-base-url").value = BOOT.config.base_url;
     $("set-model").value = BOOT.config.model;
     $("set-api-key").value = BOOT.config.api_key;
-    $("set-output-language").value = outLabel || BOOT.config.output_language;
+    $("set-output-language").value = outputLanguageLabel();
     $("set-translate-language").value = BOOT.translateLanguage;
     $("set-ui-language").value = uiLabel || "English";
     $("set-autorun").checked = BOOT.autorun;
@@ -557,6 +563,7 @@
     BOOT.config.base_url = payload.baseUrl;
     BOOT.config.model = payload.model;
     BOOT.config.api_key = payload.apiKey;
+    BOOT.config.output_language = BOOT.outputLanguageMap[payload.outputLanguage] || payload.outputLanguage || "English";
     BOOT.translateLanguage = payload.translateLanguage;
     BOOT.autorun = payload.autorun;
     BOOT.selectedGoals = payload.goals;
