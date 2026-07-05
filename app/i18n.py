@@ -32,7 +32,6 @@ class Msg(StrEnum):
     USE = "Use"
     COPY = "Copy"
     COPIED_EXCL = "Copied!"
-    TRIGGER = "Trigger ({hotkey})"
     POLISHING = "Polishing…"
     POLISHING_PROGRESS = "Polishing… ({received}/{total})"
     POLISHED_READY = "Polished versions ready"
@@ -127,7 +126,6 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.USE: "Usar",
         Msg.COPY: "Copiar",
         Msg.COPIED_EXCL: "¡Copiado!",
-        Msg.TRIGGER: "Activar ({hotkey})",
         Msg.POLISHING: "Puliendo…",
         Msg.POLISHING_PROGRESS: "Puliendo… ({received}/{total})",
         Msg.POLISHED_READY: "Versiones pulidas listas",
@@ -205,7 +203,6 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.USE: "Utiliser",
         Msg.COPY: "Copier",
         Msg.COPIED_EXCL: "Copié !",
-        Msg.TRIGGER: "Déclencher ({hotkey})",
         Msg.POLISHING: "Peaufinage…",
         Msg.POLISHING_PROGRESS: "Peaufinage… ({received}/{total})",
         Msg.POLISHED_READY: "Versions peaufinées prêtes",
@@ -283,7 +280,6 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.USE: "Verwenden",
         Msg.COPY: "Kopieren",
         Msg.COPIED_EXCL: "Kopiert!",
-        Msg.TRIGGER: "Auslösen ({hotkey})",
         Msg.POLISHING: "Verfeinern…",
         Msg.POLISHING_PROGRESS: "Verfeinern… ({received}/{total})",
         Msg.POLISHED_READY: "Verfeinerte Versionen bereit",
@@ -361,7 +357,6 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.USE: "使用",
         Msg.COPY: "コピー",
         Msg.COPIED_EXCL: "コピーしました!",
-        Msg.TRIGGER: "実行 ({hotkey})",
         Msg.POLISHING: "推敲中…",
         Msg.POLISHING_PROGRESS: "推敲中… ({received}/{total})",
         Msg.POLISHED_READY: "推敲されたバージョンが準備できました",
@@ -439,7 +434,6 @@ _TRANSLATIONS: dict[str, dict[Msg, str]] = {
         Msg.USE: "사용",
         Msg.COPY: "복사",
         Msg.COPIED_EXCL: "복사됨!",
-        Msg.TRIGGER: "실행 ({hotkey})",
         Msg.POLISHING: "다듬는 중…",
         Msg.POLISHING_PROGRESS: "다듬는 중… ({received}/{total})",
         Msg.POLISHED_READY: "다듬어진 버전 준비 완료",

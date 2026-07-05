@@ -6,7 +6,6 @@ import { ResultCard, type ResultCardHandle } from "@/components/ResultCard";
 import { useBootstrap } from "@/hooks/useBootstrap";
 import { useAlertConfirm } from "@/hooks/useAlertConfirm";
 import { usePolish } from "@/hooks/usePolish";
-import { fmt } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { statusColorClass } from "@/lib/status";
 
@@ -94,7 +93,7 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
           </SelectContent>
         </Select>
         <Button type="button" size="sm" variant="outline" disabled={polish.busy} onClick={triggerFromButton}>
-          {fmt(boot.strings.TRIGGER, { hotkey: boot.polishHotkey })}
+          {boot.strings.POLISH} ({boot.polishHotkey})
         </Button>
       </div>
 
