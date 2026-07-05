@@ -27,8 +27,7 @@ LOG_PATH = DATA_DIR / "grammar_ai.log"
 ERROR_LOG_PATH = DATA_DIR / "error.log"
 
 # Cross-lingual polishing - output language for polished text.
-# Maps the friendly label shown in Settings to the value passed to the model. The
-# combobox stays editable, so any language name the model understands also works.
+# Maps the friendly label shown in Settings to the value passed to the model.
 DEFAULT_OUTPUT_LANGUAGE = "English"
 OUTPUT_LANGUAGES: dict[str, str] = {
     "English": "English",

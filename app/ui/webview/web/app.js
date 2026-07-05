@@ -458,19 +458,18 @@
     $("settings-save-btn").addEventListener("click", saveSettings);
     $("test-connection-btn").addEventListener("click", testConnection);
 
-    const dl = $("output-lang-list");
-    BOOT.outputLanguages.forEach((label) => {
-      const opt = document.createElement("option");
-      opt.value = label;
-      dl.appendChild(opt);
-    });
-
+    const outputSelect = $("set-output-language");
     const translateSelect = $("set-translate-language");
     BOOT.outputLanguages.forEach((label) => {
-      const opt = document.createElement("option");
-      opt.value = label;
-      opt.textContent = label;
-      translateSelect.appendChild(opt);
+      const outOpt = document.createElement("option");
+      outOpt.value = label;
+      outOpt.textContent = label;
+      outputSelect.appendChild(outOpt);
+
+      const trOpt = document.createElement("option");
+      trOpt.value = label;
+      trOpt.textContent = label;
+      translateSelect.appendChild(trOpt);
     });
 
     const uiSelect = $("set-ui-language");
