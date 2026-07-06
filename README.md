@@ -20,16 +20,6 @@
 
 It has two core modes, each with its own tab and global hotkey: **Polish**, for rewriting text in a chosen tone and goal, and **Translate**, for quick, direct translation.
 
-<div align="center">
-
-<img src="media/how-to-use.gif" alt="Usage demo" width="420" />
-
-_Select text anywhere, press the hotkey, pick a polished version - done._
-
-</div>
-
-> 🎬 Prefer video? See [`media/how-to-use.mp4`](media/how-to-use.mp4) for the full walkthrough.
-
 ---
 
 ## ✍️ Polish
