@@ -387,5 +387,10 @@ class Api:
 
     def quit_app(self) -> None:
         self.shutdown()
+        single_instance.release_lock()
         if self._window is not None:
-            self._window.destroy()
+            try:
+                self._window.destroy()
+            except Exception as exc:
+                logger.debug(f"window.destroy failed during quit: {exc}")
+        os._exit(0)
