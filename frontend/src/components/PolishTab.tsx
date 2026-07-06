@@ -71,6 +71,17 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
   return (
     <div className={cn("flex flex-col gap-2", !active && "hidden")}>
       <div className="flex items-center gap-1.5">
+        <Button
+          type="button"
+          size="sm"
+          variant="default"
+          className="w-[120px]"
+          disabled={polish.busy}
+          onClick={triggerFromButton}
+        >
+          {boot.strings.POLISH} ({boot.polishHotkey})
+        </Button>
+        <span className="flex-1" />
         <label className="whitespace-nowrap text-xs text-muted-foreground">{boot.strings.TONE_LABEL}</label>
         <Select value={polish.tone} onValueChange={(v) => v !== null && polish.onToneChange(v)}>
           <SelectTrigger size="sm" className="w-30">
@@ -89,10 +100,6 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
             ))}
           </SelectContent>
         </Select>
-        <Button type="button" size="sm" variant="outline" disabled={polish.busy} onClick={triggerFromButton}>
-          {polish.busy ? <Loader2Icon className="mr-2 size-3.5 animate-spin" /> : null}
-          {boot.strings.POLISH} ({boot.polishHotkey})
-        </Button>
         <span className="flex-1" />
         <Button
           type="button"
@@ -110,14 +117,23 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
         <label className="mb-1 block text-[11px] font-semibold text-muted-foreground">
           {boot.strings.ORIGINAL_TEXT}
         </label>
-        <Textarea rows={4} value={polish.original} onChange={(e) => polish.setOriginal(e.target.value)} />
+        <Textarea
+          rows={4}
+          value={polish.original}
+          disabled={polish.busy}
+          onChange={(e) => polish.setOriginal(e.target.value)}
+        />
       </div>
 
       <div className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
         <span>
           {boot.strings.POLISHED_VERSIONS}: {outputLanguageLabel()}
         </span>
-        {polish.busy ? <Loader2Icon className="size-3.5 animate-spin" /> : null}
+        {polish.busy ? (
+          <span className="inline-flex size-4 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <Loader2Icon className="size-3.5 animate-spin" />
+          </span>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-1.5">

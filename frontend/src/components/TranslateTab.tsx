@@ -51,11 +51,11 @@ export const TranslateTab = forwardRef<TranslateTabHandle, TranslateTabProps>(fu
         <Button
           type="button"
           size="sm"
-          variant="outline"
+          variant="default"
+          className="w-[120px]"
           disabled={translate.busy}
           onClick={triggerFromButton}
         >
-          {translate.busy ? <Loader2Icon className="mr-2 size-3.5 animate-spin" /> : null}
           {boot.strings.TRANSLATE} ({boot.translateHotkey})
         </Button>
         <span className="flex-1" />
@@ -78,6 +78,7 @@ export const TranslateTab = forwardRef<TranslateTabHandle, TranslateTabProps>(fu
         <Textarea
           rows={5}
           value={translate.original}
+          disabled={translate.busy}
           onChange={(e) => translate.setOriginal(e.target.value)}
         />
       </div>
@@ -87,7 +88,11 @@ export const TranslateTab = forwardRef<TranslateTabHandle, TranslateTabProps>(fu
           <span>
             {boot.strings.TRANSLATED_TEXT}: {boot.translateLanguage}
           </span>
-          {translate.busy ? <Loader2Icon className="size-3.5 animate-spin" /> : null}
+          {translate.busy ? (
+            <span className="inline-flex size-4 items-center justify-center rounded-full bg-primary/15 text-primary">
+              <Loader2Icon className="size-3.5 animate-spin" />
+            </span>
+          ) : null}
         </div>
         <Textarea rows={6} readOnly value={translate.output} />
       </div>
