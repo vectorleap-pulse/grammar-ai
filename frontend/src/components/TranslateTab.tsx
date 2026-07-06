@@ -83,9 +83,12 @@ export const TranslateTab = forwardRef<TranslateTabHandle, TranslateTabProps>(fu
       </div>
 
       <div>
-        <label className="mb-1 block text-[11px] font-semibold text-muted-foreground">
-          {boot.strings.TRANSLATED_TEXT}: {boot.translateLanguage}
-        </label>
+        <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+          <span>
+            {boot.strings.TRANSLATED_TEXT}: {boot.translateLanguage}
+          </span>
+          {translate.busy ? <Loader2Icon className="size-3.5 animate-spin" /> : null}
+        </div>
         <Textarea rows={6} readOnly value={translate.output} />
       </div>
 

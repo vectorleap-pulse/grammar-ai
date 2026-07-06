@@ -113,8 +113,11 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
         <Textarea rows={4} value={polish.original} onChange={(e) => polish.setOriginal(e.target.value)} />
       </div>
 
-      <div className="mt-1 text-[11px] font-semibold text-muted-foreground">
-        {boot.strings.POLISHED_VERSIONS}: {outputLanguageLabel()}
+      <div className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+        <span>
+          {boot.strings.POLISHED_VERSIONS}: {outputLanguageLabel()}
+        </span>
+        {polish.busy ? <Loader2Icon className="size-3.5 animate-spin" /> : null}
       </div>
 
       <div className="flex flex-col gap-1.5">
