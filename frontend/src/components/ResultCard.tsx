@@ -56,7 +56,9 @@ export const ResultCard = forwardRef<ResultCardHandle, ResultCardProps>(function
   return (
     <div className="rounded-md border border-border bg-card p-1.5">
       <div className="mb-1 flex items-center gap-1.5">
-        <span className="text-[11px] font-semibold">{goalMeta?.label || result.goal}</span>
+        <span className="text-[11px] font-semibold text-muted-foreground">
+          {goalMeta?.label || result.goal}
+        </span>
         <span className="flex-1" />
         {shortcutHint && (
           <span className="rounded border border-border px-1 text-[10px] leading-snug text-muted-foreground">
