@@ -75,7 +75,7 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
           type="button"
           size="sm"
           variant="default"
-          className="w-30"
+          className="w-40"
           disabled={polish.busy}
           onClick={triggerFromButton}
         >
@@ -84,7 +84,7 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
         <span className="flex-1" />
         <label className="whitespace-nowrap text-xs text-muted-foreground">{boot.strings.TONE_LABEL}</label>
         <Select value={polish.tone} onValueChange={(v) => v !== null && polish.onToneChange(v)}>
-          <SelectTrigger size="sm" className="w-30">
+          <SelectTrigger size="sm" className="w-40">
             {/* base-ui's Select.Value shows the raw value (tone.value, e.g. "professional")
                 unless told how to render it - it doesn't look up the matching SelectItem's
                 label on its own like Radix does. */}

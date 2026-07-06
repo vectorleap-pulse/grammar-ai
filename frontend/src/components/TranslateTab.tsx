@@ -52,7 +52,7 @@ export const TranslateTab = forwardRef<TranslateTabHandle, TranslateTabProps>(fu
           type="button"
           size="sm"
           variant="default"
-          className="w-30"
+          className="w-40"
           disabled={translate.busy}
           onClick={triggerFromButton}
         >
