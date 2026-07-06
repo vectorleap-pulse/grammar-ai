@@ -44,12 +44,12 @@ def bring_to_foreground(hwnd: int) -> None:
     """
     if not _IS_WIN or not hwnd:
         return
-    user32 = ctypes.windll.user32
+    user32 = ctypes.windll.user32  # type: ignore[attr-defined]
     fg_hwnd = user32.GetForegroundWindow()
     if fg_hwnd == hwnd:
         return
     fg_thread = user32.GetWindowThreadProcessId(fg_hwnd, None)
-    cur_thread = ctypes.windll.kernel32.GetCurrentThreadId()
+    cur_thread = ctypes.windll.kernel32.GetCurrentThreadId()  # type: ignore[attr-defined]
     attached = False
     try:
         if fg_thread and fg_thread != cur_thread:

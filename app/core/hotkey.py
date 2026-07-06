@@ -87,7 +87,7 @@ class KBDLLHOOKSTRUCT(ctypes.Structure):
     ]
 
 
-_LowLevelKeyboardProc = ctypes.WINFUNCTYPE(
+_LowLevelKeyboardProc = ctypes.WINFUNCTYPE(  # type: ignore[attr-defined]
     ctypes.c_ssize_t, ctypes.c_int, ctypes.wintypes.WPARAM, ctypes.POINTER(KBDLLHOOKSTRUCT)
 )
 
