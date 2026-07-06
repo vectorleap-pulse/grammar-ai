@@ -42,6 +42,7 @@ from app.db.database import (
     load_history,
     load_selected_goals,
     load_selected_tone,
+    load_theme,
     load_translate_language,
     load_ui_language,
     save_autorun,
@@ -49,6 +50,7 @@ from app.db.database import (
     save_history,
     save_selected_goals,
     save_selected_tone,
+    save_theme,
     save_translate_language,
     save_ui_language,
 )
@@ -186,6 +188,7 @@ class Api:
             "translateLanguage": load_translate_language(),
             "uiLanguageCode": load_ui_language(),
             "autorun": load_autorun(),
+            "theme": load_theme(),
             "polishHotkey": HOTKEY,
             "translateHotkey": TRANSLATE_HOTKEY,
         }
@@ -243,6 +246,14 @@ class Api:
         )
         ok, message = check_connection(config)
         return {"ok": ok, "message": message}
+
+    def save_theme_setting(self, theme: str) -> dict:
+        try:
+            save_theme(theme)
+            return {"ok": True}
+        except Exception as exc:
+            logger.exception("theme save failed")
+            return {"ok": False, "error": str(exc)}
 
     def restart_app(self) -> None:
         # Deliberately does not call self._window.destroy(): that fires pywebview's

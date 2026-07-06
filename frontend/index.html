@@ -6,6 +6,17 @@
     <title>Grammar AI</title>
   </head>
   <body>
+    <script>
+      (() => {
+        const key = "grammar-ai-theme";
+        const stored = window.localStorage.getItem(key);
+        if (stored === "light" || stored === "dark") {
+          document.documentElement.setAttribute("data-theme", stored);
+        } else {
+          document.documentElement.removeAttribute("data-theme");
+        }
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

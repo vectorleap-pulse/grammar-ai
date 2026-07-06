@@ -42,6 +42,7 @@ export interface Bootstrap {
   translateLanguage: string;
   uiLanguageCode: string;
   autorun: boolean;
+  theme: string | null;
   polishHotkey: string;
   translateHotkey: string;
 }
@@ -97,6 +98,7 @@ export interface GetHistoryResult {
 export interface PywebviewApi {
   get_bootstrap(): Promise<Bootstrap>;
   save_settings(payload: SettingsPayload): Promise<SaveSettingsResult>;
+  save_theme_setting(theme: string): Promise<{ ok: boolean; error?: string }>;
   test_connection(payload: SettingsPayload): Promise<TestConnectionResult>;
   restart_app(): Promise<void>;
   set_selected_tone(toneValue: string): Promise<void>;

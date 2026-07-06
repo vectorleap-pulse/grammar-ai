@@ -196,3 +196,18 @@ def save_autorun(enabled: bool) -> None:
             ("1" if enabled else "0",),
         )
     logger.info(f"Autorun setting saved: {enabled}")
+
+
+def load_theme() -> str | None:
+    with _connect() as conn:
+        row = conn.execute("SELECT value FROM settings WHERE key = 'theme'").fetchone()
+    return row["value"] if row else None
+
+
+def save_theme(theme: str) -> None:
+    with _connect() as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES ('theme', ?)",
+            (theme,),
+        )
+    logger.info(f"Theme saved: {theme}")
