@@ -20,13 +20,13 @@ export function ErrorDialog({
         <DialogHeader>
           <DialogTitle>{boot.strings.LLM_ERROR}</DialogTitle>
         </DialogHeader>
-        <p className="text-xs text-muted-foreground">{boot.strings.LLM_ERROR_BODY}</p>
-        <Textarea readOnly rows={6} value={message ?? ""} className="text-xs" />
+        <p className="text-sm text-muted-foreground">{boot.strings.LLM_ERROR_BODY}</p>
+        <Textarea readOnly rows={6} value={message ?? ""} className="text-sm" />
         <div className="flex justify-end gap-1.5">
-          <Button type="button" variant="outline" size="sm" onClick={() => void api().open_log()}>
+          <Button type="button" variant="outline" onClick={() => void api().open_log()}>
             {boot.strings.OPEN_LOG}
           </Button>
-          <DialogClose render={<Button variant="outline" size="sm" />}>{boot.strings.CLOSE}</DialogClose>
+          <DialogClose render={<Button variant="outline" />}>{boot.strings.CLOSE}</DialogClose>
         </div>
       </DialogContent>
     </Dialog>

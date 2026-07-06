@@ -82,7 +82,7 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
           {boot.strings.POLISH} ({boot.polishHotkey})
         </Button>
         <span className="flex-1" />
-        <label className="whitespace-nowrap text-xs text-muted-foreground">{boot.strings.TONE_LABEL}</label>
+        <label className="whitespace-nowrap text-sm text-muted-foreground">{boot.strings.TONE_LABEL}</label>
         <Select value={polish.tone} onValueChange={(v) => v !== null && polish.onToneChange(v)}>
           <SelectTrigger size="sm" className="w-40">
             {/* base-ui's Select.Value shows the raw value (tone.value, e.g. "professional")
@@ -114,7 +114,7 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
       </div>
 
       <div>
-        <label className="mb-1 block text-[11px] font-semibold text-muted-foreground">
+        <label className="mb-1 block text-sm font-semibold text-muted-foreground">
           {boot.strings.ORIGINAL_TEXT}
         </label>
         <Textarea
@@ -125,7 +125,7 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
         />
       </div>
 
-      <div className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+      <div className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
         <span>
           {boot.strings.POLISHED_VERSIONS}: {outputLanguageLabel()}
         </span>

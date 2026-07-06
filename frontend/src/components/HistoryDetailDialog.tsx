@@ -23,7 +23,7 @@ export function HistoryDetailDialog({
         </DialogHeader>
 
         {entry && (
-          <div className="flex min-h-0 flex-col gap-2 overflow-y-auto text-xs">
+          <div className="flex min-h-0 flex-col gap-2 overflow-y-auto text-sm">
             <div className="flex flex-col gap-0.5 text-muted-foreground">
               <div>
                 <strong>{boot.strings.TONE}:</strong> {entry.tone}
@@ -36,11 +36,11 @@ export function HistoryDetailDialog({
               </div>
             </div>
             <hr className="border-border" />
-            <label className="text-[11px] font-semibold text-muted-foreground">
+            <label className="text-sm font-semibold text-muted-foreground">
               {boot.strings.ORIGINAL_TEXT}
             </label>
             <Textarea readOnly rows={4} value={entry.originalText} />
-            <label className="text-[11px] font-semibold text-muted-foreground">
+            <label className="text-sm font-semibold text-muted-foreground">
               {boot.strings.POLISHED_TEXT}
             </label>
             <Textarea readOnly rows={4} value={entry.polishedText} />
@@ -48,7 +48,7 @@ export function HistoryDetailDialog({
         )}
 
         <div className="flex justify-end">
-          <DialogClose render={<Button variant="outline" size="sm" />}>{boot.strings.CLOSE}</DialogClose>
+          <DialogClose render={<Button variant="outline" />}>{boot.strings.CLOSE}</DialogClose>
         </div>
       </DialogContent>
     </Dialog>

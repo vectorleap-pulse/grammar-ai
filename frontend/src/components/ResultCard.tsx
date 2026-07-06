@@ -56,19 +56,17 @@ export const ResultCard = forwardRef<ResultCardHandle, ResultCardProps>(function
   return (
     <div className="rounded-md border border-border bg-card p-1.5">
       <div className="mb-1 flex items-center gap-1.5">
-        <span className="text-[11px] font-semibold text-muted-foreground">
-          {goalMeta?.label || result.goal}
-        </span>
+        <span className="text-sm font-semibold text-muted-foreground">{goalMeta?.label || result.goal}</span>
         <span className="flex-1" />
         {shortcutHint && (
-          <span className="rounded border border-border px-1 text-[10px] leading-snug text-muted-foreground">
+          <span className="rounded border border-border px-1 text-sm leading-snug text-muted-foreground">
             {shortcutHint}
           </span>
         )}
         <Button
           type="button"
           variant="outline"
-          size="icon-sm"
+          size="icon"
           title={boot.strings.USE}
           aria-label={boot.strings.USE}
           onClick={triggerUse}
@@ -78,7 +76,7 @@ export const ResultCard = forwardRef<ResultCardHandle, ResultCardProps>(function
         <Button
           type="button"
           variant="outline"
-          size="icon-sm"
+          size="icon"
           title={justCopied ? boot.strings.COPIED_EXCL : boot.strings.COPY}
           aria-label={boot.strings.COPY}
           onClick={doCopy}

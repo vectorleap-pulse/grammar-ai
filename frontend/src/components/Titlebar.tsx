@@ -17,7 +17,7 @@ export function Titlebar({
     <div className="pywebview-drag-region flex h-10 flex-none items-center gap-1 border-b border-border bg-card px-1">
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <span className="truncate text-sm font-semibold text-foreground pl-2">{appName}</span>
-        {version ? <span className="shrink-0 text-[11px] text-muted-foreground">v{version}</span> : null}
+        {version ? <span className="shrink-0 text-sm text-muted-foreground">v{version}</span> : null}
       </div>
       <button
         type="button"

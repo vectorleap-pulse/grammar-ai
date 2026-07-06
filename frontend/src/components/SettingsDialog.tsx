@@ -135,19 +135,19 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             <LanguageSelect value={uiLanguage} onChange={setUiLanguage} options={boot.uiLanguages} />
           </Field>
 
-          <label className="flex items-center gap-1.5 text-xs">
+          <label className="flex items-center gap-1.5 text-sm">
             <Checkbox checked={autorun} onCheckedChange={(c) => setAutorun(c === true)} />
             {boot.strings.RUN_AT_STARTUP}
           </label>
 
           <fieldset className="rounded-md border border-border p-2">
-            <legend className="px-1 text-[11px] font-semibold text-muted-foreground">
+            <legend className="px-1 text-sm font-semibold text-muted-foreground">
               {boot.strings.GOALS_TO_GENERATE}
             </legend>
             <div className="mb-1.5 flex gap-1">
               <Button
                 type="button"
-                size="xs"
+                size="sm"
                 variant="outline"
                 onClick={() => setGoals(boot.goalPresets.minimum)}
               >
@@ -155,7 +155,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               </Button>
               <Button
                 type="button"
-                size="xs"
+                size="sm"
                 variant="outline"
                 onClick={() => setGoals(boot.goalPresets.default)}
               >
@@ -163,7 +163,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               </Button>
               <Button
                 type="button"
-                size="xs"
+                size="sm"
                 variant="outline"
                 onClick={() => setGoals(boot.goalPresets.all)}
               >
@@ -172,7 +172,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </div>
             <div className="grid grid-cols-2 gap-1">
               {boot.goals.map((g) => (
-                <label key={g.value} className="flex items-center gap-1 text-[11px]" title={g.description}>
+                <label key={g.value} className="flex items-center gap-1 text-sm" title={g.description}>
                   <Checkbox
                     checked={goals.includes(g.value)}
                     onCheckedChange={(c) => toggleGoal(g.value, c === true)}
@@ -181,7 +181,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 </label>
               ))}
             </div>
-            <p className="mt-1.5 text-[10px] italic text-muted-foreground">
+            <p className="mt-1.5 text-sm italic text-muted-foreground">
               {boot.strings.MORE_GOALS_DISCLAIMER}
             </p>
           </fieldset>
@@ -195,17 +195,17 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             />
           </Field>
 
-          <div className={`min-h-3.5 text-[11px] ${statusColorClass(status.color)}`}>{status.text}</div>
+          <div className={`min-h-3.5 text-sm ${statusColorClass(status.color)}`}>{status.text}</div>
         </div>
 
         <div className="flex justify-end gap-1.5">
-          <Button type="button" variant="outline" size="sm" disabled={testing} onClick={onTest}>
+          <Button type="button" variant="outline" disabled={testing} onClick={onTest}>
             {boot.strings.TEST_CONNECTION}
           </Button>
-          <Button type="button" size="sm" onClick={onSave}>
+          <Button type="button" onClick={onSave}>
             {boot.strings.SAVE}
           </Button>
-          <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             {boot.strings.CANCEL}
           </Button>
         </div>
@@ -217,7 +217,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <label className="mb-1 block text-[11px] font-semibold text-muted-foreground">{label}</label>
+      <label className="mb-1 block text-sm font-semibold text-muted-foreground">{label}</label>
       {children}
     </div>
   );
@@ -236,7 +236,7 @@ function LanguageSelect({
 }) {
   return (
     <Select value={value} onValueChange={(v) => v !== null && onChange(v)}>
-      <SelectTrigger size="sm" className="w-full" title={title}>
+      <SelectTrigger className="w-full" title={title}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
