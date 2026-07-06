@@ -52,13 +52,7 @@ export function HistoryTab({ active }: { active: boolean }) {
           <RotateCcwIcon className="size-3.5" />
           {boot.strings.REFRESH}
         </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          title={boot.strings.CLEAR}
-          onClick={onClear}
-        >
+        <Button type="button" size="sm" variant="outline" title={boot.strings.CLEAR} onClick={onClear}>
           <Trash2Icon className="size-3.5" />
           {boot.strings.CLEAR}
         </Button>
