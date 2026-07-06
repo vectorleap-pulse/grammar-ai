@@ -53,12 +53,22 @@ WebView2 window - the only UI; there is no other launch mode besides `--tray-onl
 
 **`frontend/`** — the UI's source: a React + TypeScript SPA built with Vite, styled with
 Tailwind v4 and shadcn components (retheme-matched to the app's original vanilla-JS look, not
-shadcn's defaults - see `frontend/src/index.css`'s `@theme`/`:root` blocks). `frontend/vite.config.ts`
-builds directly into `app/ui/webview/web/` (`base: "./"`, since the page loads over `file://`
-inside WebView2, not a web server root - a `crossorigin` on the emitted `<script>`/`<link>` tags
-would otherwise fail WebView2's CORS check for that null origin, so a small Vite plugin strips it).
-`app/ui/webview/web/` itself is **generated output, gitignored** - run `pnpm build` inside
-`frontend/` after any change under `frontend/src/` (see Commands above).
+shadcn's defaults - see `frontend/src/index.css`'s `@theme`/`:root` blocks; Input/Textarea's
+focus and invalid states were also simplified from shadcn's defaults, dropping the colored
+`ring-*` glow in favor of a plain `border-foreground/70` on focus, to avoid a distracting mix of
+border colors across the many stacked text fields in Settings and the result cards).
+`frontend/vite.config.ts` builds directly into `app/ui/webview/web/` (`base: "./"`, since the page
+loads over `file://` inside WebView2, not a web server root - a `crossorigin` on the emitted
+`<script>`/`<link>` tags would otherwise fail WebView2's CORS check for that null origin, so a
+small Vite plugin strips it). `app/ui/webview/web/` itself is **generated output, gitignored** -
+run `pnpm build` inside `frontend/` after any change under `frontend/src/` (see Commands above).
+
+`Titlebar.tsx` hosts the Settings, theme-toggle, and Close buttons directly (moved out of the nav
+bar) plus the app version string, and is the `pywebview-drag-region` for frameless-window
+dragging. `ui/dialog.tsx`/`ui/alert-dialog.tsx`'s overlays are offset `top-10` rather than
+`inset-0` so the titlebar stays visible/draggable while a dialog is open. `App.tsx` binds Escape
+to `close_window()` globally, except while focus is in an input/textarea/select or a dialog/error
+alert is open (so it doesn't swallow the key from inside those).
 
 **`app/ui/webview/`** — `api.py`'s `Api` class, exposed as `pywebview.api` in the frontend
 (typed in `frontend/src/lib/pywebview.ts`). `Api` adapts business logic (LLM calls, storage,
@@ -68,7 +78,10 @@ calling `window.onPolishResult(...)`/`onTranslateDone(...)`/etc. globals - these
 `window` globals assigned by React effects (`App.tsx`, `hooks/usePolish.ts`,
 `hooks/useTranslate.ts`), not React state/props, since Python has no way to call into React
 directly. `Api` also owns the two `HotkeyManager` instances (Polish and Translate) directly -
-hotkey capture pushes into the page via `window.onHotkeyCapture(kind, text)`. i18n strings are
+hotkey capture pushes into the page via `window.onHotkeyCapture(kind, text)` - and holds a
+reference to the system tray icon (`attach_tray_icon()`, called from `main.py`'s `_run_tray()`),
+so `quit_app()`/`open_installer_and_quit()` can stop pystray's icon loop (`stop_tray_icon()`) as
+part of their hard-exit sequence, not just tear down the window. i18n strings are
 not duplicated in the frontend: `Api.get_bootstrap()` serializes the full current-language string
 table (all `Msg` members) once at load, and components render from that dict via
 `hooks/useBootstrap.tsx`'s context.
@@ -107,11 +120,13 @@ table (all `Msg` members) once at load, and components render from that dict via
   explicit user double-click. This is deliberate: a process that downloads and executes an
   unsigned binary itself is a common dropper-behavior signature that AV/EDR heuristics watch for -
   this codebase has already been burned once by a different flagged pattern (see the
-  clipboard-capture note below), so the update flow is designed to never create that one. The
-  hard-exit in `open_installer_and_quit()` cannot use `Api.quit_app()` - see its own comment for
-  why (same `window.destroy()`/autorun-hide pitfall as `restart_app()`, which is why this uses
-  `os._exit()` after `shutdown()` + releasing the single-instance lock, same as `restart_app()`
-  minus the `os.execv` re-launch).
+  clipboard-capture note below), so the update flow is designed to never create that one.
+  `open_installer_and_quit()` skips `Api.quit_app()` (see its own comment) - not because
+  `quit_app()` fails to exit (it also force-exits via `os._exit()` after a best-effort
+  `window.destroy()`), but because Explorer is about to take focus regardless, so there's no need
+  for the destroy()/closing-event dance first. Both methods share the same `shutdown()` +
+  `stop_tray_icon()` + `release_lock()` + `os._exit(0)` hard-exit tail, mirroring `restart_app()`'s
+  reasoning minus its `os.execv` re-launch.
 - `llm.py` — the only non-Windows-specific module here: an OpenAI-compatible client (BYO base
   URL/key/model — Groq, OpenAI, etc., configured in Settings) used for both Polish and Translate.
 

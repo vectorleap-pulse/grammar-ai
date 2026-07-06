@@ -368,13 +368,14 @@ class Api:
         if self._downloaded_installer_path is None:
             return {"ok": False}
         updater.open_containing_folder(self._downloaded_installer_path)
-        # Deliberately not self.quit_app(): it calls self._window.destroy(), which
-        # fires pywebview's `closing` event - and main.py's handler intercepts that
-        # into a window.hide() (canceling the destroy) whenever autorun is on, so the
-        # process would never actually exit. Same reasoning as restart_app()'s
-        # os.execv, but this needs a genuine process exit rather than a re-exec, and
-        # os._exit() (not sys.exit()) is used since a background thread calling
-        # sys.exit() would only terminate that thread, not the process.
+        # Deliberately not self.quit_app(): it also force-exits via os._exit() below,
+        # but only after a best-effort self._window.destroy() first (which fires
+        # pywebview's `closing` event, intercepted into a window.hide() by main.py's
+        # handler when autorun is on, before the os._exit() cuts in anyway). Skipping
+        # destroy() here avoids that pointless destroy()/hide() detour, since Explorer
+        # is about to take focus regardless. os._exit() (not sys.exit()) is used since
+        # a background thread calling sys.exit() would only terminate that thread, not
+        # the process.
         self.shutdown()
         self.stop_tray_icon()
         single_instance.release_lock()
