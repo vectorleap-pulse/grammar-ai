@@ -51,7 +51,6 @@ export const TranslateTab = forwardRef<TranslateTabHandle, TranslateTabProps>(fu
         <Button
           type="button"
           size="sm"
-          variant="default"
           className="w-40"
           disabled={translate.busy}
           onClick={triggerFromButton}
@@ -72,7 +71,7 @@ export const TranslateTab = forwardRef<TranslateTabHandle, TranslateTabProps>(fu
       </div>
 
       <div>
-        <label className="mb-1 block text-[11px] font-semibold text-muted-foreground">
+        <label className="mb-1 block text-sm font-semibold text-muted-foreground">
           {boot.strings.ORIGINAL_TEXT}
         </label>
         <Textarea
@@ -84,7 +83,7 @@ export const TranslateTab = forwardRef<TranslateTabHandle, TranslateTabProps>(fu
       </div>
 
       <div>
-        <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+        <div className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
           <span>
             {boot.strings.TRANSLATED_TEXT}: {boot.translateLanguage}
           </span>

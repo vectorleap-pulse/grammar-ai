@@ -87,21 +87,26 @@ table (all `Msg` members) once at load, and components render from that dict via
 `hooks/useBootstrap.tsx`'s context.
 
 **`app/core/` — OS integration, all Windows-specific (`ctypes` calls into `user32.dll`/`kernel32.dll`)**:
-- `hotkey.py` — global hotkeys are double-taps of a lone modifier (Polish: double-tap Shift,
-  Translate: double-tap Ctrl), not `RegisterHotKey` combos - `RegisterHotKey` can't represent
-  "a modifier pressed twice alone", so `HotkeyManager` installs its own `WH_KEYBOARD_LL` low-level
-  keyboard hook per instance and times taps itself, tracking every currently-held key so a tap
-  used as part of any chord is never mistaken for a solo double-tap. `Api` owns one instance each
-  for Polish and Translate, each on its own dedicated thread (hooks need a live `GetMessageW` loop
-  on the installing thread). Polish's capture reads the focused control's text via **UI Automation**
-  (`uiautomation` package: `ValuePattern`/`TextPattern`), not the clipboard - a Chromium/Electron
-  cold-start quirk is handled here (a retry after `_COLD_START_RETRY_DELAY_SECONDS`, since Chromium
-  only activates its full accessibility tree once it detects an AT client querying it, so the very
-  first read can come back empty). Translate's capture is a deliberate exception
-  (`capture_via_clipboard=True`): clipboard-blank + simulated Ctrl+C + poll + restore, see below.
-- `focus.py` — writes the polished/translated text back into the originally focused control via
-  UI Automation (`ValuePattern.SetValue`), keyed off the `Control` reference (`last_control`)
-  captured by `HotkeyManager`, not by re-focusing and simulating keystrokes.
+- `hotkey.py` — global hotkeys are real key combos (Polish: Ctrl+Alt+A, Translate: Ctrl+Alt+D)
+  registered via Win32 `RegisterHotKey`, delivered as `WM_HOTKEY` on the registering thread's
+  message queue. `Api` owns one `HotkeyManager` instance each for Polish and Translate, each on
+  its own dedicated thread (`RegisterHotKey(hWnd=None, ...)` ties the registration to the calling
+  thread, which must keep pumping `GetMessageW` for as long as the hotkey should fire).
+  Both hotkeys capture the focused control's text the same way: clipboard-blank + simulated
+  Ctrl+C + poll + restore (falling back to Ctrl+A, Ctrl+C if nothing was selected). `last_hwnd`
+  (the foreground window at hotkey time) is the only thing remembered afterward - paste-back
+  (`focus.py`) works off that window handle alone, not a captured control reference.
+- `clipboard.py` — `poll_clipboard(timeout)`, the polling loop shared by `hotkey.py`'s capture and
+  `focus.py`'s paste-back (poll `pyperclip.paste()` every 25ms until non-empty or timeout).
+- `focus.py` — writes the polished text back into the originally focused window via the same
+  clipboard-blank/simulate-keys/poll/restore family as capture, applied to writing: refocus the
+  window (`bring_to_foreground`), select-all + copy to read its *current* live content, replace
+  the captured `original` substring with the polished text against that live read (not a stale
+  value), write the merged result to the clipboard, then select-all + paste - restoring the user's
+  prior clipboard contents afterward. Bails out (returns `False`, letting `Api.use_polished()` fall
+  back to a plain clipboard copy) if the original window can't be brought back to the actual OS
+  foreground, rather than risking sending Select-All/Paste into whatever window - possibly Grammar
+  AI's own - happens to be focused instead.
 - `single_instance.py` — named Win32 mutex + event so a second launch focuses the existing window
   instead of starting a new process.
 - `autorun.py` — writes/removes a value under `HKCU\...\Run` for start-on-login.
@@ -125,23 +130,41 @@ table (all `Msg` members) once at load, and components render from that dict via
   `quit_app()` fails to exit (it also force-exits via `os._exit()` after a best-effort
   `window.destroy()`), but because Explorer is about to take focus regardless, so there's no need
   for the destroy()/closing-event dance first. Both methods share the same `shutdown()` +
-  `stop_tray_icon()` + `release_lock()` + `os._exit(0)` hard-exit tail, mirroring `restart_app()`'s
-  reasoning minus its `os.execv` re-launch.
+  `stop_tray_icon()` + `release_lock()` + `os._exit(0)` hard-exit tail, but `restart_app()` inserts
+  a `subprocess.Popen([sys.executable, *sys.argv])` **before** `window.destroy()`, not after - not
+  `os.execv`, which on Windows is CRT-emulated via spawn-and-wait rather than true in-place
+  replacement, and has been observed to silently fail to hand off at all under a Git Bash/MSYS
+  parent shell. `Popen` must run before `destroy()` specifically: `restart_app()` normally runs on
+  a background thread (pywebview's JS-bridge dispatch), and `window.destroy()` unblocks
+  `webview.start()`'s blocking call on the *main* thread, letting `main()` finish and the process
+  start shutting down naturally - which kills that background thread (a daemon thread) mid-flight
+  before it reaches `Popen`, if `Popen` hasn't already run by then. Confirmed via a live repro: this
+  race is timing-dependent (invisible in a minimal repro, but reliably fatal once a tray-icon
+  thread - which the real app always has - is also shutting down concurrently), so spawn-then-destroy
+  isn't a stylistic preference, it's what makes the replacement process reliably exist at all.
+  The `Popen` call also needs `creationflags=CREATE_BREAKAWAY_FROM_JOB | DETACHED_PROCESS`: Git
+  Bash/MSYS runs launched processes inside a Windows Job Object and a shared console, and a plain
+  child inherits both, getting silently killed the moment this process exits (or its parent shell's
+  console/pty tears down) without either flag - also confirmed via a live repro (spawn, check
+  `tasklist`, not just absence of an exception), since relying on inherited stdout to observe a
+  `DETACHED_PROCESS` child is itself unreliable.
 - `llm.py` — the only non-Windows-specific module here: an OpenAI-compatible client (BYO base
   URL/key/model — Groq, OpenAI, etc., configured in Settings) used for both Polish and Translate.
 
-**Important**: `app/core/focus.py` and Polish's capture path in `app/core/hotkey.py` don't touch
-the system clipboard or simulate keystrokes - a deliberate constraint, not an oversight. The
-clipboard-blank/simulate-Ctrl+C/poll/restore approach was flagged by some AV/EDR products
-(Bitdefender confirmed) as malware-like behavior, which is why Polish and all paste-back avoid it.
-**Translate's capture is a scoped, deliberate exception** (`HotkeyManager(..., capture_via_clipboard=True)`
-in `api.py`): it does use that clipboard/`pyautogui` pattern, trading the same AV-heuristic risk
-for broader compatibility with apps that don't expose text via accessibility APIs. Don't "fix"
-this back to UI Automation without checking with whoever owns this decision first, and don't
-spread clipboard/keystroke-sim to Polish or to any paste-back path - this exception is Translate's
-capture only. `pyperclip` is also used, separately, for explicit user-clicked "Copy" buttons
+**Important**: both hotkeys' capture (`app/core/hotkey.py`) and Polish's paste-back (`app/core/focus.py`)
+use the clipboard-blank/simulate-keys/poll/restore pattern, trading the same AV-heuristic risk
+(this pattern is structurally identical to how clipboard-hijacking malware behaves and has
+previously been flagged as such by some AV/EDR products - Bitdefender confirmed) for broader
+compatibility with apps that don't expose text via accessibility APIs, or whose UI Automation
+support doesn't behave like a real user edit. Both capture and paste-back were originally
+Translate-only (Translate has no paste-back, so this only ever meant capture for Translate);
+Polish was deliberately kept on UI-Automation-only capture and paste-back to avoid that AV risk,
+then later migrated onto the same clipboard pattern as Translate for both - two separate,
+owner-approved reversals of that original decision, not oversights. As of this migration, nothing
+in the codebase uses the `uiautomation` package any more, and it has been dropped from
+`pyproject.toml`. `pyperclip` is also used, separately, for explicit user-clicked "Copy" buttons
 (`Api.copy_text()`, wired to the Copy buttons in `ResultCard.tsx`/`TranslateTab.tsx`) - a one-shot,
-user-initiated pattern distinct from both of the above.
+user-initiated pattern distinct from the programmatic capture/paste-back loops above.
 
 **`app/db/database.py`** — SQLite at `~/.grammar-ai/data.db` (see `app/config.py` for paths).
 Stores settings (including the API key, in plaintext) and Polish history (capped at
@@ -159,8 +182,8 @@ resource-path logic (handles both PyInstaller's `sys._MEIPASS` and Nuitka's `__c
 
 - Do not use em-dashes in code, commit messages, or documentation in this repository.
 - Prefer Context7 (MCP) for looking up current library/API documentation rather than relying on
-  training-data knowledge, particularly for the Windows-specific packages (`uiautomation`,
-  `pystray`), `openai` SDK usage, and the frontend stack (Vite, Tailwind v4, shadcn/Base UI).
+  training-data knowledge, particularly for the Windows-specific packages (`pyautogui`,
+  `pyperclip`, `pystray`), `openai` SDK usage, and the frontend stack (Vite, Tailwind v4, shadcn/Base UI).
 - Commit messages in this repository follow a terse, no-fluff "caveman commit" style: short,
   direct, imperative, no filler words or hedging (e.g. `fix hotkey capture`, `add translate tab`,
   not `This commit fixes an issue where...`).

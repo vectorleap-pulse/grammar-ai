@@ -44,7 +44,6 @@ export function HistoryTab({ active }: { active: boolean }) {
       <div className="flex items-center gap-1.5">
         <Button
           type="button"
-          size="sm"
           variant="outline"
           title={boot.strings.REFRESH}
           onClick={() => void refresh(page, pageSize)}
@@ -52,14 +51,14 @@ export function HistoryTab({ active }: { active: boolean }) {
           <RotateCcwIcon className="size-3.5" />
           {boot.strings.REFRESH}
         </Button>
-        <Button type="button" size="sm" variant="outline" title={boot.strings.CLEAR} onClick={onClear}>
+        <Button type="button" variant="destructive" className="border border-destructive/30" title={boot.strings.CLEAR} onClick={onClear}>
           <Trash2Icon className="size-3.5" />
           {boot.strings.CLEAR}
         </Button>
       </div>
 
       <div className="flex items-center gap-1.5">
-        <label className="whitespace-nowrap text-xs text-muted-foreground">{boot.strings.PAGE_SIZE}</label>
+        <label className="whitespace-nowrap text-sm text-muted-foreground">{boot.strings.PAGE_SIZE}</label>
         <Select
           value={String(pageSize)}
           onValueChange={(v) => {
@@ -67,7 +66,7 @@ export function HistoryTab({ active }: { active: boolean }) {
             setPage(0);
           }}
         >
-          <SelectTrigger size="sm" className="w-auto">
+          <SelectTrigger className="w-auto">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -80,7 +79,7 @@ export function HistoryTab({ active }: { active: boolean }) {
         </Select>
         <Button
           type="button"
-          size="icon-sm"
+          size="icon"
           variant="outline"
           title={boot.strings.PREV}
           disabled={page <= 0}
@@ -88,12 +87,12 @@ export function HistoryTab({ active }: { active: boolean }) {
         >
           <ChevronLeftIcon />
         </Button>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-sm text-muted-foreground">
           {fmt(boot.strings.PAGE_X_OF_Y, { cur: page + 1, total: totalPages })}
         </span>
         <Button
           type="button"
-          size="icon-sm"
+          size="icon"
           variant="outline"
           title={boot.strings.NEXT}
           disabled={page + 1 >= totalPages}
@@ -103,7 +102,7 @@ export function HistoryTab({ active }: { active: boolean }) {
         </Button>
       </div>
 
-      <table className="w-full border-collapse text-[11px]">
+      <table className="w-full border-collapse text-sm">
         <thead>
           <tr>
             <th className="border-b border-border px-1.5 py-1 text-left">{boot.strings.USED_AT}</th>

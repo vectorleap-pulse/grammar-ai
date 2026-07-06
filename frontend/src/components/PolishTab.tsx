@@ -18,10 +18,10 @@ interface PolishTabProps {
   onError: (message: string) => void;
 }
 
-// Digit hint text for the Nth card, matching app.js's renumberShortcutHints() (app.js:313-327).
+// Digit hint text for the Nth card.
 function shortcutHintFor(index: number): string | null {
   if (index >= 10) return null;
-  return "Shift+" + (index === 9 ? "0" : String(index + 1));
+  return "Alt+" + (index === 9 ? "0" : String(index + 1));
 }
 
 export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function PolishTab(
@@ -47,11 +47,11 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
   const goalMetaByValue = useMemo(() => new Map(boot.goals.map((g) => [g.value, g])), [boot.goals]);
   const toneMetaByValue = useMemo(() => new Map(boot.tones.map((t) => [t.value, t])), [boot.tones]);
 
-  // Shift+1..Shift+9,Shift+0 triggers "Use" on the Nth result card, while this tab is active
-  // and focus isn't in an input/textarea/select - mirrors app.js:143-163.
+  // Alt+1..Alt+9,Alt+0 triggers "Use" on the Nth result card, while this tab is active
+  // and focus isn't in an input/textarea/select.
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (!active || !e.shiftKey) return;
+      if (!active || !e.altKey) return;
       const match = /^Digit([0-9])$/.exec(e.code);
       if (!match) return;
       const tag = (document.activeElement as HTMLElement | null)?.tagName;
@@ -74,7 +74,6 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
         <Button
           type="button"
           size="sm"
-          variant="default"
           className="w-40"
           disabled={polish.busy}
           onClick={triggerFromButton}
@@ -82,7 +81,7 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
           {boot.strings.POLISH} ({boot.polishHotkey})
         </Button>
         <span className="flex-1" />
-        <label className="whitespace-nowrap text-xs text-muted-foreground">{boot.strings.TONE_LABEL}</label>
+        <label className="whitespace-nowrap text-sm text-muted-foreground">{boot.strings.TONE_LABEL}</label>
         <Select value={polish.tone} onValueChange={(v) => v !== null && polish.onToneChange(v)}>
           <SelectTrigger size="sm" className="w-40">
             {/* base-ui's Select.Value shows the raw value (tone.value, e.g. "professional")
@@ -114,7 +113,7 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
       </div>
 
       <div>
-        <label className="mb-1 block text-[11px] font-semibold text-muted-foreground">
+        <label className="mb-1 block text-sm font-semibold text-muted-foreground">
           {boot.strings.ORIGINAL_TEXT}
         </label>
         <Textarea
@@ -125,7 +124,7 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
         />
       </div>
 
-      <div className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+      <div className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
         <span>
           {boot.strings.POLISHED_VERSIONS}: {outputLanguageLabel()}
         </span>

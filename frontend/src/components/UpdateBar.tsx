@@ -11,12 +11,12 @@ export function UpdateBar({ update, onDismiss }: { update: UpdateInfo | null; on
   if (!update) return null;
 
   return (
-    <div className="flex items-center gap-2 border-b border-border bg-primary/10 px-2 py-1 text-xs text-foreground">
+    <div className="flex items-center gap-2 border-b border-border bg-primary/10 px-2 py-1 text-sm text-foreground">
       <span className="font-medium">{fmt(boot.strings.UPDATE_AVAILABLE, { version: update.version })}</span>
       <span className="flex-1" />
       <button
         type="button"
-        className="rounded border border-primary/30 bg-primary px-2 py-1 text-xs font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+        className="rounded border border-primary/30 bg-primary px-2 py-1 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
         onClick={() => void api().open_installer_and_quit()}
       >
         {boot.strings.UPDATE_NOW}

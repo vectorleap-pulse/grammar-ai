@@ -85,7 +85,7 @@ def _run_webview(tray_only: bool) -> None:
         raise RuntimeError("pywebview failed to create the main window")
 
     def _closing() -> bool:
-        if load_autorun():
+        if load_autorun() and not api.is_restarting:
             window.hide()
             return False
         # Don't call api.quit_app() here: it calls window.destroy(), and we're
