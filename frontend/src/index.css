@@ -178,4 +178,21 @@
     @apply bg-background text-foreground;
     font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   }
+
+  :root {
+    color-scheme: light;
+    scrollbar-color: rgba(107, 114, 128, 0.6) transparent;
+    scrollbar-width: thin;
+  }
+
+  :root[data-theme="dark"],
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    scrollbar-color: rgba(154, 154, 158, 0.6) rgba(42, 42, 45, 0.8);
+    scrollbar-width: thin;
+  }
+
+  * {
+    scrollbar-color: inherit;
+  }
 }
