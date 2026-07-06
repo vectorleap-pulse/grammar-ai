@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { SettingsIcon } from "lucide-react";
 import { Titlebar } from "@/components/Titlebar";
 import { UpdateBar, type UpdateInfo } from "@/components/UpdateBar";
 import { PolishTab, type PolishTabHandle } from "@/components/PolishTab";
@@ -9,7 +8,6 @@ import { SettingsDialog } from "@/components/SettingsDialog";
 import { ErrorDialog } from "@/components/ErrorDialog";
 import { useBootstrap } from "@/hooks/useBootstrap";
 import { cn } from "@/lib/utils";
-import { Button } from "./components/ui/button";
 
 type TabName = "polish" | "translate" | "history";
 
@@ -45,7 +43,7 @@ export function App() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <Titlebar appName={boot.appName} version={boot.version} />
+      <Titlebar appName={boot.appName} version={boot.version} onSettingsOpen={() => setSettingsOpen(true)} />
       <UpdateBar update={update} onDismiss={() => setUpdate(null)} />
 
       <nav className="flex items-center gap-0.5 border-b border-border px-1 pt-1">
@@ -61,15 +59,6 @@ export function App() {
           onClick={() => setTab("history")}
         />
         <span className="flex-1" />
-        <Button
-          type="button"
-          variant="outline"
-          title={boot.strings.SETTINGS}
-          onClick={() => setSettingsOpen(true)}
-          className="rounded p-1.5 mb-0.5 text-foreground hover:bg-border"
-        >
-          <SettingsIcon className="size-4" />
-        </Button>
       </nav>
 
       <main className="flex-1 overflow-y-auto p-2">

@@ -1,8 +1,16 @@
-import { MoonIcon, SunIcon, XIcon } from "lucide-react";
+import { MoonIcon, SettingsIcon, SunIcon, XIcon } from "lucide-react";
 import { api } from "@/lib/pywebview";
 import { useTheme } from "@/hooks/useTheme";
 
-export function Titlebar({ appName, version }: { appName: string; version: string }) {
+export function Titlebar({
+  appName,
+  version,
+  onSettingsOpen,
+}: {
+  appName: string;
+  version: string;
+  onSettingsOpen: () => void;
+}) {
   const { theme, toggle } = useTheme();
 
   return (
@@ -11,6 +19,15 @@ export function Titlebar({ appName, version }: { appName: string; version: strin
         <span className="truncate text-sm font-semibold text-foreground pl-2">{appName}</span>
         {version ? <span className="shrink-0 text-[11px] text-muted-foreground">v{version}</span> : null}
       </div>
+      <button
+        type="button"
+        title="Settings"
+        aria-label="Settings"
+        onClick={onSettingsOpen}
+        className="flex h-8 w-8 items-center justify-center rounded text-foreground hover:bg-border"
+      >
+        <SettingsIcon className="size-4" />
+      </button>
       <button
         type="button"
         title="Toggle theme"

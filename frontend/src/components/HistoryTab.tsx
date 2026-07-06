@@ -121,10 +121,10 @@ export function HistoryTab({ active }: { active: boolean }) {
         <tbody>
           {entries.map((entry) => (
             <tr key={entry.id} className="cursor-pointer hover:bg-muted" onClick={() => setDetail(entry)}>
-              <td className="max-w-[140px] truncate border-b border-border px-1.5 py-1">{entry.usedAt}</td>
-              <td className="max-w-[140px] truncate border-b border-border px-1.5 py-1">{entry.tone}</td>
-              <td className="max-w-[140px] truncate border-b border-border px-1.5 py-1">{entry.goal}</td>
-              <td className="max-w-[140px] truncate border-b border-border px-1.5 py-1">
+              <td className="max-w-35 truncate border-b border-border px-1.5 py-1">{entry.usedAt}</td>
+              <td className="max-w-35 truncate border-b border-border px-1.5 py-1">{entry.tone}</td>
+              <td className="max-w-35 truncate border-b border-border px-1.5 py-1">{entry.goal}</td>
+              <td className="max-w-35 truncate border-b border-border px-1.5 py-1">
                 {entry.polishedText.split("\n")[0].slice(0, 120)}
               </td>
             </tr>
