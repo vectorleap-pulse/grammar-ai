@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, RotateCcwIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HistoryDetailDialog } from "@/components/HistoryDetailDialog";
@@ -42,10 +42,24 @@ export function HistoryTab({ active }: { active: boolean }) {
   return (
     <div className={cn("flex flex-col gap-2", !active && "hidden")}>
       <div className="flex items-center gap-1.5">
-        <Button type="button" size="sm" variant="outline" onClick={() => void refresh(page, pageSize)}>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          title={boot.strings.REFRESH}
+          onClick={() => void refresh(page, pageSize)}
+        >
+          <RotateCcwIcon className="size-3.5" />
           {boot.strings.REFRESH}
         </Button>
-        <Button type="button" size="sm" variant="outline" onClick={onClear}>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          title={boot.strings.CLEAR}
+          onClick={onClear}
+        >
+          <Trash2Icon className="size-3.5" />
           {boot.strings.CLEAR}
         </Button>
       </div>
