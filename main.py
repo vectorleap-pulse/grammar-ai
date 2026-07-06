@@ -103,7 +103,7 @@ def _run_webview(tray_only: bool) -> None:
 
     # private_mode defaults to True in pywebview, which wipes localStorage (and
     # therefore the theme toggle's persisted choice) on every relaunch.
-    webview.start(_on_start, debug=False, private_mode=False)
+    webview.start(_on_start, debug=False, private_mode=True)
 
 
 def main() -> None:
