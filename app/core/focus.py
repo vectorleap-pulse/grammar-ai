@@ -1,41 +1,45 @@
-"""Write polished/translated text back into the originating control via UI Automation.
+"""Write polished text back into the originating window via clipboard + simulated paste.
 
-No clipboard access, no simulated keystrokes, no SetForegroundWindow-driven "select
-all and replace" trick - the text is written directly into the control that was
-captured at hotkey time via ValuePattern.SetValue. If that control reference has
-gone stale (the source app closed, or enough time passed that the automation
-element is no longer valid), focus is restored to the original window and the
-currently-focused control is re-resolved as a one-shot recovery attempt - this
-still never touches the clipboard.
+Blanks the clipboard, selects all and copies to read the control's *current* full
+content (which may have changed since capture), replaces the captured `original`
+substring within that live text with the polished result, writes the merged text
+back to the clipboard, then selects all and pastes - restoring the user's prior
+clipboard contents afterward. This mirrors hotkey.py's capture mechanism (same
+clipboard-blank/simulate-keys/poll/restore family, applied to writing instead of
+reading), trading the same AV-heuristic risk for compatibility with apps where a
+real simulated paste succeeds but direct UI Automation writes don't.
 """
 
 import ctypes
 import sys
 import time
-from typing import Optional
 
 from loguru import logger
 
+from app.core.clipboard import poll_clipboard
+
 _IS_WIN = sys.platform == "win32"
 
-if _IS_WIN:
-    import uiautomation as auto
+try:
+    import pyautogui
+except ImportError:  # pragma: no cover - Windows-only runtime dependency
+    pyautogui = None  # type: ignore[assignment]
 
-
-def get_foreground_window() -> int:
-    if _IS_WIN:
-        return ctypes.windll.user32.GetForegroundWindow()  # type: ignore[attr-defined]
-    return 0
+try:
+    import pyperclip
+except ImportError:  # pragma: no cover - Windows-only runtime dependency
+    pyperclip = None  # type: ignore[assignment]
 
 
 def bring_to_foreground(hwnd: int) -> None:
     """Force `hwnd` (one of Grammar AI's own windows) to the OS foreground.
 
     Plain SetForegroundWindow/pywebview's window.show()+restore() aren't enough when
-    called off the back of the global hotkey hook: the hook only observes keystrokes
-    (CallNextHookEx passes every one through, see hotkey.py), it never consumes them,
-    so whatever app the user was actually typing into - not Grammar AI - is the one
-    Windows credits with "the most recent input." Windows denies a foreground-switch
+    called off the back of a global RegisterHotKey combo: WM_HOTKEY lands on a
+    background thread of this process (see hotkey.py), not on the window belonging
+    to whatever app the user was actually typing into, and Windows doesn't treat
+    "this process just handled a global hotkey" as automatic license to steal
+    foreground focus from it. Windows denies a foreground-switch
     request from any process that isn't the current foreground process, wasn't
     launched by it, or didn't generate the last input event, and flashes the taskbar
     button instead. AttachThreadInput temporarily shares the calling thread's input
@@ -62,64 +66,37 @@ def bring_to_foreground(hwnd: int) -> None:
             user32.AttachThreadInput(cur_thread, fg_thread, False)
 
 
-def _is_control_alive(control: "Optional[auto.Control]") -> bool:
-    if control is None:
-        return False
-    try:
-        # Touching a property forces a live COM round-trip; a stale/dead element raises.
-        control.GetRuntimeId()
-        return True
-    except Exception:
-        return False
+def restore_focus_and_paste(hwnd: int, original: str, polished: str) -> bool:
+    """Replace `original` with `polished` in whatever window `hwnd` refers to.
 
-
-def _write_value(control: "auto.Control", original: str, new_text: str) -> bool:
-    value_pattern = control.GetPattern(auto.PatternId.ValuePattern)
-    if not value_pattern:
-        return False
-    if value_pattern.IsReadOnly:
-        return False
-
-    current = value_pattern.Value or ""
-    if original and original in current:
-        replacement = current.replace(original, new_text, 1)
-    else:
-        replacement = new_text
-    return bool(value_pattern.SetValue(replacement))
-
-
-def restore_focus_and_paste(
-    control: "Optional[auto.Control]", hwnd: int, original: str, polished: str
-) -> bool:
-    """Write `polished` into `control` (replacing `original` if still present).
-
-    Returns True on success. Never touches the clipboard.
+    Returns True on success. Restores the user's clipboard contents afterward.
     """
-    if not _IS_WIN:
+    if not _IS_WIN or not hwnd or pyautogui is None or pyperclip is None:
         return False
 
-    target = control if _is_control_alive(control) else None
-
-    if target is None and hwnd:
-        try:
-            ctypes.windll.user32.SetForegroundWindow(hwnd)  # type: ignore[attr-defined]
-            time.sleep(0.05)
-            target = auto.GetFocusedControl()
-        except Exception as e:
-            logger.debug(f"Could not restore foreground window for paste-back: {e}")
-            target = None
-
-    if target is None:
-        logger.warning("No live control available for paste-back")
+    bring_to_foreground(hwnd)
+    time.sleep(0.05)
+    if ctypes.windll.user32.GetForegroundWindow() != hwnd:  # type: ignore[attr-defined]
+        logger.warning("Could not bring original window to foreground for paste-back")
         return False
 
+    original_clipboard = pyperclip.paste()
     try:
-        ok = _write_value(target, original, polished)
-        if ok:
-            logger.debug("Pasted via UI Automation ValuePattern.SetValue")
+        pyperclip.copy("")
+        pyautogui.hotkey("ctrl", "a")
+        pyautogui.hotkey("ctrl", "c")
+        current = poll_clipboard(timeout=0.4)
+
+        if original and original in current:
+            replacement = current.replace(original, polished, 1)
         else:
-            logger.debug("Target control does not support writable ValuePattern")
-        return ok
-    except Exception as e:
-        logger.warning(f"UI Automation paste-back failed: {e}")
-        return False
+            replacement = polished
+
+        pyperclip.copy(replacement)
+        pyautogui.hotkey("ctrl", "a")
+        pyautogui.hotkey("ctrl", "v")
+        time.sleep(0.1)
+        logger.debug("Pasted via clipboard/simulated Ctrl+V")
+        return True
+    finally:
+        pyperclip.copy(original_clipboard or "")

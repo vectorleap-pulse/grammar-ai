@@ -32,7 +32,7 @@ from app.config import (
 from app.core import single_instance, updater
 from app.core.autorun import configure_autorun
 from app.core.focus import bring_to_foreground, restore_focus_and_paste
-from app.core.hotkey import HotkeyManager
+from app.core.hotkey import MOD_ALT, MOD_CONTROL, HotkeyManager
 from app.core.llm import check_connection, polish_text, translate_text
 from app.db.database import (
     clear_history,
@@ -79,13 +79,16 @@ class Api:
         self._update_check_stop = threading.Event()
         self._update_check_thread: Optional[threading.Thread] = None
         self._polish_hotkey = HotkeyManager(
-            self._on_polish_hotkey, tap_key="shift", description=HOTKEY
+            self._on_polish_hotkey,
+            modifiers=MOD_CONTROL | MOD_ALT,
+            vk=ord("A"),
+            description=HOTKEY,
         )
         self._translate_hotkey = HotkeyManager(
             self._on_translate_hotkey,
-            tap_key="control",
+            modifiers=MOD_CONTROL | MOD_ALT,
+            vk=ord("D"),
             description=TRANSLATE_HOTKEY,
-            capture_via_clipboard=True,
         )
 
     def attach_window(self, window: webview.Window) -> None:
@@ -311,9 +314,8 @@ class Api:
         except ValueError:
             return {"ok": False}
         save_history(original, text, tone, goal)
-        control = self._polish_hotkey.last_control
         hwnd = self._polish_hotkey.last_hwnd
-        pasted = restore_focus_and_paste(control, hwnd, original, text)
+        pasted = restore_focus_and_paste(hwnd, original, text)
         if not pasted and pyperclip is not None:
             pyperclip.copy(text)
         return {"ok": True, "pasted": pasted}
