@@ -49,10 +49,7 @@ export function useTheme(): { theme: Theme; toggle: () => void } {
 
   useLayoutEffect(() => {
     const bootTheme = boot?.theme;
-    const resolvedTheme =
-      bootTheme === "light" || bootTheme === "dark"
-        ? bootTheme
-        : getStoredTheme();
+    const resolvedTheme = bootTheme === "light" || bootTheme === "dark" ? bootTheme : getStoredTheme();
     const effectiveTheme = resolvedTheme ?? (systemPrefersDark() ? "dark" : "light");
 
     applyTheme(effectiveTheme);
