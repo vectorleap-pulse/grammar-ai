@@ -7,8 +7,10 @@ to a request/response + push-update shape a webview frontend can consume.
 
 import json
 import os
+import subprocess
 import sys
 import threading
+import time
 import webbrowser
 from pathlib import Path
 from typing import Any, Optional
@@ -78,6 +80,7 @@ class Api:
         self._notified_update_version: Optional[str] = None
         self._update_check_stop = threading.Event()
         self._update_check_thread: Optional[threading.Thread] = None
+        self._restarting = False
         self._polish_hotkey = HotkeyManager(
             self._on_polish_hotkey,
             modifiers=MOD_CONTROL | MOD_ALT,
@@ -110,6 +113,10 @@ class Api:
         self._polish_hotkey.disable()
         self._translate_hotkey.disable()
         self._update_check_stop.set()
+
+    @property
+    def is_restarting(self) -> bool:
+        return self._restarting
 
     def attach_tray_icon(self, icon: Any) -> None:
         self._tray_icon = icon
@@ -156,8 +163,6 @@ class Api:
             logger.debug(f"show_window failed: {e}")
 
     def _poll_show_signal(self) -> None:
-        import time
-
         while True:
             time.sleep(0.5)
             if single_instance.consume_show_signal():
@@ -259,14 +264,79 @@ class Api:
             return {"ok": False, "error": str(exc)}
 
     def restart_app(self) -> None:
-        # Deliberately does not call self._window.destroy(): that fires pywebview's
-        # `closing` event, which main.py's handler intercepts and turns into a hide
-        # (not a real close) whenever autorun is on - the window would never actually
-        # close and os.execv would replace a process still holding a visible window.
-        # os.execv terminates this process outright, taking the window with it.
+        # Spawns the replacement process explicitly via subprocess.Popen rather than
+        # os.execv: on Windows, os.execv is emulated by the CRT via spawn-and-wait
+        # rather than true in-place process replacement (unlike on Unix), and that
+        # emulation has been observed to silently fail to hand off to a new process
+        # at all when the parent's console is a Git Bash/MSYS shell (a common
+        # terminal on Windows dev machines) - the old process just exits and nothing
+        # new ever starts, with no error anywhere. subprocess.Popen sidesteps that
+        # fragility entirely.
+        #
+        # Popen happens BEFORE window.destroy(), not after: destroying the window
+        # unblocks pywebview's blocking webview.start() call on the *main* thread,
+        # letting main() reach its end and the whole process start shutting down
+        # naturally - and this method itself normally runs on a background thread
+        # (pywebview's JS-bridge dispatch), which Python kills mid-execution the
+        # instant the main thread exits, without waiting for it. Spawning the
+        # replacement first means it exists as an independent process before
+        # anything here can race to end this one - confirmed via a live repro that
+        # this ordering matters: with a tray-icon thread also present (as the real
+        # app always has), destroy-then-Popen consistently lost that race and the
+        # replacement was never created, even though it looked fine without a tray
+        # icon. The new process's own webview init still won't happen until after
+        # its own Python/import/DB startup, by which point the old window (destroyed
+        # right after Popen returns, below) is long gone - so this doesn't reintroduce
+        # the WebView2 user-data-folder lock contention that not destroying the
+        # window at all originally caused.
+        logger.info("restart_app: starting restart sequence")
+        self._restarting = True
         self.shutdown()
+        self.stop_tray_icon()
         single_instance.release_lock()
-        os.execv(sys.executable, [sys.executable, *sys.argv])
+        # CREATE_BREAKAWAY_FROM_JOB | DETACHED_PROCESS: Git Bash/MSYS (a common
+        # terminal on Windows dev machines) runs launched processes inside a Windows
+        # Job Object and a shared console - a plain child inherits both, so it gets
+        # silently killed when this parent process exits below (or when the parent
+        # shell's console/pty tears down), even though the child is otherwise a fully
+        # independent process. Breaking away from the job and detaching from the
+        # console (this is a GUI app - it doesn't need one) is what makes it survive.
+        # `sys.executable` (python.exe, for a from-source run) is a console-subsystem
+        # binary, though - DETACHED_PROCESS only stops it inheriting *our* console, it
+        # doesn't stop the CRT from auto-allocating a fresh one the moment anything
+        # tries to write to stdout/stderr with no console attached (e.g. main.py's own
+        # `logger.add(sys.stderr, ...)`), which is what caused an empty console window
+        # to flash up. Redirecting all three standard streams to DEVNULL means that
+        # write has somewhere to go that isn't "summon a console."
+        try:
+            proc = subprocess.Popen(
+                [sys.executable, *sys.argv],
+                creationflags=subprocess.CREATE_BREAKAWAY_FROM_JOB  # type: ignore[attr-defined]
+                | subprocess.DETACHED_PROCESS,  # type: ignore[attr-defined]
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            logger.info(f"restart_app: replacement process spawned, pid={proc.pid}")
+        except Exception:
+            # Logged (not just debug) since this is the one failure mode that would
+            # otherwise vanish silently: this runs on pywebview's JS-bridge dispatch,
+            # entirely outside main.py's own startup try/except that writes
+            # ERROR_LOG_PATH, so an uncaught exception here would never reach either
+            # log - pywebview's own bridge dispatcher would catch and swallow it.
+            logger.exception("restart_app: failed to spawn replacement process")
+        if self._window is not None:
+            try:
+                self._window.destroy()
+            except Exception as exc:
+                logger.debug(f"window.destroy failed during restart: {exc}")
+        logger.info("restart_app: window destroyed, exiting old process now")
+        # Best-effort grace period for the old WebView2 host subprocess to actually
+        # release its user-data-folder lock before os._exit (harmless now that Popen
+        # already ran, but still avoids leaving the OS a fully torn-down window vs.
+        # a still-finishing one to sort out at the same instant as process exit).
+        time.sleep(0.3)
+        os._exit(0)
 
     # ------------------------------------------------------------------ polish
 
