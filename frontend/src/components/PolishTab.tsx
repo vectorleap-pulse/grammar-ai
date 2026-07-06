@@ -75,7 +75,7 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
           type="button"
           size="sm"
           variant="default"
-          className="w-[120px]"
+          className="w-30"
           disabled={polish.busy}
           onClick={triggerFromButton}
         >

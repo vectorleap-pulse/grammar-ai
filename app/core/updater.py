@@ -140,16 +140,36 @@ def download_installer(download_url: str, dest_dir: Path) -> Path:
     the stream completes without error, so a crash/kill mid-download never leaves a
     truncated file sitting at the path the idempotency check above looks for.
     """
-    filename = download_url.rsplit("/", 1)[-1]
+    filename = download_url.rsplit("/", 1)[-1].split("?", 1)[0].split("#", 1)[0]
     dest_path = dest_dir / filename
     if dest_path.exists():
+        tmp_path = dest_dir / f"{filename}.part"
+        if tmp_path.exists():
+            try:
+                tmp_path.unlink()
+            except OSError as e:
+                logger.debug(f"Could not remove stale temp download {tmp_path}: {e}")
         return dest_path
 
     dest_dir.mkdir(parents=True, exist_ok=True)
     tmp_path = dest_dir / f"{filename}.part"
+    if tmp_path.exists():
+        try:
+            tmp_path.unlink()
+        except OSError as e:
+            logger.debug(f"Could not remove stale temp download {tmp_path}: {e}")
+
     req = urllib.request.Request(download_url, headers={"User-Agent": "grammar-ai-updater"})
-    with urllib.request.urlopen(req, timeout=60) as resp, open(tmp_path, "wb") as f:
-        shutil.copyfileobj(resp, f)
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp, open(tmp_path, "wb") as f:
+            shutil.copyfileobj(resp, f)
+    except Exception:
+        if tmp_path.exists():
+            try:
+                tmp_path.unlink()
+            except OSError:
+                pass
+        raise
     os.replace(tmp_path, dest_path)
 
     # Mark of the Web - the same zone-identifier a browser writes for anything it

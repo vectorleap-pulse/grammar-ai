@@ -27,6 +27,7 @@ from app.config import (
     TONES,
     TRANSLATE_HOTKEY,
     UI_LANGUAGES,
+    UPDATE_CHECK_INTERVAL_MS,
 )
 from app.core import single_instance, updater
 from app.core.autorun import configure_autorun
@@ -72,6 +73,9 @@ class Api:
         self._tray_icon: Any = None
         self._config: AppConfig = load_config()
         self._downloaded_installer_path: Optional[Path] = None
+        self._notified_update_version: Optional[str] = None
+        self._update_check_stop = threading.Event()
+        self._update_check_thread: Optional[threading.Thread] = None
         self._polish_hotkey = HotkeyManager(
             self._on_polish_hotkey, tap_key="shift", description=HOTKEY
         )
@@ -87,11 +91,20 @@ class Api:
         self._polish_hotkey.enable()
         self._translate_hotkey.enable()
         threading.Thread(target=self._poll_show_signal, daemon=True).start()
-        threading.Thread(target=self._check_update_worker, daemon=True).start()
+
+        if self._update_check_thread is not None and self._update_check_thread.is_alive():
+            self._update_check_stop.set()
+
+        self._update_check_stop = threading.Event()
+        self._update_check_thread = threading.Thread(
+            target=self._run_update_check_loop, daemon=True
+        )
+        self._update_check_thread.start()
 
     def shutdown(self) -> None:
         self._polish_hotkey.disable()
         self._translate_hotkey.disable()
+        self._update_check_stop.set()
 
     def attach_tray_icon(self, icon: Any) -> None:
         self._tray_icon = icon
@@ -352,20 +365,27 @@ class Api:
 
     # ------------------------------------------------------------------ updater
 
+    def _run_update_check_loop(self) -> None:
+        while not self._update_check_stop.is_set():
+            self._check_update_worker()
+            self._update_check_stop.wait(UPDATE_CHECK_INTERVAL_MS / 1000.0)
+
     def _check_update_worker(self) -> None:
         info = updater.check_for_update(self._version)
         if info is None:
+            return
+        if self._notified_update_version == info.version:
             return
         try:
             downloads_dir = updater.get_downloads_folder()
             path = updater.download_installer(info.download_url, downloads_dir)
         except Exception as e:
             # Download failures aren't surfaced to the UI - just retried on the next
-            # check (there isn't one yet, see app/config.py's UPDATE_CHECK_INTERVAL_MS),
-            # same as check_for_update() already does for its own failures.
+            # check, same as check_for_update() already does for its own failures.
             logger.warning(f"Update download failed: {e}")
             return
         self._downloaded_installer_path = path
+        self._notified_update_version = info.version
         self._eval(f"window.onUpdateAvailable({_js(info.version)})")
 
     def open_installer_and_quit(self) -> dict:
