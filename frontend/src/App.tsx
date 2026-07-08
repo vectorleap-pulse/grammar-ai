@@ -100,8 +100,8 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
       type="button"
       onClick={onClick}
       className={cn(
-        "border-b-2 border-transparent px-2.5 py-1.5 text-sm text-muted-foreground",
-        active && "border-primary font-semibold text-primary"
+        "rounded-t-md border-b-2 border-transparent px-2.5 py-1.5 text-sm text-muted-foreground",
+        active && "border-primary bg-primary/10 font-semibold text-foreground"
       )}
     >
       {label}
