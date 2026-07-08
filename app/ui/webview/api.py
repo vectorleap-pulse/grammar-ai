@@ -461,7 +461,12 @@ class Api:
             return
         try:
             downloads_dir = updater.get_downloads_folder()
-            path = updater.download_installer(info.download_url, downloads_dir)
+            path = updater.download_installer(
+                info.download_url,
+                downloads_dir,
+                expected_size=info.size,
+                expected_digest=info.digest,
+            )
         except Exception as e:
             # Download failures aren't surfaced to the UI - just retried on the next
             # check, same as check_for_update() already does for its own failures.
@@ -472,7 +477,12 @@ class Api:
         self._eval(f"window.onUpdateAvailable({_js(info.version)})")
 
     def open_installer_and_quit(self) -> dict:
-        if self._downloaded_installer_path is None:
+        if self._downloaded_installer_path is None or not self._downloaded_installer_path.exists():
+            # File may have been deleted, moved, or quarantined since the update banner
+            # was shown - reset so the next background check re-downloads and
+            # re-notifies instead of staying stuck believing this version was handled.
+            self._downloaded_installer_path = None
+            self._notified_update_version = None
             return {"ok": False}
         updater.open_containing_folder(self._downloaded_installer_path)
         # Deliberately not self.quit_app(): it also force-exits via os._exit() below,
