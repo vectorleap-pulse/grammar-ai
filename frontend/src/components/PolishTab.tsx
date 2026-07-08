@@ -74,7 +74,7 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
         <Button
           type="button"
           size="sm"
-          className="w-40"
+          className="w-40 text-sm"
           disabled={polish.busy}
           onClick={triggerFromButton}
         >
@@ -121,6 +121,7 @@ export const PolishTab = forwardRef<PolishTabHandle, PolishTabProps>(function Po
           value={polish.original}
           disabled={polish.busy}
           onChange={(e) => polish.setOriginal(e.target.value)}
+          className="max-h-48 overflow-y-auto"
         />
       </div>
 

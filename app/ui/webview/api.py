@@ -84,7 +84,7 @@ class Api:
         self._polish_hotkey = HotkeyManager(
             self._on_polish_hotkey,
             modifiers=MOD_CONTROL | MOD_ALT,
-            vk=ord("A"),
+            vk=ord("S"),
             description=HOTKEY,
         )
         self._translate_hotkey = HotkeyManager(

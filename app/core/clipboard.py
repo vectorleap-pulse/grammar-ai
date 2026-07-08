@@ -27,7 +27,7 @@ def poll_clipboard(timeout: float) -> str:
     return ""
 
 
-def wait_for_keys_released(vks: list[int], timeout: float = 1.0) -> None:
+def wait_for_keys_released(vks: list[int], timeout: float = 1.0) -> bool:
     """Block until none of `vks` are physically held down, or `timeout` elapses.
 
     Hotkeys built from real key combos (a global Ctrl+Alt+<letter>, or an in-app
@@ -39,12 +39,18 @@ def wait_for_keys_released(vks: list[int], timeout: float = 1.0) -> None:
     character instead of running the clipboard shortcut, corrupting the target
     field. Waiting for a clean release (checked via `GetAsyncKeyState`, independent
     of any window's focus or message queue) avoids that race.
+
+    Returns True once a clean release is confirmed, False if `timeout` elapsed
+    while a key was still held - callers must treat False as "do not proceed",
+    since going ahead anyway is exactly the corruption this function exists to
+    prevent.
     """
     if not _IS_WIN:
-        return
+        return True
     user32 = ctypes.windll.user32  # type: ignore[attr-defined]
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if not any(user32.GetAsyncKeyState(vk) & 0x8000 for vk in vks):
-            return
+            return True
         time.sleep(0.01)
+    return False

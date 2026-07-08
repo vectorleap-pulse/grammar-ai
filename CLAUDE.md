@@ -87,7 +87,7 @@ table (all `Msg` members) once at load, and components render from that dict via
 `hooks/useBootstrap.tsx`'s context.
 
 **`app/core/` — OS integration, all Windows-specific (`ctypes` calls into `user32.dll`/`kernel32.dll`)**:
-- `hotkey.py` — global hotkeys are real key combos (Polish: Ctrl+Alt+A, Translate: Ctrl+Alt+D)
+- `hotkey.py` — global hotkeys are real key combos (Polish: Ctrl+Alt+S, Translate: Ctrl+Alt+D)
   registered via Win32 `RegisterHotKey`, delivered as `WM_HOTKEY` on the registering thread's
   message queue. `Api` owns one `HotkeyManager` instance each for Polish and Translate, each on
   its own dedicated thread (`RegisterHotKey(hWnd=None, ...)` ties the registration to the calling

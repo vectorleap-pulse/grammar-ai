@@ -14,7 +14,7 @@ Windows only. No browser extension, no Linux/macOS support at this time.
 
 ### Polish
 
-- Global hotkey (**Ctrl+Alt+A**) captures the focused control's text (selection if present,
+- Global hotkey (**Ctrl+Alt+S**) captures the focused control's text (selection if present,
   otherwise the full field) and sends it to the Polish tab.
 - Rewrites the captured text into one or more **tones** (Professional, Casual, Chatting, Formal,
   Friendly, Empathetic, Assertive, Diplomatic), each generated for every configured **goal**

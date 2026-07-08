@@ -231,7 +231,7 @@ def polish_text(
     data = json.loads(content)
     results: list[PolishedText] = []
     for goal in active_goals:
-        result = PolishedText(tone=tone, goal=goal, text=data.get(goal, ""))
+        result = PolishedText(tone=tone, goal=goal, text=(data.get(goal, "") or "").strip())
         results.append(result)
         if on_result:
             on_result(result)

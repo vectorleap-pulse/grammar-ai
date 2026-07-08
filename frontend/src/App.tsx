@@ -5,6 +5,7 @@ import { PolishTab, type PolishTabHandle } from "@/components/PolishTab";
 import { TranslateTab, type TranslateTabHandle } from "@/components/TranslateTab";
 import { HistoryTab } from "@/components/HistoryTab";
 import { SettingsDialog } from "@/components/SettingsDialog";
+import { HotkeysDialog } from "@/components/HotkeysDialog";
 import { ErrorDialog } from "@/components/ErrorDialog";
 import { useBootstrap } from "@/hooks/useBootstrap";
 import { api } from "@/lib/pywebview";
@@ -16,6 +17,7 @@ export function App() {
   const { boot } = useBootstrap();
   const [tab, setTab] = useState<TabName>("polish");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [hotkeysOpen, setHotkeysOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
 
@@ -41,7 +43,7 @@ export function App() {
       if (event.key !== "Escape") return;
       const tag = (document.activeElement as HTMLElement | null)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-      if (settingsOpen || errorMessage) return;
+      if (settingsOpen || hotkeysOpen || errorMessage) return;
       event.preventDefault();
       void api().close_window();
     }
@@ -52,11 +54,16 @@ export function App() {
       delete window.onHotkeyCapture;
       delete window.onUpdateAvailable;
     };
-  }, [settingsOpen, errorMessage]);
+  }, [settingsOpen, hotkeysOpen, errorMessage]);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <Titlebar appName={boot.appName} version={boot.version} onSettingsOpen={() => setSettingsOpen(true)} />
+      <Titlebar
+        appName={boot.appName}
+        version={boot.version}
+        onSettingsOpen={() => setSettingsOpen(true)}
+        onHotkeysOpen={() => setHotkeysOpen(true)}
+      />
       <UpdateBar update={update} onDismiss={() => setUpdate(null)} />
 
       <nav className="flex items-center gap-0.5 border-b border-border px-1 pt-1">
@@ -81,6 +88,7 @@ export function App() {
       </main>
 
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <HotkeysDialog open={hotkeysOpen} onOpenChange={setHotkeysOpen} />
       <ErrorDialog message={errorMessage} onOpenChange={(open) => !open && setErrorMessage(null)} />
     </div>
   );
@@ -92,8 +100,8 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
       type="button"
       onClick={onClick}
       className={cn(
-        "border-b-2 border-transparent px-2.5 py-1.5 text-sm text-muted-foreground",
-        active && "border-primary font-semibold text-primary"
+        "rounded-t-md border-b-2 border-transparent px-2.5 py-1.5 text-sm text-muted-foreground",
+        active && "border-primary bg-primary/10 font-semibold text-foreground"
       )}
     >
       {label}

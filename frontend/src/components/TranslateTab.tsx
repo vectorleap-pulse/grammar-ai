@@ -51,7 +51,7 @@ export const TranslateTab = forwardRef<TranslateTabHandle, TranslateTabProps>(fu
         <Button
           type="button"
           size="sm"
-          className="w-40"
+          className="w-40 text-sm"
           disabled={translate.busy}
           onClick={triggerFromButton}
         >
@@ -79,6 +79,7 @@ export const TranslateTab = forwardRef<TranslateTabHandle, TranslateTabProps>(fu
           value={translate.original}
           disabled={translate.busy}
           onChange={(e) => translate.setOriginal(e.target.value)}
+          className="max-h-48 overflow-y-auto"
         />
       </div>
 
