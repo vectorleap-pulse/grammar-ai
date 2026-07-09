@@ -11,13 +11,19 @@ real simulated paste succeeds but direct UI Automation writes don't.
 """
 
 import ctypes
+import re
 import sys
 import threading
 import time
 
 from loguru import logger
 
-from app.core.clipboard import VK_MENU, poll_clipboard, wait_for_keys_released
+from app.core.clipboard import (
+    SELECT_ALL_SETTLE_SECONDS,
+    VK_MENU,
+    poll_clipboard,
+    wait_for_keys_released,
+)
 
 # Best-effort buffer given to the target app to finish reading the clipboard after
 # a simulated Ctrl+V before the original clipboard contents are restored over it -
@@ -44,6 +50,33 @@ try:
     import pyperclip
 except ImportError:  # pragma: no cover - Windows-only runtime dependency
     pyperclip = None  # type: ignore[assignment]
+
+
+def _normalize_newlines(text: str) -> str:
+    """Collapse \\r\\n and \\r to \\n so a partial-selection copy and a Ctrl+A
+    whole-buffer copy of the same text compare equal regardless of which
+    line-ending convention the target app used for each.
+    """
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def _find_normalized(haystack: str, needle: str) -> tuple[int, int] | None:
+    """Find `needle` inside `haystack`, treating any of \\r\\n, \\r, or \\n in
+    `needle` as equivalent to any of those in `haystack` (a partial-selection
+    copy and a Ctrl+A whole-buffer copy of the same text can report different
+    line-ending conventions for the same underlying content - see
+    _normalize_newlines). Returns the matched span in `haystack`'s own
+    unmodified coordinates, so the caller can splice around it without
+    altering any of `haystack`'s original text (including its line endings)
+    outside the match.
+    """
+    if not needle:
+        return None
+    pattern = "".join(
+        r"(?:\r\n|\r|\n)" if ch == "\n" else re.escape(ch) for ch in _normalize_newlines(needle)
+    )
+    match = re.search(pattern, haystack)
+    return match.span() if match else None
 
 
 def bring_to_foreground(hwnd: int) -> None:
@@ -150,13 +183,39 @@ def restore_focus_and_paste(hwnd: int, original: str, polished: str) -> bool:
     try:
         pyperclip.copy("")
         pyautogui.hotkey("ctrl", "a")
+        # Give the target app time to finish updating its selection before the
+        # copy, same as hotkey.py's select-all capture fallback - firing Ctrl+C
+        # immediately risks racing an app that processes the select-all
+        # asynchronously, returning stale/incomplete clipboard content.
+        time.sleep(SELECT_ALL_SETTLE_SECONDS)
         pyautogui.hotkey("ctrl", "c")
         current = poll_clipboard(timeout=0.4)
 
-        if original and original in current:
-            replacement = current.replace(original, polished, 1)
-        else:
-            replacement = polished
+        match = _find_normalized(current, original)
+
+        if match is None:
+            # Can't verify the originally-selected text is still there unchanged
+            # (user edited the field, app auto-reformatted it, or the read above
+            # timed out) - abort rather than overwrite the whole field with just
+            # the polished text. Caller falls back to a plain clipboard copy.
+            logger.warning(
+                "Original selection no longer found in the field's live text - "
+                "aborting paste-back to avoid overwriting unrelated content"
+            )
+            if ctypes.windll.user32.GetForegroundWindow() == hwnd:  # type: ignore[attr-defined]
+                # The Ctrl+A above left the whole field selected - collapse
+                # that selection so a stray keystroke afterward doesn't wipe
+                # the field, rather than leaving everything highlighted with
+                # no indication the paste-back was aborted.
+                pyautogui.press("home")
+            return False
+
+        # Splice around the matched span in `current`'s own, unmodified
+        # coordinates so any text outside the match - including its original
+        # line-ending convention - is preserved exactly, not just the parts
+        # normalization happened to leave alone.
+        start, end = match
+        replacement = current[:start] + polished + current[end:]
 
         # Focus may have drifted away from hwnd during the read above (another
         # window stealing foreground, a notification, etc.) - re-check right
