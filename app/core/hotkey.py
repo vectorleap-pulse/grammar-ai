@@ -25,7 +25,13 @@ from typing import Callable, Optional
 
 from loguru import logger
 
-from app.core.clipboard import VK_CONTROL, VK_MENU, poll_clipboard, wait_for_keys_released
+from app.core.clipboard import (
+    SELECT_ALL_SETTLE_SECONDS,
+    VK_CONTROL,
+    VK_MENU,
+    poll_clipboard,
+    wait_for_keys_released,
+)
 
 _IS_WIN = sys.platform == "win32"
 
@@ -154,7 +160,7 @@ class HotkeyManager:
             if not text or not text.strip():
                 # Nothing was selected - select all then copy.
                 pyautogui.hotkey("ctrl", "a")
-                time.sleep(0.05)
+                time.sleep(SELECT_ALL_SETTLE_SECONDS)
                 pyperclip.copy("")
                 pyautogui.hotkey("ctrl", "c")
                 text = poll_clipboard(timeout=0.4)

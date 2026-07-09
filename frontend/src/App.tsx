@@ -57,7 +57,7 @@ export function App() {
   }, [settingsOpen, hotkeysOpen, errorMessage]);
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden">
+    <div className="flex h-screen flex-col overflow-hidden rounded-2xl border-2 bg-background" style={{ borderColor: "var(--window-border)" }}>
       <Titlebar
         appName={boot.appName}
         version={boot.version}

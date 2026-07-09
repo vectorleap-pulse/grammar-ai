@@ -100,6 +100,7 @@
   --sidebar-accent-foreground: #1c1c1e;
   --sidebar-border: #d0d0d5;
   --sidebar-ring: #2563eb;
+  --window-border: rgba(249, 115, 22, 0.8);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -131,6 +132,7 @@
     --sidebar-accent-foreground: #f2f2f2;
     --sidebar-border: #3a3a3d;
     --sidebar-ring: #3b82f6;
+    --window-border: rgba(251, 146, 60, 0.85);
   }
 }
 
@@ -164,6 +166,7 @@
   --sidebar-accent-foreground: #f2f2f2;
   --sidebar-border: #3a3a3d;
   --sidebar-ring: #3b82f6;
+  --window-border: rgba(251, 146, 60, 0.85);
 }
 
 @layer base {
